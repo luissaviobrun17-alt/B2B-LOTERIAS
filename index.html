@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Cache controlado pelo servidor (server.js) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *; font-src * data:;">
+    <title>B2B Loterias</title>
+    <!-- BUILD: 2026-06-16T20:53 — cache-buster automático -->
+    <meta name="build-version" content="2026-06-16-2053">
+
+
+    <!-- PWA ATIVADO — Permite instalar como app (sem barra do Chrome) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10B981">
+    <script>
+    // Rastreador de erros visual para depuração remota
+    window.addEventListener('error', function(e) {
+        var errDiv = document.getElementById('b2b-err-banner');
+        if (!errDiv) {
+            errDiv = document.createElement('div');
+            errDiv.id = 'b2b-err-banner';
+            errDiv.style = 'background: #dc2626; color: white; padding: 15px; font-family: monospace; font-size: 14px; position: fixed; top: 0; left: 0; right: 0; z-index: 99999; border-bottom: 3px solid #7f1d1d; max-height: 200px; overflow-y: auto;';
+            errDiv.innerHTML = '<strong>[B2B-ERRO-CRÍTICO]</strong><br>';
+            var closeBtn = document.createElement('button');
+            closeBtn.innerText = 'Fechar';
+            closeBtn.style = 'margin-top: 10px; padding: 5px 10px; background: white; color: #dc2626; border: none; font-weight: bold; cursor: pointer;';
+            closeBtn.onclick = function() { errDiv.remove(); };
+            errDiv.appendChild(closeBtn);
+            document.body.appendChild(errDiv);
+        }
+        var msg = document.createElement('div');
+        msg.style.marginTop = '10px';
+        msg.innerText = e.message + ' em ' + e.filename + ':' + e.lineno + ':' + e.colno;
+        errDiv.insertBefore(msg, errDiv.lastChild);
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        var errDiv = document.getElementById('b2b-err-banner');
+        if (!errDiv) {
+            errDiv = document.createElement('div');
+            errDiv.id = 'b2b-err-banner';
+            errDiv.style = 'background: #dc2626; color: white; padding: 15px; font-family: monospace; font-size: 14px; position: fixed; top: 0; left: 0; right: 0; z-index: 99999; border-bottom: 3px solid #7f1d1d; max-height: 200px; overflow-y: auto;';
+            errDiv.innerHTML = '<strong>[B2B-ERRO-CRÍTICO]</strong><br>';
+            var closeBtn = document.createElement('button');
+            closeBtn.innerText = 'Fechar';
+            closeBtn.style = 'margin-top: 10px; padding: 5px 10px; background: white; color: #dc2626; border: none; font-weight: bold; cursor: pointer;';
+            closeBtn.onclick = function() { errDiv.remove(); };
+            errDiv.appendChild(closeBtn);
+            document.body.appendChild(errDiv);
+        }
+        var msg = document.createElement('div');
+        msg.style.marginTop = '10px';
+        msg.innerText = 'Rejeição de Promise: ' + (e.reason ? (e.reason.message || e.reason) : e);
+        errDiv.insertBefore(msg, errDiv.lastChild);
+    });
+
+
+    // Desregistrar Service Worker UMA VEZ (não repetir a cada load)
+    if ('serviceWorker' in navigator && !localStorage.getItem('b2b_sw_cleaned_v3')) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            registrations.forEach(function(registration) {
+                registration.unregister().then(function() {
+                    console.log('[B2B] Service Worker desregistrado!');
+                });
+            });
+        });
+        if (caches) {
+            caches.keys().then(function(names) {
+                names.forEach(function(name) {
+                    caches.delete(name);
+                    console.log('[B2B] Cache removido: ' + name);
+                });
+            });
+        }
+        localStorage.setItem('b2b_sw_cleaned_v3', '1');
+    }
+    </script>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="B2B Loterias">
+    <link rel="apple-touch-icon" href="img/icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="B2B Loterias">
+    <meta name="description" content="Gerador inteligente de apostas para todas as loterias da Caixa com IA">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css?v=1781904541">
+    <link rel="stylesheet" href="styles/components.css?v=1781904541">
+    <link rel="stylesheet" href="styles/lottery.css?v=1781904541">
+    <link rel="stylesheet" href="styles/responsive.css?v=1781904541">
+    <link rel="stylesheet" href="styles/comparison.css?v=1781904541">
+
+    <!-- Service Worker DESABILITADO — Causava reload infinito + ERR_FAILED -->
+    <script>
+    // Limpeza DEFINITIVA: desregistrar qualquer SW residual (NUNCA re-registrar)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+            regs.forEach(function(r) {
+                r.unregister().then(function() {
+                    console.log('[B2B] SW residual removido com sucesso');
+                });
+            });
+        });
+    }
+    </script>
+</head>
+
+<body>
+    <div class="app-container">
+
+        <header>
+            <!-- Removed potential blocker div -->
+            <div class="header-top" style="display: flex; justify-content: flex-end; align-items: center; padding: 0 20px; min-height: 130px; position: relative;">
+                <style>
+                    @keyframes liquidGold {
+                        0% { background-position: -200% center; }
+                        100% { background-position: 200% center; }
+                    }
+                    @keyframes quantumAura {
+                        0%, 100% { 
+                            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.4)) contrast(1.1); 
+                            transform: translateY(-50%) scale(1);
+                        }
+                        50% { 
+                            filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.7)) contrast(1.3);
+                            transform: translateY(-50%) scale(1.01);
+                        }
+                    }
+                    .tagline-quantum-high {
+                        position: absolute;
+                        right: 215px;
+                        top: 92%;
+                        transform: translateY(-50%);
+                        text-align: right;
+                        z-index: 50;
+                        pointer-events: none;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-end;
+                        animation: quantumAura 4s ease-in-out infinite;
+                    }
+                    .gold-3d-text {
+                        color: #FFD700;
+                        font-family: 'Inter', sans-serif;
+                        font-style: italic;
+                        font-weight: 900;
+                        text-transform: uppercase;
+                        display: block;
+                        line-height: 1;
+                        text-shadow: 
+                            0 1px 0 #d4af37, 
+                            0 2px 0 #b8860b, 
+                            0 3px 0 #996515, 
+                            0 4px 12px rgba(0,0,0,0.9);
+                        background: linear-gradient(110deg, #FFD700 30%, #fff8dc 50%, #FFD700 70%);
+                        background-size: 200% auto;
+                        -webkit-background-clip: text;
+                        background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        animation: liquidGold 3s linear infinite;
+                        white-space: nowrap;
+                        filter: contrast(1.2) brightness(1.1);
+                    }
+                    .tagline-main-5d { font-size: 1.4rem; letter-spacing: -0.2px; }
+                    .tagline-sub-5d { font-size: 0.85rem; letter-spacing: 5px; margin-top: 3px; opacity: 0.95; }
+                    /* Mobile: reposicionar tagline */
+                    @media screen and (max-width: 767px) {
+                        .tagline-quantum-high {
+                            position: relative;
+                            right: auto;
+                            top: auto;
+                            transform: none;
+                            text-align: center;
+                            align-items: center;
+                            flex: 1;
+                            margin-top: 0;
+                            animation: none;
+                        }
+                        .tagline-main-5d { font-size: 1.1rem; }
+                        .tagline-sub-5d { font-size: 0.6rem; letter-spacing: 3px; }
+                    }
+                </style>
+                <div class="tagline-quantum-high">
+                    <span class="gold-3d-text tagline-main-5d">Loteria Inteligente</span>
+                    <span class="gold-3d-text tagline-sub-5d">⚡ Gerada por IA ⚡</span>
+                </div>
+                <div class="brand-logo" style="z-index: 10;">
+                    <div class="logo-container">
+                        <img src="img/logo_atom.png" alt="B2B Loterias" class="header-logo-img">
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <button class="nav-btn active" data-game="megasena">
+                    <span class="nav-name">Mega Sena</span>
+                <span class="nav-prize" id="prize-nav-megasena">R$ 30,0 M</span>
+                </button>
+                <button class="nav-btn" data-game="lotofacil">
+                    <span class="nav-name">Lotofácil</span>
+                    <span class="nav-prize" id="prize-nav-lotofacil">R$ 1,7 M</span>
+                </button>
+                <button class="nav-btn" data-game="quina">
+                    <span class="nav-name">Quina</span>
+                    <span class="nav-prize" id="prize-nav-quina">R$ 6,0 M</span>
+                </button>
+                <button class="nav-btn" data-game="duplasena">
+                    <span class="nav-name">Dupla Sena</span>
+                    <span class="nav-prize" id="prize-nav-duplasena">R$ 2,5 M</span>
+                </button>
+                <button class="nav-btn" data-game="lotomania">
+                    <span class="nav-name">Lotomania</span>
+                    <span class="nav-prize" id="prize-nav-lotomania">R$ 4,0 M</span>
+                </button>
+                <button class="nav-btn" data-game="timemania">
+                    <span class="nav-name">Timemania</span>
+                    <span class="nav-prize" id="prize-nav-timemania">R$ 3,5 M</span>
+                </button>
+                <button class="nav-btn" data-game="diadesorte">
+                    <span class="nav-name">Dia de Sorte</span>
+                    <span class="nav-prize" id="prize-nav-diadesorte">R$ 1,0 M</span>
+                </button>
+            </nav>
+        </header>
+
+        <div class="content-wrapper">
+            <main class="main-content">
+                <div class="game-config">
+                    <div class="panel-header" style="flex-wrap: wrap; gap: 1rem;">
+                        <div class="header-left">
+                            <h2 id="current-game-title" style="margin-bottom: 0.2rem;">Mega Sena</h2>
+                            <div id="prize-display" class="prize-display" style="display: block;">
+                                <div class="prize-inner">
+                                    <span class="prize-label">🏆 Prêmio Estimado:</span>
+                                    <span class="prize-value" id="prize-value">R$ 30.000.000</span>
+                                    <span class="prize-badge" id="prize-badge" style="display: none;">ACUMULADO!</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="countdown">
+                            <small>Próximo Sorteio</small>
+                            <span class="timer" id="timer">--:--:--</span>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <!-- Selection Area First now for logic flow -->
+                        <div class="selection-area">
+                            <div class="selection-header">
+                                <label>Escolha seus números:</label>
+                                <div class="selection-info">
+                                    <span id="selected-count">0</span> / <span id="max-selection">0</span>
+                                    <button id="btn-random-select" class="sm-btn" title="Selecionar Aleatório">🎲
+                                        Aleatório</button>
+                                    <button id="btn-fixed-mode" class="sm-btn" title="Modo Fixar Números">📌
+                                        Fixar</button>
+                                    <button id="btn-clear-selection" class="sm-btn" title="Limpar todos os números selecionados e jogos gerados" style="margin-left: auto;">🗑️ Excluir Tudo</button>
+                                </div>
+                            </div>
+                            <div id="number-selection-grid" class="number-grid">
+                                <!-- Grid injected by JS -->
+                            </div>
+                            <div id="fixed-info-panel" class="fixed-info"
+                                style="display:none; margin-top: 5px; font-size: 0.8em; color: #F59E0B;">
+                                Fixos: <span id="fixed-numbers-list"></span>
+                            </div>
+                        </div>
+
+
+                        <!-- ══ MÊS DA SORTE — Dia de Sorte (hidden para outras loterias) ══ -->
+                        <div id="mes-sorte-row" class="control-row" style="display:none; grid-template-columns: 1fr; gap: 10px; margin-bottom: 4px; padding: 10px 14px; background: linear-gradient(145deg, rgba(226,120,32,0.08), rgba(15,23,42,0.9)); border: 1px solid rgba(226,120,32,0.3); border-radius: 10px;">
+                            <div class="control-group" style="margin-bottom:0;">
+                                <label for="mes-sorte-select" style="color:#F59E0B; font-size:0.85rem; font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                                    🗓️ Mês da Sorte
+                                    <span style="font-size:0.72rem; color:#94A3B8; font-weight:400;">(cabeçalho do arquivo salvo)</span>
+                                </label>
+                                <select id="mes-sorte-select" style="width:100%; background:rgba(0,0,0,0.45); border:1px solid rgba(226,120,32,0.4); color:#E2E8F0; padding:8px 12px; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer; outline:none; height:38px; transition: border-color 0.2s;">
+                                    <option value="">— Selecione o Mês da Sorte —</option>
+                                    <option value="Janeiro">Janeiro</option>
+                                    <option value="Fevereiro">Fevereiro</option>
+                                    <option value="Março">Março</option>
+                                    <option value="Abril">Abril</option>
+                                    <option value="Maio">Maio</option>
+                                    <option value="Junho">Junho</option>
+                                    <option value="Julho">Julho</option>
+                                    <option value="Agosto">Agosto</option>
+                                    <option value="Setembro">Setembro</option>
+                                    <option value="Outubro">Outubro</option>
+                                    <option value="Novembro">Novembro</option>
+                                    <option value="Dezembro">Dezembro</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="control-row" style="grid-template-columns: 1fr 1fr; gap: 12px; align-items: end;">
+                            <div class="control-group">
+                                <label>🔒 Garantia de Fechamento</label>
+                                <select id="closing-type">
+                                    <option value="6">Garantir 6 pontos</option>
+                                    <option value="5">Garantir 5 pontos (Quadra/Quina)</option>
+                                    <option value="4">Garantir 4 pontos</option>
+                                </select>
+                            </div>
+
+                            <div class="control-group">
+                                <label>📊 Qtd. Jogos</label>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <input type="number" id="games-quantity" min="1" max="500000" value="10" style="flex:1;">
+                                    <span id="current-bet-cost" style="font-size:1.05rem;color:#22C55E;font-weight:800;white-space:nowrap;text-shadow:0 0 8px rgba(34,197,94,0.3);">R$ 0,00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação — 3 MOTORES + MOTORES B2B -->
+                        <div id="action-buttons-row" style="display:flex;gap:10px;align-items:stretch;margin-top:10px;flex-wrap:wrap;">
+                            <button id="generate-btn" class="action-btn" style="flex: 1; min-width: 0; padding: 14px 10px; background: linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%); border: 1px solid #10B981; color: #ecfdf5; font-size: 0.95rem;" title="Gera jogos com os seus números selecionados no volante. Cobertura combinatória otimizada (Greedy Set Cover) + Filtros P5-P95 + ROI honesto. Você escolhe os números, o motor otimiza a distribuição.">🎲 Manual</button>
+                            <button id="generate-coverage-btn" class="action-btn" style="flex: 1; min-width: 0; padding: 14px 10px; background: linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%); border: 1px solid #10B981; color: #ecfdf5; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 15px rgba(16,185,129,0.3);" title="Motor de Cobertura Pura — Matemática combinatória. Greedy Set Cover + filtros P5-P95. Ative o Sniper para focar em um pool reduzido baseado em evidência estatística real.">📐 Cobertura IA</button>
+                            <button id="btn-gerador-inteligente" class="action-btn" style="flex: 1; min-width: 0; padding: 14px 10px; background: linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%); border: 1px solid #10B981; color: #ecfdf5; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 15px rgba(14,165,233,0.3);" title="Motor unificado de Cobertura Pura — Matemática combinatória sem previsão. Usa TODOS os números, Greedy Set Cover, filtros P5-P95, anti-concentração. Mostra ROI honesto ANTES de gerar. Toggle Sniper disponível.">🎯 Gerador Inteligente</button>
+                            <button id="btn-motor-lotofacil" class="action-btn" style="flex: 1 1 calc(50% - 5px); margin-top: 4px; padding: 14px 12px; background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #4c1d95 100%); border: 1px solid #c084fc; color: #ffffff; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(192,132,252,0.35); cursor:pointer;" title="MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS: Análise obrigatória 10 concursos, divisões dinâmicas, relações 7/8, 8/7, 6/9, 9/6, consecutividade máx 5, Score B2B e Transparência Matemática.">⚡ MOTOR LOTOFÁCIL (B2B)</button>
+                            <button id="btn-motor-lotomania" class="action-btn" style="flex: 1 1 calc(50% - 5px); margin-top: 4px; padding: 14px 12px; background: linear-gradient(135deg, #0284c7 0%, #0f766e 100%); border: 1px solid #38bdf8; color: #ffffff; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(56,189,248,0.35); cursor:pointer;" title="MOTOR LOTOMANIA — B2B LOTERIAS: 5 Conjuntos estritos de 20 numeros, 10 por conjunto (5x10=50), consecutividade maxima de 4 no jogo ordenado, scoring estatistico e auditoria 10 pontos.">⚛️ MOTOR LOTOMANIA (B2B)</button>
+                        </div>
+
+                        <!-- PAINEL MOTOR LOTOFÁCIL DO B2B LOTERIAS -->
+                        <div id="motor-lotofacil-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(147, 51, 234, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #a855f7; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                <div style="font-size: 1.05rem; font-weight: 800; color: #c084fc; display: flex; align-items: center; gap: 8px;">
+                                    ⚡ MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS
+                                </div>
+                                <span style="font-size: 0.75rem; background: rgba(192, 132, 252, 0.15); color: #e9d5ff; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(192, 132, 252, 0.3); font-weight: 700;">
+                                    Análise 10 Concursos • Divisão Dinâmica • Max Consecutivo ≤ 5
+                                </span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; margin: 0 0 12px 0;">
+                                Exploração combinatória profunda com divisões testadas dinamicamente (<strong style="color:#c084fc;">01-13/14-25, 01-12/13-25, 01-11/12-25</strong>), relações prioritárias (<strong style="color:#a7f3d0;">7/8, 8/7, 6/9, 9/6</strong>), filtro rígido de consecutividade (<strong>≤ 5</strong>), Score B2B multicritério e bloco obrigatório de Verdade Matemática.
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Janela de Análise:</label>
+                                    <select id="select-historico-lotofacil" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(192,132,252,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="10" selected>Últimos 10 Concursos (Obrigatório / Padrão)</option>
+                                        <option value="20">Últimos 20 Concursos</option>
+                                        <option value="50">Últimos 50 Concursos</option>
+                                        <option value="100">Últimos 100 Concursos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia Combinatória:</label>
+                                    <select id="select-estrategia-lotofacil" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(192,132,252,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="equilibrada" selected>Equilibrada (Score B2B + Cobertura)</option>
+                                        <option value="exaustao_prioritaria">Exaustão da Estrutura Principal (7/8 ou 8/7)</option>
+                                        <option value="ampla_cobertura">Ampla Cobertura (Diversificação Máxima)</option>
+                                        <option value="frequencia_pura">Foco em Duplas & Trios Fortes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button id="btn-executar-motor-lotofacil" style="flex: 2; background: linear-gradient(135deg, #7c3aed, #059669); border: 1px solid #a855f7; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(168,85,247,0.4);">
+                                    ⚡ GERAR CARTEIRA (MOTOR LOTOFÁCIL)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PAINEL MOTOR LOTOMANIA DO B2B LOTERIAS -->
+                        <div id="motor-lotomania-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(14, 116, 144, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #0891b2; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                <div style="font-size: 1.05rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+                                    ⚛️ MOTOR LOTOMANIA — B2B LOTERIAS
+                                </div>
+                                <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 700;">
+                                    5 Conjuntos x 10 = 50 Dezenas • C(20,10)⁵
+                                </span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.5; margin: 0 0 12px 0;">
+                                Divisao estrita em 5 conjuntos de 20 numeros (<strong style="color:#a7f3d0;">C1: 01-20, C2: 21-40, C3: 41-60, C4: 61-80, C5: 81-00</strong>). Max. <strong style="color:#fcd34d;">4 consecutivos</strong> no jogo ordenado. Auditoria 10/10 e diversificacao de carteira.
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Historico Utilizado:</label>
+                                    <select id="select-historico-lotomania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="0">Todos os Concursos</option>
+                                        <option value="10">Ultimos 10 Concursos</option>
+                                        <option value="20">Ultimos 20 Concursos</option>
+                                        <option value="50">Ultimos 50 Concursos</option>
+                                        <option value="100" selected>Ultimos 100 Concursos</option>
+                                        <option value="200">Ultimos 200 Concursos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estrategia do Motor:</label>
+                                    <select id="select-estrategia-lotomania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="equilibrada" selected>Equilibrada (Recomendada)</option>
+                                        <option value="frequencia">Frequencia Historica</option>
+                                        <option value="frequencia_recente">Frequencia Recente</option>
+                                        <option value="diversificacao">Diversificacao</option>
+                                        <option value="cobertura_maxima">Cobertura Maxima</option>
+                                        <option value="otimizacao_estatistica">Otimizacao Estatistica</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button id="btn-executar-motor-lotomania" style="flex: 2; background: linear-gradient(135deg, #0284c7, #059669); border: 1px solid #34d399; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(5,150,105,0.4);">
+                                    ⚡ GERAR CARTEIRA (MOTOR LOTOMANIA)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Barra de Progresso (logo abaixo dos botões) -->
+                        <div id="async-progress-inline" style="display:none;margin-top:4px;"></div>
+                        <!-- ROI Preview Container -->
+                        <div id="roi-preview-container" style="display:none;margin-top:8px;"></div>
+
+                        <!-- Botão Precisão removido v11 — era alias do Cobertura -->
+
+
+
+                        <!-- Painel de controle IA -->
+                        <div id="smart-numbers-row" style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 14px;background:linear-gradient(145deg,rgba(139,92,246,0.06),rgba(15,23,42,0.9));border:1px solid rgba(139,92,246,0.2);border-radius:10px;">
+                            <label for="smart-draw-size" style="color:#C4B5FD;font-size:0.85rem;font-weight:700;white-space:nowrap;margin-bottom:0;">
+                                🧠 Nº por Jogo:
+                            </label>
+                            <select id="smart-draw-size" style="max-width:80px;background:rgba(0,0,0,0.4);border:1px solid rgba(139,92,246,0.35);color:#E2E8F0;padding:6px 8px;border-radius:8px;font-size:0.9rem;font-weight:700;cursor:pointer;outline:none;height:36px;">
+                            </select>
+                            
+                            <!-- Toggle Sniper -->
+                            <div style="display:flex;align-items:center;gap:6px;margin-left:auto;background:rgba(0,0,0,0.3);padding:4px 8px;border-radius:8px;border:1px solid rgba(255,215,0,0.2);box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                                <span id="sniper-label-text" style="color:#FCD34D;font-size:0.75rem;font-weight:700;transition:0.3s;">🎯 Sniper</span>
+                                <label style="position:relative;display:inline-block;width:36px;height:20px;margin-bottom:0;">
+                                    <input type="checkbox" id="precision-mode-toggle" style="opacity:0;width:0;height:0;">
+                                    <span class="slider">
+                                        <span class="slider-knob"></span>
+                                    </span>
+                                </label>
+                                <style>
+                                    .slider {
+                                        position: absolute;
+                                        cursor: pointer;
+                                        top: 0; left: 0; right: 0; bottom: 0;
+                                        background-color: #1E293B;
+                                        box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
+                                        transition: .4s;
+                                        border-radius: 20px;
+                                    }
+                                    .slider-knob {
+                                        position: absolute;
+                                        height: 14px;
+                                        width: 14px;
+                                        left: 3px;
+                                        bottom: 3px;
+                                        /* Duas cores internas (desativado) */
+                                        background: radial-gradient(circle at 30% 30%, #E2E8F0 10%, #64748B 90%);
+                                        box-shadow: 0 1px 3px rgba(0,0,0,0.8), inset 0 -1px 2px rgba(0,0,0,0.4);
+                                        transition: .4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                                        border-radius: 50%;
+                                    }
+                                    #precision-mode-toggle:checked + .slider { 
+                                        background-color: #7F1D1D;
+                                        box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(239,68,68,0.4);
+                                    }
+                                    #precision-mode-toggle:checked + .slider .slider-knob { 
+                                        transform: translateX(16px); 
+                                        /* Duas cores internas (ativado) */
+                                        background: radial-gradient(circle at 30% 30%, #FCA5A5 10%, #DC2626 90%);
+                                        box-shadow: 0 0 8px rgba(239,68,68,0.8), inset 0 -1px 2px rgba(153,27,27,0.6);
+                                    }
+                                    #precision-mode-toggle:checked ~ #sniper-label-text {
+                                        text-shadow: 0 0 8px rgba(252, 211, 77, 0.8);
+                                    }
+                                </style>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-panel">
+                    <div class="stats-header">
+                        <h3>Estatísticas</h3>
+                        <div class="stats-controls">
+                            <button class="stat-toggle" data-range="3">3</button>
+                            <button class="stat-toggle" data-range="5">5</button>
+                            <button class="stat-toggle active" data-range="10">10</button>
+                            <button class="stat-toggle" data-range="15">15</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-box hot">
+                            <h4>Mais Sorteados</h4>
+                            <div id="hot-numbers" class="number-list"></div>
+                        </div>
+                        <div class="stat-box cold">
+                            <h4>Menos Sorteados</h4>
+                            <div id="cold-numbers" class="number-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ PAINEL DE FREQUÊNCIA MULTI-FAIXA ═══ -->
+                    <div id="frequency-panel" class="freq-panel">
+                        <div class="freq-panel-header">
+                            <h3>🔥 Frequência dos Números — Mapa de Calor</h3>
+                            <span class="freq-badge">Dados em Tempo Real</span>
+                        </div>
+                        <div id="freq-content">
+                            <div class="freq-loading">
+                                <span class="freq-spinner"></span>
+                                Carregando dados estatísticos...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Painel de Sugestões IA -->
+                    <div class="quantum-card" style="margin-top: 1rem;">
+                        <div class="quantum-shine-bar"></div>
+                        <div class="quantum-header">
+                            <div class="quantum-title-group">
+                                <span class="quantum-icon">✨</span>
+                                <h4>Números Sugeridos</h4>
+                                <span class="quantum-badge">IA</span>
+                            </div>
+                        </div>
+                        <div id="quantum-formula" class="formula-display">Processando padrões...</div>
+                        <div class="quantum-controls-row">
+                            <div class="quantum-input-group">
+                                <label for="quantum-count">Quantidade:</label>
+                                <input type="number" id="quantum-count" min="1" max="100" value="6">
+                            </div>
+                            <button id="btn-quantum-calculate" class="quantum-btn quantum-btn-generate">
+                                <span>⚡</span> Gerar Sugestão
+                            </button>
+                        </div>
+                        <div id="quantum-results" class="quantum-results-area">
+                            <div class="quantum-placeholder">Clique em "Gerar Sugestão" para começar</div>
+                        </div>
+                        <button id="btn-use-quantum" class="quantum-btn quantum-btn-use">
+                            ✓ Usar Estes Números no Jogo
+                        </button>
+        <button id="btn-analyse-selection" class="quantum-btn" style="
+                            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+                            border: 1px solid #6366f140;
+                            color: #a5b4fc;
+                            font-size: 0.75rem;
+                            padding: 8px 14px;
+                            margin-top: 6px;
+                            width: 100%;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#6366f140'">
+                            🔬 Analisar Minha Seleção (12 Dimensões)
+                        </button>
+                        <!-- Botão de análise de grupos — exclusivo Lotofácil -->
+                        <button id="btn-group-analysis" class="quantum-btn" style="
+                            background: linear-gradient(135deg, #4a044e 0%, #701a75 100%);
+                            border: 1px solid #c026d340;
+                            color: #f0abfc;
+                            font-size: 0.75rem;
+                            padding: 8px 14px;
+                            margin-top: 5px;
+                            width: 100%;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                            display: none;
+                        " onmouseover="this.style.borderColor='#c026d3'" onmouseout="this.style.borderColor='#c026d340'">
+                            🎯 Análise por Grupos (5×5) — Lotofácil
+                        </button>
+                        <!-- ⚡ ESTRATÉGIA DUAL 2 GRUPOS — EXCLUSIVO LOTOFÁCIL -->
+                        <button id="btn-dual-strategy" class="quantum-btn" style="
+                            background: linear-gradient(135deg, #1a0533 0%, #3b0764 50%, #4c1d95 100%);
+                            border: 2px solid #7c3aed80;
+                            color: #c4b5fd;
+                            font-size: 0.78rem;
+                            font-weight: 700;
+                            padding: 10px 14px;
+                            margin-top: 6px;
+                            width: 100%;
+                            border-radius: 10px;
+                            cursor: pointer;
+                            transition: all 0.25s;
+                            display: none;
+                            letter-spacing: 0.3px;
+                            box-shadow: 0 4px 15px rgba(124,58,237,0.25);
+                        "
+                        onmouseover="this.style.borderColor='#7c3aed';this.style.boxShadow='0 6px 20px rgba(124,58,237,0.45)';this.style.color='#e9d5ff';"
+                        onmouseout="this.style.borderColor='#7c3aed80';this.style.boxShadow='0 4px 15px rgba(124,58,237,0.25)';this.style.color='#c4b5fd';">
+                            ⚡ Estratégia Dual 2G — Gerar Jogos Lotofácil
+                        </button>
+                        <div id="ae-manual-container"></div>
+                        <div id="lge-group-container"></div>
+                        <div id="dual-strategy-container"></div>
+                    </div>
+
+                </div>
+                <!-- STATS PANEL END (includes Quantum) -->
+
+                <div class="results-area">
+                    <div class="results-header">
+                        <h3>Jogos Gerados</h3>
+                        <div class="results-actions">
+                            <button id="save-btn" class="secondary-btn" title="Salvar Jogos">Salvar</button>
+                            <button id="copy-btn" class="secondary-btn" title="Copiar para Área de Transferência">Copiar</button>
+                            <button id="btn-print" class="secondary-btn" title="Imprimir Jogos">Imprimir</button>
+                            <button id="check-btn" class="secondary-btn" title="Conferir Jogos">Conferir</button>
+                            <a id="btn-play-caixa" class="secondary-btn" href="https://www.loteriasonline.caixa.gov.br/silce-web/#/mega-sena" target="_blank" rel="noopener" title="Ir para Loterias Caixa Online" style="text-decoration:none;">Jogar Online</a>
+                            <button id="btn-compare" class="secondary-btn" title="Comparar eficiência: Manual vs Cobertura IA vs Sniper">⚔️ Comparar</button>
+                        </div>
+                    </div>
+                    <div id="check-summary" class="check-summary"
+                        style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--primary-color); display: none;">
+                    </div>
+                    <div id="games-container" class="games-grid">
+                        <div class="empty-state">Selecione as opções e clique em Gerar Jogos</div>
+                    </div>
+                </div>
+                <div id="comparison-container" style="display:none;"></div>
+            </main>
+
+            <aside class="investment-sidebar">
+                <div class="sidebar-card investment-card" style="border: 2px solid #FFD700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); margin-top: 1.5rem; margin-bottom: 0;">
+                    <h3 style="color: #FFD700;">Simulador de Custo</h3>
+                    <div class="cost-summary">
+                        <div class="cost-row">
+                            <span>Números Selecionados</span>
+                            <strong id="cost-selected-count">0</strong>
+                        </div>
+                        <div class="cost-row">
+                            <span>Combinações Totais</span>
+                            <strong id="cost-total-combinations">0</strong>
+                        </div>
+                        <div class="cost-row" style="margin-top: 8px; padding: 8px 0; border-top: 1px solid rgba(255,215,0,0.2); border-bottom: 1px solid rgba(255,215,0,0.2);">
+                            <span style="color: #10B981; font-weight: 600;">💰 Custo da Sua Aposta</span>
+                            <strong id="cost-user-games" style="color: #10B981; font-size: 1.1rem;">R$ 0,00</strong>
+                        </div>
+                        <div class="cost-row" style="font-size: 0.75rem; opacity: 0.7; margin-top: 2px;">
+                            <span id="cost-user-games-detail"></span>
+                        </div>
+                        <div class="cost-total">
+                            <span>Preço Total (todas combinações)</span>
+                            <strong id="cost-total-value">R$ 0,00</strong>
+                        </div>
+                    </div>
+                    <div class="closing-estimates" id="closing-estimates">
+                        <!-- Injected by JS -->
+                        <p class="helper-text">Selecione mais números para ver estimativas de fechamento.</p>
+                    </div>
+                </div>
+
+                <!-- ═══ ROI GUARDIAN v1.0 ═══ -->
+                <div id="roi-guardian-panel" class="sidebar-card" style="margin-top: 0.15rem; background: linear-gradient(145deg, rgba(15,23,42,0.98), rgba(30,41,59,0.95)); border: 2px solid rgba(239,68,68,0.25); border-radius: var(--radius-sm); padding: 0; box-shadow: 0 0 15px rgba(239,68,68,0.1); overflow: hidden;">
+                    <div style="padding: 12px 16px 6px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.1rem;">🛡️</span>
+                        <h3 style="font-size: 0.9rem; color: #F87171; margin: 0; font-weight: 800; letter-spacing: 0.5px;">ROI GUARDIAN</h3>
+                        <span style="margin-left: auto; font-size: 0.6rem; color: #475569; font-weight: 600;">v1.0</span>
+                    </div>
+                    <div id="roi-guardian-content" style="padding: 0 8px 8px;">
+                        <div style="text-align: center; padding: 16px; color: #64748b; font-size: 0.75rem;">Selecione a loteria e quantidade de jogos para ver a análise ROI</div>
+                    </div>
+                </div>
+
+                <!-- ═══ SMART ADVISOR v1.0 ═══ -->
+                <div id="smart-advisor-panel" class="sidebar-card" style="margin-top: 0.15rem; background: linear-gradient(145deg, rgba(15,23,42,0.98), rgba(30,41,59,0.95)); border: 2px solid rgba(251,191,36,0.25); border-radius: var(--radius-sm); padding: 0; box-shadow: 0 0 15px rgba(251,191,36,0.1); overflow: hidden;">
+                    <div id="smart-advisor-content" style="padding:0;">
+                        <div style="text-align: center; padding: 16px; color: #64748b; font-size: 0.75rem;">Carregando ranking de loterias...</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card recent-results-card"
+                    style="margin-top: 0.15rem; background: var(--bg-main); border: 2px solid #FFD700; border-radius: var(--radius-sm); padding: 1rem; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--primary-accent);">Últimos Resultados
+                    </h3>
+                    <div id="recent-results-list" class="recent-list">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Botões Modernos da Sidebar -->
+                <style>
+                    .sidebar-action-card {
+                        margin-top: 0.5rem;
+                        background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+                        border: 1px solid rgba(255, 215, 0, 0.25);
+                        border-radius: 12px;
+                        padding: 0.6rem;
+                        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+                        backdrop-filter: blur(10px);
+                    }
+                    .sidebar-modern-btn {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.6rem;
+                        padding: 0.65rem 0.8rem;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        position: relative;
+                        overflow: hidden;
+                        border: 1px solid transparent;
+                    }
+                    .sidebar-modern-btn::before {
+                        content: '';
+                        position: absolute;
+                        top: 0; left: -100%;
+                        width: 100%; height: 100%;
+                        background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.08), transparent);
+                        transition: left 0.5s ease;
+                    }
+                    .sidebar-modern-btn:hover::before {
+                        left: 100%;
+                    }
+                    .sidebar-modern-btn:hover {
+                        background: rgba(255, 215, 0, 0.08);
+                        border-color: rgba(255, 215, 0, 0.3);
+                        transform: translateX(3px);
+                        box-shadow: 0 2px 12px rgba(255, 215, 0, 0.15);
+                    }
+                    .sidebar-modern-btn:active {
+                        transform: translateX(3px) scale(0.98);
+                    }
+                    .sidebar-btn-icon {
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.15rem;
+                        flex-shrink: 0;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                    }
+                    .sidebar-modern-btn:hover .sidebar-btn-icon {
+                        transform: scale(1.1) rotate(-5deg);
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                    }
+                    .sidebar-btn-icon.tutorial-icon {
+                        background: linear-gradient(135deg, #10B981, #059669);
+                    }
+                    .sidebar-btn-icon.install-icon {
+                        background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+                    }
+                    .sidebar-btn-icon.backup-icon {
+                        background: linear-gradient(135deg, #F59E0B, #D97706);
+                    }
+                    .sidebar-btn-text {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1px;
+                    }
+                    .sidebar-btn-title {
+                        font-size: 0.78rem;
+                        font-weight: 700;
+                        color: #F1F5F9;
+                        letter-spacing: 0.3px;
+                        text-transform: uppercase;
+                        margin: 0;
+                        line-height: 1.2;
+                    }
+                    .sidebar-btn-desc {
+                        font-size: 0.65rem;
+                        color: #94A3B8;
+                        margin: 0;
+                        line-height: 1.3;
+                    }
+                    .sidebar-btn-arrow {
+                        margin-left: auto;
+                        font-size: 0.9rem;
+                        color: rgba(255, 215, 0, 0.5);
+                        transition: all 0.3s ease;
+                    }
+                    .sidebar-modern-btn:hover .sidebar-btn-arrow {
+                        color: #FFD700;
+                        transform: translateX(3px);
+                    }
+                    .sidebar-divider {
+                        height: 1px;
+                        background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+                        margin: 0.25rem 0.5rem;
+                    }
+                </style>
+                <div class="sidebar-action-card">
+                    <div id="btn-tutorial" class="sidebar-modern-btn">
+                        <div class="sidebar-btn-icon tutorial-icon">📚</div>
+                        <div class="sidebar-btn-text">
+                            <h3 class="sidebar-btn-title">Aprenda a Navegar</h3>
+                            <p class="sidebar-btn-desc">Guia completo do sistema v14.0</p>
+                        </div>
+                        <span class="sidebar-btn-arrow">›</span>
+                    </div>
+                    <div class="sidebar-divider"></div>
+                    <a id="btn-install" class="sidebar-modern-btn" href="INSTALAR_B2B.html" target="_blank" style="text-decoration:none;">
+                        <div class="sidebar-btn-icon install-icon">📲</div>
+                        <div class="sidebar-btn-text">
+                            <h3 class="sidebar-btn-title">Instalar no Dispositivo</h3>
+                            <p class="sidebar-btn-desc">Instalar como app no PC ou celular</p>
+                        </div>
+                        <span class="sidebar-btn-arrow">›</span>
+                    </a>
+                    <div class="sidebar-divider"></div>
+                    <div id="btn-backup" class="sidebar-modern-btn">
+                        <div class="sidebar-btn-icon backup-icon">💾</div>
+                        <div class="sidebar-btn-text">
+                            <h3 class="sidebar-btn-title">Backup dos Jogos</h3>
+                            <p class="sidebar-btn-desc">Exportar e restaurar seus jogos salvos</p>
+                        </div>
+                        <span class="sidebar-btn-arrow">›</span>
+                    </div>
+                    <div class="sidebar-divider"></div>
+                    <div id="btn-share-link" class="sidebar-modern-btn" title="Copiar link para instalar em outro dispositivo">
+                        <div class="sidebar-btn-icon link-icon">🔗</div>
+                        <div class="sidebar-btn-text">
+                            <h3 class="sidebar-btn-title">Copiar Link de Instalação</h3>
+                            <p class="sidebar-btn-desc">Copiar link para enviar e instalar</p>
+                        </div>
+                        <span class="sidebar-btn-arrow">›</span>
+                    </div>
+                    <div class="sidebar-divider"></div>
+                    <div id="btn-zip-download" class="sidebar-modern-btn" style="cursor:pointer;" onclick="
+                        (function(){
+                            var isLocal = window.location.protocol === 'http:' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+                            if(isLocal){
+                                window.location.href = '/gerar-zip';
+                            } else {
+                                window.open('https://github.com/luissaviobrun17-alt/loterias-caixa/archive/refs/heads/main.zip','_blank');
+                            }
+                        })();
+                    ">
+                        <div class="sidebar-btn-icon" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">📦</div>
+                        <div class="sidebar-btn-text">
+                            <h3 class="sidebar-btn-title">Baixar ZIP Completo</h3>
+                            <p class="sidebar-btn-desc">Download offline para outro PC</p>
+                        </div>
+                        <span class="sidebar-btn-arrow">›</span>
+                    </div>
+                    <div class="sidebar-divider"></div>
+                    <a id="btn-caixa-link" class="sidebar-modern-btn" href="https://www.loteriasonline.caixa.gov.br/silce-web/#/mega-sena" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;">
+                        <div class="sidebar-btn-icon" style="background: linear-gradient(135deg, #0066CC, #003D80);">🏦</div>
+                        <div class="sidebar-btn-text">
+                            <h3 class="sidebar-btn-title">Apostar na Caixa</h3>
+                            <p class="sidebar-btn-desc">Abrir site oficial Loterias Online</p>
+                        </div>
+                        <span class="sidebar-btn-arrow">›</span>
+                    </a>
+                    <div class="sidebar-divider"></div>
+                    <div id="btn-statistics" class="sidebar-modern-btn" style="cursor:pointer;">
+                        <div class="sidebar-btn-icon stats-icon">📊</div>
+                        <div class="sidebar-btn-text">
+                            <h3 class="sidebar-btn-title">Estatísticas</h3>
+                            <p class="sidebar-btn-desc">Resultados, conferência e ROI dos 3 motores</p>
+                        </div>
+                        <span class="sidebar-btn-arrow">›</span>
+                    </div>
+                    <div class="sidebar-divider"></div>
+                    <div id="btn-mobile-download" class="sidebar-modern-btn" onclick="document.getElementById('mobile-links-panel').style.display = document.getElementById('mobile-links-panel').style.display === 'none' ? 'block' : 'none'" style="cursor:pointer;">
+                        <div class="sidebar-btn-icon" style="background: linear-gradient(135deg, #10B981, #047857);">📱</div>
+                        <div class="sidebar-btn-text">
+                            <h3 class="sidebar-btn-title">Versão Mobile</h3>
+                            <p class="sidebar-btn-desc">Apostar direto no celular iOS / Android</p>
+                        </div>
+                        <span class="sidebar-btn-arrow">›</span>
+                    </div>
+                    <!-- PAINEL MOBILE EXPANDÍVEL -->
+                    <div id="mobile-links-panel" style="display:none;padding:12px;background:linear-gradient(145deg,rgba(16,185,129,0.08),rgba(15,23,42,0.95));border:1px solid #10B98130;border-radius:12px;margin-top:8px;">
+                        <div style="color:#10B981;font-weight:800;font-size:0.85rem;margin-bottom:10px;text-align:center;">📱 Jogar no Celular</div>
+                        
+                        <!-- APP STORES -->
+                        <div style="display:flex;gap:8px;margin-bottom:12px;">
+                            <a href="https://apps.apple.com/br/app/loterias-caixa/id1560707893" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;gap:6px;padding:10px;background:linear-gradient(135deg,#334155,#1E293B);border:1px solid #47556940;border-radius:10px;text-decoration:none;transition:all 0.3s;">
+                                <span style="font-size:1.4rem;">🍎</span>
+                                <div>
+                                    <div style="color:#94A3B8;font-size:0.6rem;">Baixar na</div>
+                                    <div style="color:#E2E8F0;font-weight:700;font-size:0.78rem;">App Store</div>
+                                </div>
+                            </a>
+                            <a href="https://play.google.com/store/apps/details?id=br.com.caixa.loterias" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;gap:6px;padding:10px;background:linear-gradient(135deg,#334155,#1E293B);border:1px solid #47556940;border-radius:10px;text-decoration:none;transition:all 0.3s;">
+                                <span style="font-size:1.4rem;">🤖</span>
+                                <div>
+                                    <div style="color:#94A3B8;font-size:0.6rem;">Disponível no</div>
+                                    <div style="color:#E2E8F0;font-weight:700;font-size:0.78rem;">Google Play</div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- LINKS DIRETOS POR LOTERIA -->
+                        <div style="color:#94A3B8;font-size:0.68rem;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">🎯 Apostar direto no celular:</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+                            <a href="https://www.loteriasonline.caixa.gov.br/silce-web/#/mega-sena" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:7px 10px;background:rgba(32,130,70,0.15);border:1px solid #20824620;border-radius:8px;text-decoration:none;color:#22C55E;font-size:0.72rem;font-weight:600;transition:all 0.2s;" onmouseenter="this.style.background='rgba(32,130,70,0.3)'" onmouseleave="this.style.background='rgba(32,130,70,0.15)'">🟢 Mega-Sena</a>
+                            <a href="https://www.loteriasonline.caixa.gov.br/silce-web/#/lotofacil" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:7px 10px;background:rgba(128,0,128,0.12);border:1px solid #80008020;border-radius:8px;text-decoration:none;color:#C084FC;font-size:0.72rem;font-weight:600;transition:all 0.2s;" onmouseenter="this.style.background='rgba(128,0,128,0.25)'" onmouseleave="this.style.background='rgba(128,0,128,0.12)'">🟣 Lotofácil</a>
+                            <a href="https://www.loteriasonline.caixa.gov.br/silce-web/#/quina" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:7px 10px;background:rgba(0,76,153,0.15);border:1px solid #004C9920;border-radius:8px;text-decoration:none;color:#60A5FA;font-size:0.72rem;font-weight:600;transition:all 0.2s;" onmouseenter="this.style.background='rgba(0,76,153,0.3)'" onmouseleave="this.style.background='rgba(0,76,153,0.15)'">🔵 Quina</a>
+                            <a href="https://www.loteriasonline.caixa.gov.br/silce-web/#/lotomania" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:7px 10px;background:rgba(255,140,0,0.12);border:1px solid #FF8C0020;border-radius:8px;text-decoration:none;color:#FB923C;font-size:0.72rem;font-weight:600;transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,140,0,0.25)'" onmouseleave="this.style.background='rgba(255,140,0,0.12)'">🟠 Lotomania</a>
+                            <a href="https://www.loteriasonline.caixa.gov.br/silce-web/#/dupla-sena" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:7px 10px;background:rgba(220,38,38,0.12);border:1px solid #DC262620;border-radius:8px;text-decoration:none;color:#F87171;font-size:0.72rem;font-weight:600;transition:all 0.2s;" onmouseenter="this.style.background='rgba(220,38,38,0.25)'" onmouseleave="this.style.background='rgba(220,38,38,0.12)'">🔴 Dupla Sena</a>
+                            <a href="https://www.loteriasonline.caixa.gov.br/silce-web/#/timemania" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:7px 10px;background:rgba(234,179,8,0.12);border:1px solid #EAB30820;border-radius:8px;text-decoration:none;color:#FACC15;font-size:0.72rem;font-weight:600;transition:all 0.2s;" onmouseenter="this.style.background='rgba(234,179,8,0.25)'" onmouseleave="this.style.background='rgba(234,179,8,0.12)'">🟡 Timemania</a>
+                            <a href="https://www.loteriasonline.caixa.gov.br/silce-web/#/dia-de-sorte" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:7px 10px;background:rgba(16,185,129,0.12);border:1px solid #10B98120;border-radius:8px;text-decoration:none;color:#34D399;font-size:0.72rem;font-weight:600;transition:all 0.2s;grid-column:span 2;justify-content:center;" onmouseenter="this.style.background='rgba(16,185,129,0.25)'" onmouseleave="this.style.background='rgba(16,185,129,0.12)'">🍀 Dia de Sorte</a>
+                        </div>
+
+                        <!-- DOWNLOAD ZIP MOBILE -->
+                        <div style="margin-top:10px;border-top:1px solid #334155;padding-top:8px;">
+                            <a href="https://luissaviobrun17-alt.github.io/loterias-caixa/B2B_Loterias_Mobile.html" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;background:linear-gradient(135deg,#1E293B,#0F172A);border:1px solid #33415530;border-radius:8px;text-decoration:none;color:#94A3B8;font-size:0.7rem;transition:all 0.2s;" onmouseenter="this.style.borderColor='#10B98150'" onmouseleave="this.style.borderColor='#33415530'">
+                                📱 Abrir versão Mobile (online)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Menu de Compartilhamento -->
+                <style>
+                    .sidebar-btn-icon.link-icon {
+                        background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+                    }
+                    .share-context-menu {
+                        display: none;
+                        position: fixed;
+                        z-index: 10000;
+                        min-width: 220px;
+                        background: linear-gradient(145deg, #1a1f35, #0f172a);
+                        border: 1px solid rgba(255, 215, 0, 0.3);
+                        border-radius: 12px;
+                        padding: 0.5rem;
+                        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.1);
+                        backdrop-filter: blur(20px);
+                        animation: shareMenuIn 0.2s ease-out;
+                    }
+                    @keyframes shareMenuIn {
+                        from { opacity: 0; transform: scale(0.9) translateY(-5px); }
+                        to { opacity: 1; transform: scale(1) translateY(0); }
+                    }
+                    .share-menu-title {
+                        font-size: 0.7rem;
+                        color: #94A3B8;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        padding: 0.3rem 0.8rem;
+                        margin-bottom: 0.2rem;
+                        font-weight: 600;
+                    }
+                    .share-menu-item {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.6rem;
+                        padding: 0.55rem 0.8rem;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        border: 1px solid transparent;
+                        text-decoration: none;
+                        color: #E2E8F0;
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                    }
+                    .share-menu-item:hover {
+                        background: rgba(255, 215, 0, 0.08);
+                        border-color: rgba(255, 215, 0, 0.2);
+                        transform: translateX(3px);
+                    }
+                    .share-menu-item .share-icon {
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 8px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 0.95rem;
+                        flex-shrink: 0;
+                    }
+                    .share-icon.whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); }
+                    .share-icon.telegram { background: linear-gradient(135deg, #0088cc, #005f8c); }
+                    .share-icon.facebook { background: linear-gradient(135deg, #1877F2, #0d47a1); }
+                    .share-icon.twitter { background: linear-gradient(135deg, #1DA1F2, #0d8bd9); }
+                    .share-icon.email { background: linear-gradient(135deg, #EA4335, #c62828); }
+                    .share-icon.linkedin { background: linear-gradient(135deg, #0A66C2, #004182); }
+                    .share-icon.copy-link { background: linear-gradient(135deg, #F59E0B, #D97706); }
+                    .share-menu-divider {
+                        height: 1px;
+                        background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.15), transparent);
+                        margin: 0.3rem 0.5rem;
+                    }
+                </style>
+                <div id="share-context-menu" class="share-context-menu">
+                    <div class="share-menu-title">📤 Compartilhar via</div>
+                    <div class="share-menu-item" data-share="whatsapp">
+                        <span class="share-icon whatsapp">💬</span> WhatsApp
+                    </div>
+                    <div class="share-menu-item" data-share="telegram">
+                        <span class="share-icon telegram">✈️</span> Telegram
+                    </div>
+                    <div class="share-menu-divider"></div>
+                    <div class="share-menu-item" data-share="facebook">
+                        <span class="share-icon facebook">👤</span> Facebook
+                    </div>
+                    <div class="share-menu-item" data-share="twitter">
+                        <span class="share-icon twitter">𝕏</span> X (Twitter)
+                    </div>
+                    <div class="share-menu-item" data-share="linkedin">
+                        <span class="share-icon linkedin">💼</span> LinkedIn
+                    </div>
+                    <div class="share-menu-item" data-share="instagram">
+                        <span class="share-icon" style="background:linear-gradient(135deg,#E1306C,#833AB4,#F77737);">📸</span> Instagram
+                    </div>
+                    <div class="share-menu-divider"></div>
+                    <div class="share-menu-item" data-share="email">
+                        <span class="share-icon email">📧</span> Enviar por E-mail
+                    </div>
+                    <div class="share-menu-item" data-share="sms">
+                        <span class="share-icon" style="background:linear-gradient(135deg,#10B981,#047857);">📱</span> Enviar por SMS
+                    </div>
+                    <div class="share-menu-divider"></div>
+                    <div style="padding:0.4rem 0.8rem;">
+                        <div style="color:#10B981;font-size:0.7rem;font-weight:700;margin-bottom:6px;">📱 Abrir no Celular</div>
+                        <div style="display:flex;gap:6px;margin-bottom:6px;">
+                            <span style="background:rgba(16,185,129,0.1);border:1px solid #10B98130;border-radius:6px;padding:3px 8px;font-size:0.65rem;color:#34D399;">🍎 iOS</span>
+                            <span style="background:rgba(16,185,129,0.1);border:1px solid #10B98130;border-radius:6px;padding:3px 8px;font-size:0.65rem;color:#34D399;">🤖 Android</span>
+                            <span style="background:rgba(16,185,129,0.1);border:1px solid #10B98130;border-radius:6px;padding:3px 8px;font-size:0.65rem;color:#34D399;">💻 PC</span>
+                        </div>
+                        <div style="background:#0F172A;border:1px solid #334155;border-radius:6px;padding:6px 8px;font-size:0.62rem;color:#60A5FA;word-break:break-all;cursor:pointer;user-select:all;" onclick="navigator.clipboard.writeText('https://luissaviobrun17-alt.github.io/loterias-caixa/');this.style.borderColor='#22C55E';this.innerHTML='✅ Link copiado!';setTimeout(()=>{this.innerHTML='https://luissaviobrun17-alt.github.io/loterias-caixa/';this.style.borderColor='#334155'},2000)">https://luissaviobrun17-alt.github.io/loterias-caixa/</div>
+                        <div style="color:#94A3B8;font-size:0.58rem;margin-top:4px;text-align:center;">Clique no link acima para copiar • Funciona em qualquer celular</div>
+                    </div>
+                    <div class="share-menu-divider"></div>
+                    <div class="share-menu-item" data-share="qrcode">
+                        <span class="share-icon" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9);">📷</span> Gerar QR Code
+                    </div>
+                    <div class="share-menu-item" data-share="copy">
+                        <span class="share-icon copy-link">📋</span> Copiar Link
+                    </div>
+                </div>
+
+                <script>
+                (function() {
+                    const shareBtn = document.getElementById('btn-share-link');
+                    const shareMenu = document.getElementById('share-context-menu');
+                    const shareUrl = 'https://luissaviobrun17-alt.github.io/loterias-caixa/';
+                    const shareTitle = 'B2B Loterias QUANTUM L99 - Motor de Predição Inteligente';
+                    const shareText = '🍀 B2B Loterias QUANTUM L99 — Motor de 18 camadas de predição para Loterias da Caixa! Mega Sena, Lotofácil, Quina, Dupla Sena, Lotomania, Timemania e Dia de Sorte. Funciona no celular! 📱';
+
+                    // Clique esquerdo - abre o menu também
+                    shareBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showShareMenu(e.clientX, e.clientY);
+                    });
+
+                    // Botão direito - abre menu customizado
+                    shareBtn.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showShareMenu(e.clientX, e.clientY);
+                    });
+
+                    function showShareMenu(x, y) {
+                        shareMenu.style.display = 'block';
+                        // Posicionar o menu
+                        const menuRect = shareMenu.getBoundingClientRect();
+                        const viewW = window.innerWidth;
+                        const viewH = window.innerHeight;
+                        
+                        let posX = x;
+                        let posY = y;
+                        
+                        if (x + menuRect.width > viewW) posX = viewW - menuRect.width - 10;
+                        if (y + menuRect.height > viewH) posY = viewH - menuRect.height - 10;
+                        if (posX < 5) posX = 5;
+                        if (posY < 5) posY = 5;
+                        
+                        shareMenu.style.left = posX + 'px';
+                        shareMenu.style.top = posY + 'px';
+                    }
+
+                    // Fechar menu ao clicar fora
+                    document.addEventListener('click', function(e) {
+                        if (!shareMenu.contains(e.target) && e.target !== shareBtn && !shareBtn.contains(e.target)) {
+                            shareMenu.style.display = 'none';
+                        }
+                    });
+
+                    document.addEventListener('contextmenu', function(e) {
+                        if (!shareBtn.contains(e.target)) {
+                            shareMenu.style.display = 'none';
+                        }
+                    });
+
+                    // Ações de compartilhamento
+                    shareMenu.querySelectorAll('.share-menu-item').forEach(function(item) {
+                        item.addEventListener('click', function() {
+                            const type = this.dataset.share;
+                            const encodedUrl = encodeURIComponent(shareUrl);
+                            const encodedText = encodeURIComponent(shareText);
+                            const encodedTitle = encodeURIComponent(shareTitle);
+                            let url = '';
+
+                            switch(type) {
+                                case 'whatsapp':
+                                    url = 'https://wa.me/?text=' + encodedText + '%20' + encodedUrl;
+                                    break;
+                                case 'telegram':
+                                    url = 'https://t.me/share/url?url=' + encodedUrl + '&text=' + encodedText;
+                                    break;
+                                case 'facebook':
+                                    url = 'https://www.facebook.com/sharer/sharer.php?u=' + encodedUrl;
+                                    break;
+                                case 'twitter':
+                                    url = 'https://x.com/intent/tweet?text=' + encodedText + '&url=' + encodedUrl;
+                                    break;
+                                case 'linkedin':
+                                    url = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodedUrl;
+                                    break;
+                                case 'email':
+                                    url = 'mailto:?subject=' + encodedTitle + '&body=' + encodedText + '%0A%0A' + encodedUrl;
+                                    break;
+                                case 'sms':
+                                    url = 'sms:?body=' + encodedText + '%20' + encodedUrl;
+                                    break;
+                                case 'instagram':
+                                    navigator.clipboard.writeText(shareUrl + '\n\n' + shareText).then(function() {
+                                        alert('📸 Link copiado!\n\nO Instagram não permite compartilhar links diretamente.\n\n✅ O link já está copiado!\n\nCole nos Stories ou na Bio do seu perfil.');
+                                    }).catch(function() {
+                                        prompt('📸 Copie o link para compartilhar no Instagram:', shareUrl);
+                                    });
+                                    window.open('https://www.instagram.com/', '_blank');
+                                    shareMenu.style.display = 'none';
+                                    return;
+                                case 'qrcode':
+                                    var qrModal = document.createElement('div');
+                                    qrModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+                                    qrModal.innerHTML = '<div style="background:linear-gradient(145deg,#0F172A,#1E293B);border-radius:16px;border:1px solid #10B98140;padding:24px;text-align:center;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
+                                        '<div style="color:#10B981;font-weight:800;font-size:1.1rem;margin-bottom:4px;">📱 QR Code — B2B Loterias</div>' +
+                                        '<div style="color:#94A3B8;font-size:0.75rem;margin-bottom:16px;">Escaneie com a câmera do celular (iOS / Android)</div>' +
+                                        '<div style="background:white;padding:16px;border-radius:12px;display:inline-block;margin-bottom:16px;">' +
+                                        '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodedUrl + '" alt="QR Code B2B Loterias" style="width:200px;height:200px;display:block;" />' +
+                                        '</div>' +
+                                        '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px;">' +
+                                        '<span style="background:rgba(16,185,129,0.15);border:1px solid #10B98130;border-radius:6px;padding:4px 10px;font-size:0.7rem;color:#34D399;">🍎 iPhone</span>' +
+                                        '<span style="background:rgba(16,185,129,0.15);border:1px solid #10B98130;border-radius:6px;padding:4px 10px;font-size:0.7rem;color:#34D399;">🤖 Android</span>' +
+                                        '</div>' +
+                                        '<div style="color:#60A5FA;font-size:0.68rem;word-break:break-all;margin-bottom:12px;padding:6px;background:#0F172A;border-radius:6px;border:1px solid #334155;">' + shareUrl + '</div>' +
+                                        '<button onclick="this.parentElement.parentElement.remove()" style="background:linear-gradient(135deg,#EF4444,#DC2626);color:white;border:none;padding:10px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.85rem;">Fechar</button>' +
+                                        '</div>';
+                                    document.body.appendChild(qrModal);
+                                    qrModal.addEventListener('click', function(e) { if (e.target === qrModal) qrModal.remove(); });
+                                    shareMenu.style.display = 'none';
+                                    return;
+                                case 'copy':
+                                    navigator.clipboard.writeText(shareUrl).then(function() {
+                                        const original = item.innerHTML;
+                                        item.innerHTML = '<span class="share-icon copy-link">✅</span> Link copiado!';
+                                        setTimeout(function() { item.innerHTML = original; }, 2000);
+                                    }).catch(function() {
+                                        prompt('Copie o link abaixo:', shareUrl);
+                                    });
+                                    shareMenu.style.display = 'none';
+                                    return;
+                            }
+
+                            if (url) window.open(url, '_blank', 'width=600,height=400');
+                            shareMenu.style.display = 'none';
+                        });
+                    });
+                })();
+                </script>
+            </aside>
+        </div>
+
+
+
+
+    </div>
+
+    <!-- ═══ MODAL ESTATÍSTICAS ═══ -->
+    <div id="stats-modal-overlay" class="stats-modal-overlay">
+        <div class="stats-modal">
+            <div class="stats-modal-header">
+                <h2>📊 Estatísticas L99 — Relatório Preciso de Conferência</h2>
+                <button id="stats-modal-close" class="stats-modal-close">✕</button>
+            </div>
+
+            <!-- Lottery Selector -->
+            <div id="stats-lottery-grid" class="stats-lottery-grid">
+                <!-- JS injects lottery buttons -->
+            </div>
+
+            <!-- Filters -->
+            <div id="stats-filter-bar" class="stats-filter-bar" style="display:none;">
+                <label>🔍 Filtros:</label>
+                <select id="stats-filter-modo"><option value="todos">Modo: Todos</option><option value="manual">🎲 Manual</option><option value="estatistica">📊 Estatística</option><option value="cobertura">📐 Cobertura</option><option value="cobertura_sniper">📐🎯 Cobertura+Sniper</option><option value="quantum_l99">⚡ QUANTUM L99</option><option value="precision">🎯 Precisão</option><option value="fechamento">🔒 Fechamento</option></select>
+                <select id="stats-filter-precisao"><option value="todos">Precisão: Todos</option><option value="sim">🎯 Precisão L99</option><option value="nao">Sem Precisão</option></select>
+                <select id="stats-filter-qtd"><option value="todos">Qtd Jogos: Todos</option></select>
+                <select id="stats-filter-numjogo"><option value="todos">Nº/Jogo: Todos</option></select>
+            </div>
+
+            <!-- Totals -->
+            <div id="stats-totals" class="stats-totals" style="display:none;">
+                <!-- JS injects totals cards -->
+            </div>
+
+            <!-- Table -->
+            <div id="stats-table-area">
+                <div class="stats-empty">
+                    <div class="stats-empty-icon">📊</div>
+                    <div class="stats-empty-title">Selecione uma loteria acima</div>
+                    <div class="stats-empty-desc">Clique em uma das loterias para ver o histórico de conferências.<br>Os dados são alimentados automaticamente ao conferir resultados.</div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div id="stats-actions" class="stats-actions-bar" style="display:none;">
+                <button id="stats-export-csv" class="stats-action-btn">📥 Exportar CSV</button>
+                <button id="stats-import-csv" class="stats-action-btn">📤 Importar CSV</button>
+                <button id="stats-clear" class="stats-action-btn danger">🗑️ Limpar Dados</button>
+                <input type="file" id="stats-import-input" accept=".csv" style="display:none;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Checking Games -->
+    <div id="check-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Conferir Resultado</h3>
+                <button class="close-check-modal"
+                    style="background:none; border:none; font-size:1.5rem; color:var(--text-primary); cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:10px; color:var(--text-secondary);">Digite o Número do Concurso ou os Números
+                    Sorteados:</p>
+                <div class="input-group" style="margin-bottom:15px;">
+                    <input type="text" id="check-input-numbers" placeholder="Ex: 2500 ou 01 02 03 04 05..."
+                        style="width:100%; font-size:1.2rem; padding:10px;">
+                </div>
+
+                <div class="load-saved-section"
+                    style="margin-bottom: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                    <p style="margin-bottom:5px; color:var(--text-secondary); font-size:0.9rem;">Ou carregue jogos salvos da pasta L99:</p>
+                    <input type="file" id="load-games-input" accept=".txt" style="display:none;">
+                    <button id="btn-listar-jogos-salvos" style="width:100%;padding:10px 16px;background:linear-gradient(135deg,#1E40AF,#3B82F6);color:#fff;border:1px solid #60A5FA50;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.85rem;margin-bottom:8px;transition:all 0.3s;">📂 Carregar da Pasta LOTERIAS JOGOS SALVOS L99</button>
+                    <div id="saved-games-list" style="display:none;max-height:200px;overflow-y:auto;border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:rgba(0,0,0,0.3);"></div>
+                </div>
+                <div class="check-actions" style="text-align:right;">
+                    <button id="confirm-check-btn" class="action-btn">Verificar Jogos</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Installation Modal -->
+    <div id="install-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>📲 Como Instalar o Gerador</h3>
+                <button class="close-install-modal"
+                    style="background:none; border:none; font-size:1.5rem; color:var(--text-primary); cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:15px; color:var(--text-primary);">Siga os passos abaixo para criar um atalho na sua área de trabalho:</p>
+                
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <ol style="margin-left: 20px; color: var(--text-secondary); line-height: 1.6;">
+                        <li>Abra a pasta onde os arquivos do programa estão localizados.</li>
+                        <li>Localize o arquivo chamado <strong>"INSTALAR_ATALHO.bat"</strong>.</li>
+                        <li>Dê dois cliques nesse arquivo.</li>
+                        <li>Um atalho chamado <strong>"Loterias Caixa"</strong> será criado na sua Área de Trabalho.</li>
+                    </ol>
+                </div>
+
+                <div style="text-align: center; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px;">Caminho da pasta atual:</p>
+                    <code id="folder-path" style="display: block; background: #000; padding: 10px; border-radius: 4px; margin-bottom: 15px; word-break: break-all; color: #25D366;">C:\Users\luiss\.gemini\antigravity\scratch\loterias-caixa</code>
+                    <button id="btn-copy-path" class="secondary-btn">Copiar Caminho</button>
+                </div>
+
+                <div style="margin-top: 20px; text-align: right;">
+                    <button class="action-btn close-install-modal" style="width: auto; padding: 0.8rem 2rem;">Entendi!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 720px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>📚 Como Navegar no B2B Loterias v14.0</h3>
+                <button class="close-tutorial-modal"
+                    style="background:none; border:none; font-size:1.5rem; color:var(--text-primary); cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+
+                <div style="background: linear-gradient(135deg, #10B981, #059669); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <p style="color: white; margin: 0; text-align: center; font-weight: 600;">🎰 B2B Loterias v14.0 — Cobertura Combinatória + Detector de Viés Estatístico</p>
+                </div>
+
+                <!-- PASSO A PASSO -->
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary-accent); margin-bottom: 0.5rem;">🎯 Passo a Passo</h4>
+
+                    <div style="margin-bottom: 1rem; padding-left: 1rem; border-left: 3px solid var(--primary-accent);">
+                        <p style="margin: 0.5rem 0; color: var(--text-primary);"><strong>1.</strong> Escolha a loteria no cabeçalho</p>
+                        <p style="margin: 0 0 0 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">Mega Sena, Lotofácil, Quina, Dupla Sena, Lotomania, Timemania ou Dia de Sorte.</p>
+                    </div>
+
+                    <div style="margin-bottom: 1rem; padding-left: 1rem; border-left: 3px solid var(--primary-accent);">
+                        <p style="margin: 0.5rem 0; color: var(--text-primary);"><strong>2.</strong> Selecione seus números (opcional)</p>
+                        <p style="margin: 0 0 0 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">Clique nos números ou use "🎲 Aleatório". Você pode pular e deixar o sistema escolher.</p>
+                        <div style="margin: 0.5rem 0 0 1.5rem; padding: 0.5rem; background: rgba(16, 185, 129, 0.1); border-radius: 4px; border-left: 2px solid var(--primary-accent);">
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-primary);"><strong>📌 Fixar Números:</strong></p>
+                            <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: var(--text-secondary);">
+                                Clique em "📌 Fixar" e selecione os números que aparecerão em TODOS os jogos gerados.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem; padding-left: 1rem; border-left: 3px solid var(--primary-accent);">
+                        <p style="margin: 0.5rem 0; color: var(--text-primary);"><strong>3.</strong> Configure fechamento e quantidade</p>
+                        <p style="margin: 0 0 0 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">Escolha a garantia de acertos e a quantidade de jogos desejada.</p>
+                    </div>
+
+                    <div style="margin-bottom: 1rem; padding-left: 1rem; border-left: 3px solid var(--primary-accent);">
+                        <p style="margin: 0.5rem 0; color: var(--text-primary);"><strong>4.</strong> Gere os jogos com um dos 2 botões abaixo:</p>
+                    </div>
+                </div>
+
+                <!-- 2 MOTORES GERADORES (v15.0) -->
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #F59E0B; margin-bottom: 0.5rem;">🎮 Os 2 Motores Geradores de Jogos</h4>
+
+                    <div style="background: rgba(245,158,11,0.08); padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid rgba(245,158,11,0.25);">
+                        <p style="margin: 0; color: #F59E0B; font-weight: 800;">🎲 MANUAL</p>
+                        <p style="margin: 0.3rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+                            Gera jogos usando <strong>os números que VOCÊ selecionou</strong> no volante.
+                            Otimiza a distribuição via Greedy Set Cover (maximiza cobertura de pares e triplas).
+                        </p>
+                        <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: var(--text-secondary);">
+                            Inclui: filtros P5-P95, anti-concentração, Hamming Distance, ROI honesto, detecção de duplicatas.
+                        </p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: var(--text-secondary);">
+                            <strong>Quando usar:</strong> Quando você tem números de confiança e quer jogos otimizados com eles.
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(14,165,233,0.08); padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid rgba(56,189,248,0.25);">
+                        <p style="margin: 0; color: #38BDF8; font-weight: 800;">🎯 GERADOR INTELIGENTE</p>
+                        <p style="margin: 0.3rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+                            <strong>Motor unificado de Cobertura Pura</strong> — Matemática combinatória sem previsão.
+                            Usa TODOS os números do range e otimiza via Greedy Set Cover com 500+ candidatos por slot.
+                        </p>
+                        <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: var(--text-secondary);">
+                            Inclui: filtros P5-P95, anti-concentração, cobertura de triplas, Hamming Distance, ROI honesto.
+                        </p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: var(--text-secondary);">
+                            <strong>🎯 Sniper:</strong> Ative o toggle para focar em um pool reduzido baseado em evidência estatística real (Chi² + p-valor).
+                        </p>
+                        <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: var(--text-secondary);">
+                            <strong>Quando usar:</strong> Quando quer deixar o sistema gerar tudo com máxima cobertura matemática.
+                        </p>
+                        <p style="margin: 0.3rem 0 0 0; font-size: 0.75rem; color: #38BDF8; font-weight: 600;">
+                            ⚠️ Transparência total: mostra probabilidades hipergeométricas exatas e ROI esperado ANTES de gerar.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- SUGESTÃO IA -->
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #6366F1; margin-bottom: 0.5rem;">⚛️ Sugestão de Números pela IA</h4>
+
+                    <div style="background: rgba(99,102,241,0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(99,102,241,0.2);">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+                            Na seção <strong>"⚛️ Números Sugeridos pela IA"</strong>, clique em <strong>"⚡ Gerar Sugestão"</strong> 
+                            para receber números analisados em 21 camadas + Detector de Viés com p-valor.
+                        </p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+                            <strong>✓ Usar Estes Números:</strong> Transfere a sugestão para o volante. 
+                            Depois use qualquer botão gerador para criar jogos com eles.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- DETECTOR DE VIÉS -->
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #EC4899; margin-bottom: 0.5rem;">🔬 Detector de Viés Estatístico (v14.0)</h4>
+
+                    <div style="background: rgba(236,72,153,0.08); padding: 1rem; border-radius: 8px; border: 1px solid rgba(236,72,153,0.2);">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+                            Motor de matemática pura integrado em todos os geradores. Usa 4 testes estatísticos formais:
+                        </p>
+                        <ul style="margin: 0.5rem 0 0 1.5rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6;">
+                            <li><strong>Chi-Quadrado (χ²)</strong> — Detecta desvios de frequência</li>
+                            <li><strong>Runs Test</strong> — Independência entre sorteios</li>
+                            <li><strong>Autocorrelação Serial</strong> — Dependência entre sorteios consecutivos</li>
+                            <li><strong>Z-score individual</strong> — Significância por número com p-valor</li>
+                        </ul>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #EC4899; font-weight: 600;">
+                            ⚠️ Se p &gt; 0.05: o sistema informa que não há viés — honestidade matemática.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- COMO FUNCIONA -->
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #8B5CF6; margin-bottom: 0.5rem;">⚙️ Como Funciona por Dentro</h4>
+
+                    <div style="background: rgba(139,92,246,0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(139,92,246,0.2);">
+                        <p style="margin: 0; font-size: 0.85rem; color: #A78BFA; font-weight: 700;">
+                            LADO 1 — Seleção de Números (QUAIS jogar)
+                        </p>
+                        <ul style="margin: 0.3rem 0 0.5rem 1.5rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                            <li>21 camadas de análise estatística (NovaEraEngine)</li>
+                            <li>Detector de Viés com p-valor (StatisticalBiasEngine)</li>
+                            <li>Co-ocorrência de duplas + tendências de curto prazo</li>
+                        </ul>
+                        <p style="margin: 0; font-size: 0.85rem; color: #10B981; font-weight: 700;">
+                            LADO 2 — Distribuição em Jogos (COMO jogar)
+                        </p>
+                        <ul style="margin: 0.3rem 0 0 1.5rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                            <li>Greedy Set Cover (CoverageEngine) — cobertura de pares/triplas</li>
+                            <li>Covering Design (MathMatrixDB) — matrizes de La Jolla</li>
+                            <li>Diversidade Hamming — penaliza jogos muito parecidos</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- FERRAMENTAS -->
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary-accent); margin-bottom: 0.5rem;">🛠️ Ferramentas do Sistema</h4>
+
+                    <div style="background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 0.4rem;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-primary);"><strong>🔬 Analisar Seleção</strong> — Analisa seus números em 12 dimensões</p>
+                    </div>
+                    <div style="background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 0.4rem;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-primary);"><strong>⚔️ Comparar Estratégias</strong> — Compare Manual vs Cobertura vs QUANTUM L99</p>
+                    </div>
+                    <div style="background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 0.4rem;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-primary);"><strong>📊 Estatísticas</strong> — Números quentes/frios nos últimos 3, 5, 10 ou 15 sorteios</p>
+                    </div>
+                    <div style="background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 0.4rem;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-primary);"><strong>✅ Conferir Resultados</strong> — Confere seus jogos contra sorteios oficiais da Caixa</p>
+                    </div>
+                    <div style="background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 0.4rem;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-primary);"><strong>💾 Salvar / 📋 Copiar / 🖨️ Imprimir</strong> — Salve, copie ou imprima seus jogos</p>
+                    </div>
+                    <div style="background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-primary);"><strong>🏦 Jogar Online / 🔗 Compartilhar</strong> — Site da Caixa e compartilhamento</p>
+                    </div>
+                </div>
+
+                <!-- DICAS -->
+                <div style="background: #059669; border-left: 4px solid #10B981; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <h4 style="color: #FCD34D; margin: 0 0 0.5rem 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">⚠️ Dicas Importantes</h4>
+                    <ul style="margin: 0; padding-left: 1.5rem; color: #FCD34D; font-weight: 500;">
+                        <li style="margin-bottom: 0.3rem;">Sempre confira seus jogos antes de apostar</li>
+                        <li style="margin-bottom: 0.3rem;">Salve seus jogos para não perdê-los</li>
+                        <li style="margin-bottom: 0.3rem;">Jogue com responsabilidade — loterias são probabilísticas</li>
+                        <li style="margin-bottom: 0.3rem;">O sistema usa matemática pura, não promessas de acerto</li>
+                        <li>Use "🏦 Jogar Online" para ir ao site oficial da Caixa</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        <a href="#" id="print-tutorial"
+                            style="color: var(--primary-accent); text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            🖨️ Imprimir este tutorial
+                        </a>
+                    </p>
+                    <button class="action-btn close-tutorial-modal"
+                        style="width: auto; padding: 0.8rem 2rem;">Entendi!</button>
+                </div>
+            <!-- Manual Copy Fallback Modal -->
+            <div id="copy-modal" class="modal-overlay" style="display: none;">
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h3>📋 Cópia Manual</h3>
+                        <button class="close-copy-modal"
+                            style="background:none; border:none; font-size:1.5rem; color:var(--text-primary); cursor:pointer;">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom:15px; color:var(--text-secondary);">
+                            O seu navegador bloqueou a cópia automática. <br>
+                            <strong>Selecione e copie (Ctrl+C) o texto abaixo:</strong>
+                        </p>
+                        <textarea id="copy-textarea" readonly
+                            style="width: 100%; height: 200px; font-family: monospace; font-size: 0.9rem; padding: 10px; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border-color); border-radius: 4px; resize: none;"></textarea>
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                            <button id="btn-select-all" class="secondary-btn"
+                                style="width: auto; padding: 0.5rem 1rem; border-color: var(--primary-accent); color: var(--primary-accent);">Selecionar
+                                Tudo</button>
+                            <button class="action-btn close-copy-modal"
+                                style="width: auto; padding: 0.5rem 1.5rem;">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Core Data & Engines -->
+            <script src="js/engines/guardian.js?v=1781904541"></script>
+            <script src="js/engines/games.js?v=1781904570"></script>
+            <script src="js/data/history_db.js?v=1781904541"></script>
+            <script src="js/stats.js?v=1781904541"></script>
+            <script src="js/engines/calibration_quantum.js?v=1781904541"></script>
+            <script src="js/engines/precision_calibrator.js?v=1781904541"></script>
+            <script src="js/engines/combinations.js?v=1781904541"></script>
+            <script src="js/engines/quantum.js?v=1781904541"></script>
+            <script src="js/engines/quantum_god_mode.js?v=1781904541"></script>
+            <script src="js/engines/precision_engine.js?v=1781904541"></script>
+            <script src="js/engines/math_pure_engine.js?v=1781904541"></script>
+            <script src="js/engines/nova_era_engine.js?v=1781904541"></script>
+            <script src="js/engines/math_matrix_db.js?v=1781904541"></script>
+            <script src="js/engines/statistical_bias_engine.js?v=1781904541"></script>
+            <script src="js/engines/coverage_engine.js?v=1781904543"></script>
+            <script src="js/engines/closure_engine.js?v=1781904541"></script>
+            <script src="js/engines/smart_coverage_engine.js?v=1781904541"></script>
+            <script src="js/engines/backtesting.js?v=1781904541"></script>
+            <script src="js/engines/roi_guardian.js?v=1781904541"></script>
+            <script src="js/engines/smart_advisor.js?v=1781904541"></script>
+            <script src="js/engines/analysis_engine.js?v=1781904541"></script>
+            <script src="js/engines/lotofacil_group_engine.js?v=1781904541"></script>
+            <script src="js/engines/universal_group_engine.js?v=1781904541"></script>
+            <script src="js/engines/decision_engine.js?v=1781904541"></script>
+            <script src="js/engines/lotofacil_dual_strategy.js?v=1781904541"></script>
+            <script src="js/engines/closing_engine.js?v=1781904541"></script>
+            <script src="js/engines/statistics_tracker.js?v=1781904541"></script>
+            <script src="js/engines/motor_fechamento_manual.js?v=1781904541"></script>
+            <script src="js/engines/ev_calculator.js?v=1781904541"></script>
+            <script src="js/engines/strategy_validator.js?v=1781904541"></script>
+            <script src="js/engines/ensemble_engine.js?v=1781904541"></script>
+            <script src="js/engines/game_builder_engine.js?v=1781904543"></script>
+            <script src="js/engines/async_generator.js?v=1781904541"></script>
+
+            <script src="js/engines/comparison_engine.js?v=1781904541"></script>
+            <script src="js/engines/auto_updater.js?v=1781904541"></script>
+            <script src="js/engines/pure_coverage_engine.js?v=1781904543"></script>
+            <script src="js/engines/roi_dashboard.js?v=1781904541"></script>
+            <script src="js/engines/motor_lotomania_engine.js?v=1781904545"></script>
+            <script src="js/engines/motor_lotofacil_engine.js?v=1781904580"></script>
+            <script>
+            (function() {
+                var repairFn = function(game, pool, fixedSet) {
+                    var sorted = Array.from(new Set(game)).sort(function(a, b) { return a - b; });
+                    var fixed = fixedSet || new Set();
+
+                    // Encontrar candidatos no pool que nao estao no jogo
+                    var available = pool.filter(function(n) { return sorted.indexOf(n) === -1; });
+                    
+                    // Se o pool estiver vazio ou muito curto, garantir dezenas de 0 a 99
+                    if (available.length === 0) {
+                        var allNums = [];
+                        for (var i = 0; i <= 99; i++) {
+                            if (sorted.indexOf(i) === -1) { allNums.push(i); }
+                        }
+                        // Embaralhar
+                        for (var i = allNums.length - 1; i > 0; i--) {
+                            var j = Math.floor(Math.random() * (i + 1));
+                            var tempVal = allNums[i];
+                            allNums[i] = allNums[j];
+                            allNums[j] = tempVal;
+                        }
+                        available = allNums;
+                    }
+
+                    // Completar se menor que 50
+                    while (sorted.length < 50 && available.length > 0) {
+                        sorted.push(available.shift());
+                        sorted.sort(function(a, b) { return a - b; });
+                    }
+
+                    // Regras de validacao auxiliares
+                    var getPares = function(arr) { return arr.filter(function(x) { return x % 2 === 0; }).length; };
+                    var getZoning = function(arr) {
+                        var d1 = 0, d2 = 0, d3 = 0;
+                        for (var i = 0; i < arr.length; i++) {
+                            var x = arr[i];
+                            if (x <= 32) { d1++; }
+                            else if (x <= 65) { d2++; }
+                            else { d3++; }
+                        }
+                        return [d1, d2, d3];
+                    };
+                    var checkConsecutive = function(arr) {
+                        var consec = 1;
+                        var violated = false;
+                        for (var i = 1; i < arr.length; i++) {
+                            if (arr[i] === arr[i - 1] + 1) {
+                                consec++;
+                                if (consec > 3) { violated = true; }
+                            } else {
+                                consec = 1;
+                            }
+                        }
+                        return violated;
+                    };
+
+                    var attempts = 0;
+                    while (attempts < 150) {
+                        var violatedConsec = checkConsecutive(sorted);
+                        var zoning = getZoning(sorted);
+                        var d1 = zoning[0], d2 = zoning[1], d3 = zoning[2];
+                        var pares = getPares(sorted);
+                        var impares = 50 - pares;
+                        
+                        var violatedZoning = d1 > 19 || d2 > 19 || d3 > 19;
+                        var violatedParity = pares > 27 || impares > 27;
+
+                        if (!violatedConsec && !violatedZoning && !violatedParity) {
+                            return sorted;
+                        }
+
+                        var idxToReplace = -1;
+
+                        if (violatedConsec) {
+                            var consec = 1;
+                            for (var i = 1; i < sorted.length; i++) {
+                                if (sorted[i] === sorted[i - 1] + 1) {
+                                    consec++;
+                                    if (consec > 3) {
+                                        for (var j = i - consec + 1; j <= i; j++) {
+                                            if (!fixed.has(sorted[j])) {
+                                                idxToReplace = j;
+                                                break;
+                                            }
+                                        }
+                                        if (idxToReplace === -1) { idxToReplace = i; }
+                                        break;
+                                    }
+                                } else {
+                                    consec = 1;
+                                }
+                            }
+                        } else if (violatedZoning) {
+                            var targetZone = d1 > 19 ? 1 : d2 > 19 ? 2 : 3;
+                            for (var i = 0; i < sorted.length; i++) {
+                                var val = sorted[i];
+                                if (fixed.has(val)) { continue; }
+                                var z = val <= 32 ? 1 : val <= 65 ? 2 : 3;
+                                if (z === targetZone) {
+                                    idxToReplace = i;
+                                    break;
+                                }
+                            }
+                        } else if (violatedParity) {
+                            var targetParity = pares > 27 ? 0 : 1;
+                            for (var i = 0; i < sorted.length; i++) {
+                                var val = sorted[i];
+                                if (fixed.has(val)) { continue; }
+                                if (val % 2 === targetParity) {
+                                    idxToReplace = i;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (idxToReplace === -1) {
+                            break;
+                        }
+
+                        var replacedVal = sorted[idxToReplace];
+                        var foundSubstitute = false;
+
+                        // Embaralhar disponiveis
+                        for (var i = available.length - 1; i > 0; i--) {
+                            var j = Math.floor(Math.random() * (i + 1));
+                            var tempVal = available[i];
+                            available[i] = available[j];
+                            available[j] = tempVal;
+                        }
+
+                        for (var i = 0; i < available.length; i++) {
+                            var candidate = available[i];
+                            var temp = sorted.filter(function(_, idx) { return idx !== idxToReplace; });
+                            temp.push(candidate);
+                            temp.sort(function(a, b) { return a - b; });
+
+                            var newViolatedConsec = checkConsecutive(temp);
+                            var nzoning = getZoning(temp);
+                            var nd1 = nzoning[0], nd2 = nzoning[1], nd3 = nzoning[2];
+                            var npares = getPares(temp);
+                            var nimpares = 50 - npares;
+
+                            var newViolatedZoning = nd1 > 19 || nd2 > 19 || nd3 > 19;
+                            var newViolatedParity = npares > 27 || nimpares > 27;
+
+                            var ok = true;
+                            if (violatedConsec && newViolatedConsec) { ok = false; }
+                            if (newViolatedZoning) {
+                                var beforeExceeded = Math.max(0, d1 - 19) + Math.max(0, d2 - 19) + Math.max(0, d3 - 19);
+                                var afterExceeded = Math.max(0, nd1 - 19) + Math.max(0, nd2 - 19) + Math.max(0, nd3 - 19);
+                                if (afterExceeded >= beforeExceeded) { ok = false; }
+                            }
+                            if (newViolatedParity) {
+                                var beforeExceeded = Math.max(0, pares - 27) + Math.max(0, impares - 27);
+                                var afterExceeded = Math.max(0, npares - 27) + Math.max(0, nimpares - 27);
+                                if (afterExceeded >= beforeExceeded) { ok = false; }
+                            }
+
+                            if (ok) {
+                                sorted = temp;
+                                available[i] = replacedVal;
+                                foundSubstitute = true;
+                                break;
+                            }
+                        }
+
+                        if (!foundSubstitute) {
+                            if (available.length > 0) {
+                                var candidate = available.shift();
+                                var temp = sorted.filter(function(_, idx) { return idx !== idxToReplace; });
+                                temp.push(candidate);
+                                temp.sort(function(a, b) { return a - b; });
+                                sorted = temp;
+                                available.push(replacedVal);
+                            }
+                        }
+
+                        attempts++;
+                    }
+
+                    return sorted;
+                };
+
+                if (typeof GameBuilderEngine !== 'undefined') { GameBuilderEngine.repairGameLotomania = repairFn; }
+                if (typeof CoverageEngine !== 'undefined') { CoverageEngine.repairGameLotomania = repairFn; }
+                if (typeof PureCoverageEngine !== 'undefined') { PureCoverageEngine.repairGameLotomania = repairFn; }
+                console.log('[B2B] repairGameLotomania injetado com sucesso no escopo global das classes.');
+            })();
+            </script>
+            <script src="js/ui.js?v=1781904570"></script>
+            <script src="js/main.js?v=1781904541"></script>
+
+    <!-- v11: Coverage handler inline REMOVIDO — handler canônico está em ui.js -->
+
+
+    <!-- DIAGNÓSTICO INLINE v8.0 — NÃO DEPENDE DE CACHE -->
+    <script>
+    (function() {
+        console.log('%c[L99-DIAG] === DIAGNÓSTICO v8.0 INLINE ===', 'color: #FFD700; font-size: 18px; font-weight: bold; background: #1a1a2e; padding: 8px;');
+        console.log('[L99-DIAG] NovaEraEngine: ' + (typeof NovaEraEngine));
+        console.log('[L99-DIAG] SmartBetsEngine: ' + (typeof SmartBetsEngine));
+        console.log('[L99-DIAG] GAMES: ' + (typeof GAMES));
+        console.log('[L99-DIAG] StatsService: ' + (typeof StatsService));
+        
+        // Interceptar SmartBetsEngine.generate para garantir que funciona
+        if (typeof SmartBetsEngine !== 'undefined' && SmartBetsEngine.generate) {
+            var _originalGenerate = SmartBetsEngine.generate.bind(SmartBetsEngine);
+            SmartBetsEngine.generate = function(gameKey, numGames, sel, fixed, drawSize) {
+                console.log('%c[L99-DIAG] SmartBetsEngine.generate() INTERCEPTADO! gameKey=' + gameKey + ' numGames=' + numGames, 'color: #FF0000; font-size: 16px; font-weight: bold;');
+                console.log('[L99-DIAG] NovaEraEngine disponível: ' + (typeof NovaEraEngine !== 'undefined'));
+                
+                var result = _originalGenerate(gameKey, numGames, sel, fixed, drawSize);
+                
+                if (result && result.analysis) {
+                    console.log('%c[L99-DIAG] RESULTADO: confidence=' + result.analysis.confidence + '% | coverage=' + result.analysis.coverage + '% | diversity=' + result.analysis.diversity + '%', 'color: #00FF00; font-size: 14px;');
+                }
+                return result;
+            };
+            console.log('[L99-DIAG] ✅ SmartBetsEngine.generate() INTERCEPTADO com sucesso');
+        } else {
+            console.error('[L99-DIAG] ❌ SmartBetsEngine NÃO ENCONTRADO!');
+        }
+    })();
+    </script>
+
+    <!-- ROI GUARDIAN — Auto-update hook -->
+    <script>
+    (function() {
+        function updateROIGuardian() {
+            if (typeof ROIGuardian === 'undefined') return;
+            var container = document.getElementById('roi-guardian-content');
+            if (!container) return;
+            
+            // Detectar loteria ativa
+            var activeBtn = document.querySelector('.nav-btn.active');
+            var gameKey = activeBtn ? activeBtn.dataset.game : 'megasena';
+            
+            // Detectar quantidade de jogos
+            var qtyInput = document.getElementById('games-quantity');
+            var numGames = qtyInput ? parseInt(qtyInput.value) || 10 : 10;
+            
+            // Detectar betSize (Nº por Jogo do painel IA)
+            var smartDrawInput = document.getElementById('smart-draw-size');
+            var betSize = smartDrawInput ? parseInt(smartDrawInput.value) || null : null;
+            
+            try {
+                container.innerHTML = ROIGuardian.renderPanel(gameKey, numGames, betSize);
+            } catch(e) {
+                console.warn('[ROI Guardian] Erro ao renderizar:', e.message);
+            }
+        }
+        
+        // Atualizar ao mudar de loteria (clique nos botões nav)
+        document.querySelectorAll('.nav-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                setTimeout(updateROIGuardian, 100);
+            });
+        });
+        
+        // Atualizar ao mudar quantidade de jogos
+        var qtyInput = document.getElementById('games-quantity');
+        if (qtyInput) {
+            qtyInput.addEventListener('input', function() {
+                clearTimeout(window._roiDebounce);
+                window._roiDebounce = setTimeout(updateROIGuardian, 300);
+            });
+        }
+        
+        // Atualizar ao mudar Nº por Jogo
+        var smartDraw = document.getElementById('smart-draw-size');
+        if (smartDraw) {
+            smartDraw.addEventListener('change', function() {
+                setTimeout(updateROIGuardian, 100);
+            });
+        }
+        
+        // Render inicial após 500ms (esperar engines carregarem)
+        setTimeout(updateROIGuardian, 500);
+
+        // ═══ SMART ADVISOR AUTO-UPDATE ═══
+        function updateSmartAdvisor() {
+            if (typeof SmartAdvisor === 'undefined') return;
+            var container = document.getElementById('smart-advisor-content');
+            if (!container) return;
+
+            var qtyInput = document.getElementById('games-quantity');
+            var numGames = qtyInput ? parseInt(qtyInput.value) || 10 : 10;
+
+            try {
+                container.innerHTML = SmartAdvisor.renderPanel(numGames, 300);
+            } catch(e) {
+                console.warn('[Smart Advisor] Erro ao renderizar:', e.message);
+            }
+        }
+
+        // Atualizar Smart Advisor junto com ROI Guardian
+        document.querySelectorAll('.nav-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                setTimeout(updateSmartAdvisor, 200);
+            });
+        });
+
+        // Render inicial do Smart Advisor
+        setTimeout(updateSmartAdvisor, 800);
+
+        // Re-atualizar após dados da API (5s delay para API responder)
+        setTimeout(function() {
+            updateROIGuardian();
+            updateSmartAdvisor();
+        }, 5000);
+    })();
+    </script>
+
+    <!-- SISTEMA DE LICENÇA -->
+    <script src="js/license.js?v=1781904541"></script>
+    <script>
+    (function() {
+        // ====== PROTEÇÃO ANTI-CÓPIA (leve) ======
+
+        // Detectar se é dispositivo touch (celular/tablet)
+        var isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+        // 1. Bloquear Ctrl+U (ver código fonte) - apenas desktop
+        if (!isTouchDevice) {
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+
+        // 2. Bloquear clique direito - apenas desktop (no mobile bloqueia toque longo)
+        if (!isTouchDevice) {
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+        }
+
+        // 3. Desabilitar arrastar - apenas desktop
+        if (!isTouchDevice) {
+            document.addEventListener('dragstart', function(e) { e.preventDefault(); });
+        }
+
+        // 4. Marca d'água com info da licença
+        if (typeof B2B_LICENSE !== 'undefined') {
+            var wm = document.createElement('div');
+            wm.style.cssText = 'position:fixed;bottom:5px;left:10px;font-size:0.55rem;color:rgba(255,255,255,0.15);font-family:monospace;z-index:1;pointer-events:none;';
+            wm.textContent = 'Licença: ' + B2B_LICENSE.key + ' | ' + B2B_LICENSE.computer;
+            document.body.appendChild(wm);
+        }
+
+        // 5. Botão "Compartilhar Link" — proteção removida para não bloquear o menu de compartilhamento
+    })();
+    </script>
+
+
+
+
+</body>
+
+</html>
+
+
+
