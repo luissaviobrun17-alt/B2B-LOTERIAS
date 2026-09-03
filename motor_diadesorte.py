@@ -608,12 +608,14 @@ class MotorDiaDeSorteB2B:
             subs_A = list(itertools.combinations(self.pool_A, kA))
             scored_A = [(sub, self._pontuar_subconjunto(sub)) for sub in subs_A]
             scored_A.sort(key=lambda x: x[1], reverse=True)
-            top_A = [sub for sub, _ in scored_A[:max(15, cota * 4)]]
+            lim_A = min(len(scored_A), max(15, min(60, cota * 2)))
+            top_A = [sub for sub, _ in scored_A[:lim_A]]
 
             subs_B = list(itertools.combinations(self.pool_B, kB))
             scored_B = [(sub, self._pontuar_subconjunto(sub)) for sub in subs_B]
             scored_B.sort(key=lambda x: x[1], reverse=True)
-            top_B = [sub for sub, _ in scored_B[:max(15, cota * 4)]]
+            lim_B = min(len(scored_B), max(15, min(80, cota * 2)))
+            top_B = [sub for sub, _ in scored_B[:lim_B]]
 
             candidatos_modelo = []
             for subA in top_A:
@@ -639,6 +641,9 @@ class MotorDiaDeSorteB2B:
         for cand in jogos_gerados_candidatos:
             candidatos_por_modelo[cand["modelo"]].append(cand)
 
+        overlap_limit = 4 if Q <= 100 else (5 if Q <= 300 else 6)
+        jogos_set = set()
+
         jogo_idx = 1
         for mod, cota in cotas_modelos.items():
             pool_mod = candidatos_por_modelo.get(mod, [])
@@ -649,20 +654,27 @@ class MotorDiaDeSorteB2B:
                     break
 
                 g = cand["jogo"]
-                sobreposicao_max = 0
-                for item in carteira_final:
-                    overlap = len(set(g).intersection(set(item["jogo"])))
-                    if overlap > sobreposicao_max:
-                        sobreposicao_max = overlap
-
-                if carteira_final and sobreposicao_max >= 5:
+                tup = tuple(g)
+                if tup in jogos_set:
                     continue
+
+                if overlap_limit < 6 and carteira_final and len(carteira_final) < 300:
+                    sobreposicao_max = 0
+                    for item in carteira_final[-100:]:
+                        overlap = len(set(g).intersection(set(item["jogo"])))
+                        if overlap > sobreposicao_max:
+                            sobreposicao_max = overlap
+                        if sobreposicao_max > overlap_limit:
+                            break
+                    if sobreposicao_max > overlap_limit:
+                        continue
 
                 mes_escolhido = meses_disponiveis[(jogo_idx - 1) % len(meses_disponiveis)]
                 aprovado, motivo = self.auditar_jogo(g, mes_escolhido, mod)
                 if not aprovado:
                     continue
 
+                jogos_set.add(tup)
                 carteira_final.append({
                     "id": f"JOGO {jogo_idx:02d}",
                     "jogo": g,
@@ -679,20 +691,33 @@ class MotorDiaDeSorteB2B:
                 jogo_idx += 1
 
         if len(carteira_final) < Q:
-            for cand in jogos_gerados_candidatos:
-                if len(carteira_final) >= Q:
-                    break
-                g = cand["jogo"]
-                if any(g == item["jogo"] for item in carteira_final):
+            import random
+            tentativas_extra = 0
+            while len(carteira_final) < Q and tentativas_extra < 50000:
+                tentativas_extra += 1
+                r = random.random()
+                mod = (3, 4) if r < 0.35 else ((4, 3) if r < 0.67 else ((2, 5) if r < 0.85 else (5, 2)))
+                kA, kB = mod
+                subA = random.sample(self.pool_A, kA)
+                subB = random.sample(self.pool_B, kB)
+                g = sorted(subA + subB)
+                tup = tuple(g)
+                if tup in jogos_set:
+                    continue
+                if not self.validar_sequencia_consecutivos(g):
+                    continue
+                c_val = sum(g) / 7.0
+                if c_val < 9.0 or c_val > 23.0:
                     continue
                 mes_escolhido = meses_disponiveis[(jogo_idx - 1) % len(meses_disponiveis)]
+                jogos_set.add(tup)
                 carteira_final.append({
                     "id": f"JOGO {jogo_idx:02d}",
                     "jogo": g,
                     "dezenas_fmt": " ".join(self.formatar_dezena(x) for x in g),
                     "mes": mes_escolhido,
-                    "modelo": cand["rotulo_modelo"],
-                    "score": cand["score"]
+                    "modelo": f"{kA} + {kB}",
+                    "score": self._pontuar_jogo_completo(g)
                 })
                 jogo_idx += 1
 
