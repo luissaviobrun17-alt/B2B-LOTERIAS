@@ -319,9 +319,10 @@
                         </div>
 
                         <!-- MOTORES EXCLUSIVOS B2B LOTERIAS (Lado a Lado) -->
-                        <div id="b2b-motors-row" style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                        <div id="b2b-motors-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 8px;">
                             <button id="btn-motor-lotofacil" class="action-btn" style="padding: 14px 12px; background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #4c1d95 100%); border: 1px solid #c084fc; color: #ffffff; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(192,132,252,0.35); cursor:pointer;" title="MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS: Análise obrigatória 10 concursos, divisões dinâmicas, relações 7/8, 8/7, 6/9, 9/6, consecutividade máx 5, Score B2B e Transparência Matemática.">⚡ MOTOR LOTOFÁCIL (B2B)</button>
                             <button id="btn-motor-lotomania" class="action-btn" style="padding: 14px 12px; background: linear-gradient(135deg, #0284c7 0%, #0f766e 100%); border: 1px solid #38bdf8; color: #ffffff; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(56,189,248,0.35); cursor:pointer;" title="MOTOR LOTOMANIA — B2B LOTERIAS: 5 Conjuntos estritos de 20 numeros, 10 por conjunto (5x10=50), consecutividade maxima de 4 no jogo ordenado, scoring estatistico e auditoria 10 pontos.">⚛️ MOTOR LOTOMANIA (B2B)</button>
+                            <button id="btn-motor-diadesorte" class="action-btn" style="padding: 14px 12px; background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%); border: 1px solid #f59e0b; color: #ffffff; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(245,158,11,0.35); cursor:pointer;" title="MOTOR DIA DE SORTE — B2B LOTERIAS: Grupos A (01-15) e B (16-31), modelos 3+4, 4+3, 5+2, 2+5, filtro máx 3 consecutivos, Lift/Z-score, auto-pesos e Mês da Sorte com Honestidade Matemática.">🍀 MOTOR DIA DE SORTE (B2B)</button>
                         </div>
 
                         <!-- PAINEL MOTOR LOTOFÁCIL DO B2B LOTERIAS -->
@@ -404,6 +405,60 @@
                             <div style="display: flex; gap: 8px;">
                                 <button id="btn-executar-motor-lotomania" style="flex: 2; background: linear-gradient(135deg, #0284c7, #059669); border: 1px solid #34d399; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(5,150,105,0.4);">
                                     ⚡ GERAR CARTEIRA (MOTOR LOTOMANIA)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PAINEL MOTOR DIA DE SORTE DO B2B LOTERIAS -->
+                        <div id="motor-diadesorte-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(217, 119, 6, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #f59e0b; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                <div style="font-size: 1.05rem; font-weight: 800; color: #fbbf24; display: flex; align-items: center; gap: 8px;">
+                                    🍀 MOTOR DIA DE SORTE — B2B LOTERIAS
+                                </div>
+                                <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.15); color: #fde68a; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;">
+                                    Pool 31 (A: 01-15 | B: 16-31) • Max Consecutivo ≤ 3 • Modelos 3+4, 4+3, 5+2, 2+5 • Mês da Sorte
+                                </span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.5; margin: 0 0 12px 0;">
+                                Motor matemático, probabilístico e combinatório com partição obrigatória em <strong style="color:#fbbf24;">Grupo A (01-15)</strong> e <strong style="color:#fde68a;">Grupo B (16-31)</strong>. Ordenação estatística dinâmica dos modelos (<strong style="color:#a7f3d0;">3+4, 4+3, 5+2, 2+5</strong>), filtro obrigatório de no máximo <strong>3 consecutivos</strong>, matriz Lift/Z-score, auto-pesos e honestidade sobre o Mês da Sorte.
+                            </p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Janela de Análise Histórica:</label>
+                                    <select id="select-historico-diadesorte" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(245,158,11,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="3">Últimos 3 Concursos</option>
+                                        <option value="5">Últimos 5 Concursos</option>
+                                        <option value="10">Últimos 10 Concursos</option>
+                                        <option value="20">Últimos 20 Concursos</option>
+                                        <option value="30" selected>Últimos 30 Concursos (Recomendado)</option>
+                                        <option value="50">Últimos 50 Concursos</option>
+                                        <option value="75">Últimos 75 Concursos</option>
+                                        <option value="100">Últimos 100 Concursos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia do Motor:</label>
+                                    <select id="select-estrategia-diadesorte" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(245,158,11,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="equilibrada" selected>1 — Equilibrado (Recomendado)</option>
+                                        <option value="frequencia_historica">2 — Frequência Histórica</option>
+                                        <option value="frequencia_recente">3 — Frequência Recente</option>
+                                        <option value="atrasos_recuperacoes">4 — Atrasos e Recuperações</option>
+                                        <option value="pares_trios">5 — Pares e Trios</option>
+                                        <option value="coocorrencia_lift_zscore">6 — Coocorrência / Lift / Z-Score</option>
+                                        <option value="auto_pesos">7 — Auto Pesos Adaptativos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Pool de Números:</label>
+                                    <select id="select-pool-diadesorte" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(245,158,11,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="automatico" selected>Pool Automático Oficial (01 a 31)</option>
+                                        <option value="personalizado">Pool Personalizado (Marcados no Volante)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button id="btn-executar-motor-diadesorte" style="flex: 2; background: linear-gradient(135deg, #d97706, #059669); border: 1px solid #f59e0b; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(245,158,11,0.4);">
+                                    🍀 GERAR CARTEIRA (MOTOR DIA DE SORTE)
                                 </button>
                             </div>
                         </div>
@@ -1530,8 +1585,9 @@
             <script src="js/engines/auto_updater.js?v=1781904541"></script>
             <script src="js/engines/pure_coverage_engine.js?v=1781904543"></script>
             <script src="js/engines/roi_dashboard.js?v=1781904541"></script>
-            <script src="js/engines/motor_lotomania_engine.js?v=1781904545"></script>
+            <script src="js/engines/motor_lotomania_engine.js?v=20260828_v25"></script>
             <script src="js/engines/motor_lotofacil_engine.js?v=1781904580"></script>
+            <script src="js/engines/motor_diadesorte_engine.js?v=20260903"></script>
             <script>
             (function() {
                 var repairFn = function(game, pool, fixedSet) {

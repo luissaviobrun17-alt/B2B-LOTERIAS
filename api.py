@@ -8,7 +8,11 @@ import json
 import os
 from motor_sugestao import MotorSugestaoLoteria
 from motor_lotomania import MotorLotomaniaB2B
-from motor_lotofacil import MotorLotofacilB2B
+try:
+    from motor_lotofacil import MotorLotofacilB2B
+except ImportError:
+    from motor_lotofacil import MotorInteligenteLotofacilB2B as MotorLotofacilB2B
+from motor_diadesorte import MotorDiaDeSorteB2B
 
 app = FastAPI(
     title="Loteria B2B AI Engine API",
@@ -243,6 +247,65 @@ def endpoint_motor_lotofacil(request: MotorLotofacilRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Erro no Motor Lotofácil: {str(e)}")
+
+
+
+class MotorDiaDeSorteRequest(BaseModel):
+    quantidade_jogos: int
+    historico_limite: Optional[int] = 30
+    estrategia: Optional[str] = "equilibrada"
+    pool: Optional[List[int]] = None
+    historico: Optional[List[List[int]]] = None
+    historico_meses: Optional[List[str]] = None
+
+
+class AnaliseDiaDeSorteRequest(BaseModel):
+    historico_limite: Optional[int] = 30
+    estrategia: Optional[str] = "equilibrada"
+    pool: Optional[List[int]] = None
+
+
+@app.post("/api/v1/motor-diadesorte")
+def endpoint_motor_diadesorte(request: MotorDiaDeSorteRequest):
+    """
+    Endpoint oficial do NOVO MOTOR DIA DE SORTE — B2B LOTERIAS.
+    Aplica rigor matemático, grupos A (01-15) e B (16-31), modelos 3+4, 4+3, 5+2, 2+5,
+    filtro <= 3 consecutivos, Lift/Z-score, auto-pesos, meses da sorte e transparência.
+    """
+    try:
+        motor = MotorDiaDeSorteB2B(
+            historico=request.historico,
+            historico_meses=request.historico_meses,
+            limite_historico=request.historico_limite or 30,
+            estrategia=request.estrategia or "equilibrada",
+            pool=request.pool
+        )
+        return motor.gerar_carteira(request.quantidade_jogos)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Motor Dia de Sorte: {str(e)}")
+
+
+@app.post("/api/v1/motor-diadesorte/analise-estatistica")
+def endpoint_motor_diadesorte_analise(request: AnaliseDiaDeSorteRequest):
+    """Retorna o relatório pré-geração de evidência estatística do Dia de Sorte."""
+    try:
+        motor = MotorDiaDeSorteB2B(
+            limite_historico=request.historico_limite or 30,
+            estrategia=request.estrategia or "equilibrada",
+            pool=request.pool
+        )
+        return {
+            "sucesso": True,
+            "relatorio": motor.gerar_relatorio_pre_geracao(),
+            "distribuicoes": motor.stats["modelos_ordenados"],
+            "top_meses": motor.stats["meses"][:5]
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro na Análise Dia de Sorte: {str(e)}")
 
 
 if __name__ == "__main__":
