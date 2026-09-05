@@ -1061,6 +1061,14 @@ class UI {
             };
         }
 
+                const btnQuickLotofacil = document.getElementById('btn-quick-motor-lotofacil');
+        if (btnQuickLotofacil) {
+            btnQuickLotofacil.onclick = () => {
+                const mainBtn = document.getElementById('btn-motor-lotofacil');
+                if (mainBtn) mainBtn.click();
+            };
+        }
+
         const btnMotorLotofacil = document.getElementById('btn-motor-lotofacil');
         if (btnMotorLotofacil) {
             btnMotorLotofacil.onclick = () => {

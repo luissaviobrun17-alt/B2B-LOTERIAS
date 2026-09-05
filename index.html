@@ -180,6 +180,19 @@
                         .tagline-main-5d { font-size: 1.1rem; }
                         .tagline-sub-5d { font-size: 0.6rem; letter-spacing: 3px; }
                     }
+                    @keyframes pulseGlowMega {
+                        0% { box-shadow: 0 4px 15px rgba(16,185,129,0.35); border-color: #34d399; }
+                        100% { box-shadow: 0 0 22px rgba(16,185,129,0.85), 0 0 35px rgba(5,150,105,0.6); border-color: #a7f3d0; }
+                    }
+                    @keyframes pulseGlowQuina {
+                        0% { box-shadow: 0 4px 15px rgba(37,99,235,0.35); border-color: #60a5fa; }
+                        100% { box-shadow: 0 0 25px rgba(59,130,246,0.9), 0 0 40px rgba(37,99,235,0.7); border-color: #bfdbfe; transform: translateY(-1px); }
+                    }
+                    @keyframes pulseGlowLotofacil {
+                        0% { box-shadow: 0 4px 15px rgba(192,132,252,0.35); border-color: #c084fc; }
+                        100% { box-shadow: 0 0 22px rgba(168,85,247,0.85), 0 0 35px rgba(147,51,234,0.6); border-color: #e9d5ff; }
+                    }
+
                 </style>
                 <div class="tagline-quantum-high">
                     <span class="gold-3d-text tagline-main-5d">Loteria Inteligente</span>
@@ -259,8 +272,9 @@
                                         Aleatório</button>
                                     <button id="btn-fixed-mode" class="sm-btn" title="Modo Fixar Números">📌
                                         Fixar</button>
-                                    <button id="btn-quick-motor-quina" class="sm-btn" style="background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #ffffff; border: 1px solid #60a5fa; font-weight: 800; cursor: pointer; box-shadow: 0 0 10px rgba(37,99,235,0.4); display: none;" title="Abrir Motor Quina (B2B)">🔷 Motor Quina</button>
+                                    <button id="btn-quick-motor-quina" class="sm-btn" style="background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #ffffff; border: 1px solid #60a5fa; font-weight: 800; cursor: pointer; box-shadow: 0 0 10px rgba(37,99,235,0.4); display: none;" title="Abrir Motor Quina (B2B)">🔷 Motor Quina (B2B)</button>
                                     <button id="btn-quick-motor-megasena" class="sm-btn" style="background: linear-gradient(135deg, #059669, #10b981); color: #ffffff; border: 1px solid #34d399; font-weight: 800; cursor: pointer; box-shadow: 0 0 10px rgba(16,185,129,0.4); display: none;" title="Abrir Motor Inteligente Mega-Sena (B2B)">⚡ Motor Mega-Sena</button>
+                                    <button id="btn-quick-motor-lotofacil" class="sm-btn" style="background: linear-gradient(135deg, #7c3aed, #9333ea); color: #ffffff; border: 1px solid #c084fc; font-weight: 800; cursor: pointer; box-shadow: 0 0 10px rgba(192,132,252,0.4); display: none;" title="Abrir Motor Inteligente Lotofácil (B2B)">⚡ Motor Lotofácil</button>
                                     <button id="btn-clear-selection" class="sm-btn" title="Limpar todos os números selecionados e jogos gerados" style="margin-left: auto;">🗑️ Excluir Tudo</button>
                                 </div>
                             </div>
@@ -2162,7 +2176,7 @@
                 console.log('[B2B] repairGameLotomania injetado com sucesso no escopo global das classes.');
             })();
             </script>
-            <script src="js/ui.js?v=20260904_V3"></script>
+            <script src="js/ui.js?v=20260905_V2"></script>
             <script src="js/main.js?v=1781904541"></script>
 
     <!-- v11: Coverage handler inline REMOVIDO — handler canônico está em ui.js -->
