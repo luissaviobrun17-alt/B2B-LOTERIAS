@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste JS Motor Mega-Sena</title>
+    <script src="js/data/history_db.js"></script>
+    <script src="js/engines/motor_megasena_engine.js"></script>
+</head>
+<body>
+    <div id="output">Executando...</div>
+    <script>
+    try {
+        const res1 = MotorMegaSenaB2BEngine.gerarCarteiraLocal(10, { historicoLimite: 30, estrategia: 'equilibrada' });
+        const resSniper = MotorMegaSenaB2BEngine.gerarCarteiraLocal(5, { historicoLimite: 50, estrategia: 'sniper' });
+        const resCustom = MotorMegaSenaB2BEngine.gerarCarteiraLocal(5, {
+            pool: [3, 7, 9, 12, 16, 18, 21, 24, 27, 30, 31, 34, 37, 40, 43, 45, 49, 52, 55, 60]
+        });
+
+        const checks1 = res1.checks_auditoria.aprovacao_integral_10_de_10;
+        const checksSniper = resSniper.checks_auditoria.aprovacao_integral_10_de_10;
+        const checksCustom = resCustom.checks_auditoria.aprovacao_integral_10_de_10;
+
+        const maxConsec1 = Math.max(...res1.jogos.map(j => j.max_consecutivo));
+        const allCustomValid = resCustom.jogos.every(j => j.numeros.every(n => [3, 7, 9, 12, 16, 18, 21, 24, 27, 30, 31, 34, 37, 40, 43, 45, 49, 52, 55, 60].includes(n)));
+
+        const resultObj = {
+            res1_sucesso: res1.sucesso,
+            res1_total: res1.total_gerado,
+            res1_checks10: checks1,
+            max_consecutivo_res1: maxConsec1,
+            resSniper_checks10: checksSniper,
+            resCustom_checks10: checksCustom,
+            allCustomValid: allCustomValid,
+            top1_jogo: res1.jogos[0].numeros_formatados,
+            top1_score: res1.jogos[0].score_b2b,
+            top1_modelo: res1.jogos[0].modelo_ab,
+            top1_pares_impares: res1.jogos[0].pares_impares
+        };
+
+        document.getElementById('output').innerText = JSON.stringify(resultObj, null, 2);
+    } catch (e) {
+        document.getElementById('output').innerText = 'ERRO: ' + e.message;
+    }
+    </script>
+</body>
+</html>

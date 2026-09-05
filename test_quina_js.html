@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste JS Motor Quina B2B</title>
+    <script src="js/data/history_db.js"></script>
+    <script src="js/engines/motor_quina_engine.js"></script>
+</head>
+<body>
+    <h2>Teste Autônomo JS — Motor Quina B2B</h2>
+    <pre id="output" style="background:#0f172a;color:#38bdf8;padding:16px;border-radius:8px;font-size:13px;"></pre>
+    <script>
+    try {
+        const res1 = MotorQuinaB2BEngine.gerarCarteiraLocal(10, { historicoLimite: 30, estrategia: 'equilibrada' });
+        const resSniper = MotorQuinaB2BEngine.gerarCarteiraLocal(5, { historicoLimite: 30, estrategia: 'sniper' });
+        const customPool = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
+        const resCustom = MotorQuinaB2BEngine.gerarCarteiraLocal(5, { pool: customPool });
+
+        const maxConsec1 = Math.max(...res1.jogos.map(j => j.max_consecutivos));
+        const allCustomValid = resCustom.jogos.every(j => j.numeros.every(n => customPool.includes(n)));
+
+        const resultObj = {
+            res1_sucesso: res1.sucesso,
+            res1_total: res1.total_gerado,
+            res1_checks10: res1.checks_auditoria.aprovacao_integral_10_de_10,
+            res1_iga_carteira: res1.iga_carteira,
+            max_consecutivo_res1: maxConsec1,
+            consecutivos_valido_max2: (maxConsec1 <= 2),
+            resSniper_checks10: resSniper.checks_auditoria.aprovacao_integral_10_de_10,
+            resCustom_checks10: resCustom.checks_auditoria.aprovacao_integral_10_de_10,
+            allCustomValid: allCustomValid,
+            top1_jogo: res1.jogos[0].linha_texto,
+            top1_iga: res1.jogos[0].iga_fmt,
+            top1_modelo: res1.jogos[0].modelo,
+            top1_explicacao: res1.jogos[0].explicacao_resumida
+        };
+
+        document.getElementById('output').innerText = JSON.stringify(resultObj, null, 2);
+    } catch (e) {
+        document.getElementById('output').innerText = 'ERRO: ' + e.message + '\n' + e.stack;
+    }
+    </script>
+</body>
+</html>

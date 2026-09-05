@@ -8,11 +8,11 @@ import json
 import os
 from motor_sugestao import MotorSugestaoLoteria
 from motor_lotomania import MotorLotomaniaB2B
-try:
-    from motor_lotofacil import MotorLotofacilB2B
-except ImportError:
-    from motor_lotofacil import MotorInteligenteLotofacilB2B as MotorLotofacilB2B
+from motor_lotofacil import MotorLotofacilB2B
+from motor_timemania import MotorTimemaniaB2B
 from motor_diadesorte import MotorDiaDeSorteB2B
+from motor_megasena import MotorMegaSenaB2B
+from motor_quina import MotorQuinaB2B
 
 app = FastAPI(
     title="Loteria B2B AI Engine API",
@@ -54,6 +54,46 @@ class BacktestLotomaniaRequest(BaseModel):
     quantidade_jogos: Optional[int] = 10
     estrategia: Optional[str] = "equilibrada"
 
+class MotorLotofacilRequest(BaseModel):
+    quantidade_jogos: int
+    historico_limite: Optional[int] = None
+    estrategia: Optional[str] = "equilibrada"
+    sniper: Optional[bool] = True
+    fixas: Optional[List[int]] = None
+    excluidas: Optional[List[int]] = None
+    historico: Optional[List[List[int]]] = None
+
+class BacktestLotofacilRequest(BaseModel):
+    concurso_alvo_idx: Optional[int] = None
+    quantidade_jogos: Optional[int] = 20
+    estrategia: Optional[str] = "equilibrada"
+    sniper: Optional[bool] = True
+
+class MotorTimemaniaRequest(BaseModel):
+    quantidade_jogos: int
+    historico_limite: Optional[int] = None
+    estrategia: Optional[str] = "equilibrada"
+    sniper: Optional[bool] = False
+    no_consecutive_3_in_group: Optional[bool] = True
+    max_consecutive_total: Optional[int] = 3
+    pool: Optional[List[int]] = None
+    estrategia_time: Optional[str] = "maior_ift"
+    time_fixo_usuario: Optional[str] = None
+    historico: Optional[List[List[int]]] = None
+    historico_times: Optional[List[str]] = None
+
+class BacktestTimemaniaRequest(BaseModel):
+    concursos_teste: Optional[int] = 50
+    quantidade_jogos: Optional[int] = 10
+    estrategia: Optional[str] = "equilibrada"
+    sniper: Optional[bool] = False
+    no_consecutive_3_in_group: Optional[bool] = True
+    pool: Optional[List[int]] = None
+
+class AnaliseTimemaniaRequest(BaseModel):
+    historico_limite: Optional[int] = None
+    pool: Optional[List[int]] = None
+
 
 def obter_historico_caixa(nome_loteria: str) -> List[List[int]]:
     mapping = {
@@ -62,7 +102,8 @@ def obter_historico_caixa(nome_loteria: str) -> List[List[int]]:
         "quina": "quina",
         "lotomania": "lotomania",
         "duplasena": "duplasena",
-        "diadesorte": "diadesorte"
+        "diadesorte": "diadesorte",
+        "timemania": "timemania"
     }
     
     loteria_normalizada = nome_loteria.lower().strip().replace(" ", "").replace("-", "").replace("á", "a").replace("ó", "o")
@@ -109,7 +150,7 @@ def obter_historico_caixa(nome_loteria: str) -> List[List[int]]:
         sorted_keys = sorted(data.keys(), key=lambda x: int(x))
         historico = []
         for key in sorted_keys:
-            draw = [int(x) for x in data[key]]
+            draw = [int(x) for x in data[key][:7]]
             historico.append(draw)
         return historico
     except Exception as e:
@@ -216,19 +257,17 @@ def endpoint_motor_lotomania_backtest(request: BacktestLotomaniaRequest):
         raise HTTPException(status_code=500, detail=f"Erro no Backtest Lotomania: {str(e)}")
 
 
-class MotorLotofacilRequest(BaseModel):
-    quantidade_jogos: int
-    historico_limite: Optional[int] = 10
-    estrategia: Optional[str] = "equilibrada"
-    historico: Optional[List[List[int]]] = None
-
+# =============================================================================
+# MÓDULO EXCLUSIVO: MOTOR LOTOFÁCIL B2B (VERSÃO 2.5 - AJUSTE FINO)
+# =============================================================================
 
 @app.post("/api/v1/motor-lotofacil")
 def endpoint_motor_lotofacil(request: MotorLotofacilRequest):
     """
-    Endpoint exclusivo do MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS.
-    Explora divisões dinâmicas, subconjuntos 7/8, 8/7, 6/9, 9/6, consecutividade <= 5,
-    scoring multicritério (Score B2B), diversificação e transparência ("Verdade Matemática").
+    Endpoint exclusivo do MOTOR LOTOFACIL — B2B LOTERIAS (v2.5).
+    Aplica paridade calibrada (7I/8P e 8I/7P), ressonancia de sorteio anterior,
+    primos, moldura, fibonacci, multiplos de 3, corredor de soma 180-210,
+    teto max 4 consecutivos e anti-saturacao de matriz 5x5.
     """
     try:
         historico = request.historico
@@ -237,18 +276,131 @@ def endpoint_motor_lotofacil(request: MotorLotofacilRequest):
 
         motor = MotorLotofacilB2B(
             historico=historico,
-            limite_historico=request.historico_limite or 10,
-            estrategia=request.estrategia or "equilibrada"
+            limite_historico=request.historico_limite,
+            estrategia=request.estrategia or "equilibrada",
+            sniper=request.sniper if request.sniper is not None else True
         )
 
-        resultado = motor.gerar_carteira(request.quantidade_jogos)
+        resultado = motor.gerar_carteira(
+            quantidade_jogos=request.quantidade_jogos,
+            fixas=request.fixas,
+            excluidas=request.excluidas
+        )
         return resultado
     except Exception as e:
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Erro no Motor Lotofácil: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro no Motor Lotofacil: {str(e)}")
 
 
+@app.post("/api/v1/motor-lotofacil/backtest")
+def endpoint_motor_lotofacil_backtest(request: BacktestLotofacilRequest):
+    """Executa simulação retrospectiva na Lotofácil sem vazamento de dados futuros."""
+    try:
+        historico = obter_historico_caixa("lotofacil")
+        alvo = request.concurso_alvo_idx
+        if alvo is None or alvo <= 0:
+            alvo = len(historico) - 1
+
+        motor = MotorLotofacilB2B(
+            historico=historico,
+            estrategia=request.estrategia or "equilibrada",
+            sniper=request.sniper if request.sniper is not None else True
+        )
+        resultado = motor.executar_backtesting(
+            concurso_alvo_idx=alvo,
+            quantidade_jogos=request.quantidade_jogos or 20,
+            estrategia=request.estrategia
+        )
+        return {"sucesso": True, "backtest": resultado}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Backtest Lotofacil: {str(e)}")
+
+
+# =============================================================================
+# MÓDULO EXCLUSIVO: MOTOR TIMEMANIA B2B (ALTA ASSERTIVIDADE E CIÊNCIA EXATA)
+# =============================================================================
+
+@app.post("/api/v1/motor-timemania")
+def endpoint_motor_timemania(request: MotorTimemaniaRequest):
+    """
+    Endpoint do MOTOR TIMEMANIA — B2B LOTERIAS.
+    Aplica divisão analítica em 4 grupos (01-20, 21-40, 41-60, 61-80),
+    bloqueio de 3 consecutivos por grupo, IFM 8 dimensões, IFT do Time do Coração,
+    otimização submodular de carteira e auditoria 10 pontos.
+    """
+    try:
+        motor = MotorTimemaniaB2B(
+            historico=request.historico,
+            historico_times=request.historico_times,
+            limite_historico=request.historico_limite,
+            estrategia=request.estrategia or "equilibrada",
+            sniper=request.sniper or False,
+            no_consecutive_3_in_group=request.no_consecutive_3_in_group if request.no_consecutive_3_in_group is not None else True,
+            max_consecutive_total=request.max_consecutive_total or 3,
+            pool=request.pool
+        )
+
+        resultado = motor.gerar_carteira(
+            quantidade_jogos=request.quantidade_jogos,
+            estrategia_time=request.estrategia_time or "maior_ift",
+            time_fixo_usuario=request.time_fixo_usuario
+        )
+        return resultado
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Motor Timemania: {str(e)}")
+
+
+@app.post("/api/v1/motor-timemania/backtest")
+def endpoint_motor_timemania_backtest(request: BacktestTimemaniaRequest):
+    """Executa simulação retrospectiva Walk-Forward na Timemania sem vazamento de dados futuros."""
+    try:
+        motor = MotorTimemaniaB2B(
+            estrategia=request.estrategia or "equilibrada",
+            sniper=request.sniper or False,
+            no_consecutive_3_in_group=request.no_consecutive_3_in_group if request.no_consecutive_3_in_group is not None else True,
+            pool=request.pool
+        )
+        resultado = motor.executar_backtesting(
+            concursos_teste=request.concursos_teste or 50,
+            quantidade_jogos=request.quantidade_jogos or 10,
+            estrategia=request.estrategia
+        )
+        return {"sucesso": True, "backtest": resultado}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Backtest Timemania: {str(e)}")
+
+
+@app.post("/api/v1/motor-timemania/analise-estatistica")
+def endpoint_motor_timemania_analise(request: AnaliseTimemaniaRequest):
+    """Retorna o diagnóstico estatístico completo do universo e dos 80 clubes da Timemania."""
+    try:
+        motor = MotorTimemaniaB2B(
+            limite_historico=request.historico_limite,
+            pool=request.pool
+        )
+        return {
+            "sucesso": True,
+            "total_sorteios": len(motor.historico),
+            "ifm_ranking": motor._gerar_relatorio_analitico([], 0, 0)["top_10_dezenas_ifm"],
+            "times_ranking": motor._obter_ranking_times()[:15],
+            "scores_grupos": motor._gerar_relatorio_analitico([], 0, 0)["scores_grupos"]
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro na Análise Timemania: {str(e)}")
+
+
+# =============================================================================
+# MÓDULO EXCLUSIVO: MOTOR DIA DE SORTE B2B (MÁXIMO RIGOR E HONESTIDADE)
+# =============================================================================
 
 class MotorDiaDeSorteRequest(BaseModel):
     quantidade_jogos: int
@@ -306,6 +458,196 @@ def endpoint_motor_diadesorte_analise(request: AnaliseDiaDeSorteRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Erro na Análise Dia de Sorte: {str(e)}")
+
+
+# =============================================================================
+# MÓDULO EXCLUSIVO: MOTOR MEGA-SENA B2B (RIGOR MATEMÁTICO E COMBINATÓRIO)
+# =============================================================================
+
+class MotorMegaSenaRequest(BaseModel):
+    quantidade_jogos: int
+    historico_limite: Optional[int] = 30
+    estrategia: Optional[str] = "equilibrada"
+    pool: Optional[List[int]] = None
+    modelo_preferencial: Optional[str] = None
+    numeros_fixos: Optional[List[int]] = None
+    numeros_proibidos: Optional[List[int]] = None
+    historico: Optional[List[List[int]]] = None
+
+
+class BacktestMegaSenaRequest(BaseModel):
+    concursos_teste: Optional[int] = 10
+    quantidade_jogos: Optional[int] = 10
+    historico_limite: Optional[int] = 30
+    estrategia: Optional[str] = "equilibrada"
+    pool: Optional[List[int]] = None
+
+
+class AnaliseMegaSenaRequest(BaseModel):
+    historico_limite: Optional[int] = 30
+    estrategia: Optional[str] = "equilibrada"
+    pool: Optional[List[int]] = None
+
+
+@app.post("/api/v1/motor-megasena")
+def endpoint_motor_megasena(request: MotorMegaSenaRequest):
+    """
+    Endpoint oficial do NOVO MOTOR MEGA-SENA — B2B LOTERIAS.
+    Aplica rigor matemático e estatístico, grupos A (01-30) e B (31-60), modelos hipergeométricos
+    (3/3, 2/4, 4/2, 1/5, 5/1), filtro estrito de no máximo 3 números consecutivos, centróide simétrico,
+    coocorrência/Lift/Z-Score, auto-pesos e diversificação de Jaccard.
+    """
+    try:
+        motor = MotorMegaSenaB2B(
+            historico=request.historico,
+            limite_historico=request.historico_limite or 30,
+            estrategia=request.estrategia or "equilibrada",
+            pool=request.pool,
+            modelo_preferencial=request.modelo_preferencial,
+            numeros_fixos=request.numeros_fixos,
+            numeros_proibidos=request.numeros_proibidos
+        )
+        return motor.gerar_carteira(request.quantidade_jogos)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Motor Mega-Sena: {str(e)}")
+
+
+@app.post("/api/v1/motor-megasena/backtest")
+def endpoint_motor_megasena_backtest(request: BacktestMegaSenaRequest):
+    """Executa simulação retrospectiva Walk-Forward na Mega-Sena sem vazamento de dados futuros."""
+    try:
+        motor = MotorMegaSenaB2B(
+            limite_historico=request.historico_limite or 30,
+            estrategia=request.estrategia or "equilibrada",
+            pool=request.pool
+        )
+        return motor.executar_backtesting(
+            concursos_teste=request.concursos_teste or 10,
+            quantidade_jogos=request.quantidade_jogos or 10
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Backtest Mega-Sena: {str(e)}")
+
+
+@app.post("/api/v1/motor-megasena/analise-estatistica")
+def endpoint_motor_megasena_analise(request: AnaliseMegaSenaRequest):
+    """Retorna o relatório pré-geração de evidência estatística da Mega-Sena."""
+    try:
+        motor = MotorMegaSenaB2B(
+            limite_historico=request.historico_limite or 30,
+            estrategia=request.estrategia or "equilibrada",
+            pool=request.pool
+        )
+        return {
+            "sucesso": True,
+            "relatorio": motor.gerar_relatorio_pre_geracao(),
+            "distribuicoes": motor.stats["modelos_ordenados"],
+            "top_pares": motor.stats["pares_top"][:10],
+            "robustez": motor.testar_robustez_indicadores()
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro na Análise Mega-Sena: {str(e)}")
+
+
+# =============================================================================
+# MÓDULO EXCLUSIVO: MOTOR QUINA B2B (MÁXIMA ASSERTIVIDADE ESTATÍSTICA)
+# =============================================================================
+
+class MotorQuinaRequest(BaseModel):
+    quantidade_jogos: int
+    historico_limite: Optional[int] = 30
+    estrategia: Optional[str] = "equilibrada"
+    pool: Optional[List[int]] = None
+    modelo_preferencial: Optional[str] = None
+    numeros_fixos: Optional[List[int]] = None
+    numeros_proibidos: Optional[List[int]] = None
+    historico: Optional[List[List[int]]] = None
+
+
+class BacktestQuinaRequest(BaseModel):
+    concursos_teste: Optional[int] = 10
+    quantidade_jogos: Optional[int] = 10
+    historico_limite: Optional[int] = 30
+    estrategia: Optional[str] = "equilibrada"
+    pool: Optional[List[int]] = None
+
+
+class AnaliseQuinaRequest(BaseModel):
+    historico_limite: Optional[int] = 30
+    estrategia: Optional[str] = "equilibrada"
+    pool: Optional[List[int]] = None
+
+
+@app.post("/api/v1/motor-quina")
+def endpoint_motor_quina(request: MotorQuinaRequest):
+    """
+    Endpoint oficial do NOVO MOTOR QUINA — B2B LOTERIAS.
+    Aplica rigor matemático e estatístico, grupos A (01-40) e B (41-80), modelos hipergeométricos
+    (3/2, 2/3, 4/1, 1/4, 5/0, 0/5), filtro estrito de no máximo 2 números consecutivos, centróide simétrico (202.5),
+    coocorrência/Lift/Z-Score, auto-pesos, IGA (0-100), modo Sniper e diversificação combinatória.
+    """
+    try:
+        motor = MotorQuinaB2B(
+            historico=request.historico,
+            limite_historico=request.historico_limite or 30,
+            estrategia=request.estrategia or "equilibrada",
+            pool=request.pool,
+            modelo_preferencial=request.modelo_preferencial,
+            numeros_fixos=request.numeros_fixos,
+            numeros_proibidos=request.numeros_proibidos
+        )
+        return motor.gerar_carteira(request.quantidade_jogos)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Motor Quina: {str(e)}")
+
+
+@app.post("/api/v1/motor-quina/backtest")
+def endpoint_motor_quina_backtest(request: BacktestQuinaRequest):
+    """Executa simulação retrospectiva Walk-Forward na Quina sem vazamento de dados futuros."""
+    try:
+        motor = MotorQuinaB2B(
+            limite_historico=request.historico_limite or 30,
+            estrategia=request.estrategia or "equilibrada",
+            pool=request.pool
+        )
+        return motor.executar_backtesting(
+            concursos_teste=request.concursos_teste or 10,
+            quantidade_jogos=request.quantidade_jogos or 10
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Backtest Quina: {str(e)}")
+
+
+@app.post("/api/v1/motor-quina/analise-estatistica")
+def endpoint_motor_quina_analise(request: AnaliseQuinaRequest):
+    """Retorna o relatório pré-geração de evidência estatística da Quina."""
+    try:
+        motor = MotorQuinaB2B(
+            limite_historico=request.historico_limite or 30,
+            estrategia=request.estrategia or "equilibrada",
+            pool=request.pool
+        )
+        return {
+            "sucesso": True,
+            "relatorio": motor.gerar_relatorio_pre_geracao(),
+            "distribuicoes": motor.stats["modelos_ordenados"],
+            "top_pares": motor.stats["pares_top"][:10],
+            "robustez": motor.testar_robustez_indicadores()
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro na Análise Quina: {str(e)}")
 
 
 if __name__ == "__main__":
