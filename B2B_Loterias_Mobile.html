@@ -16201,6 +16201,63 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         }
         if (dualContainer) dualContainer.innerHTML = '';
 
+        // ━━ BOTÕES DE ATALHO RÁPIDO DO MOTOR POR LOTERIA (SELECTION HEADER) ━━
+        const btnQuickQuina = document.getElementById('btn-quick-motor-quina');
+        if (btnQuickQuina) {
+            btnQuickQuina.style.display = (gameKey === 'quina') ? 'inline-block' : 'none';
+        }
+        const btnQuickMega = document.getElementById('btn-quick-motor-megasena');
+        if (btnQuickMega) {
+            btnQuickMega.style.display = (gameKey === 'megasena') ? 'inline-block' : 'none';
+        }
+        const btnQuickLotofacil = document.getElementById('btn-quick-motor-lotofacil');
+        if (btnQuickLotofacil) {
+            btnQuickLotofacil.style.display = (gameKey === 'lotofacil') ? 'inline-block' : 'none';
+        }
+        const btnQuickDupla = document.getElementById('btn-quick-motor-duplasena');
+        if (btnQuickDupla) {
+            btnQuickDupla.style.display = (gameKey === 'duplasena') ? 'inline-block' : 'none';
+        }
+
+        // ━━ DESTAQUE VISUAL DOS MOTORES EM B2B-MOTORS-ROW CONFORME A LOTERIA SELECIONADA ━━
+        const b2bQuinaBtn = document.getElementById('btn-motor-quina');
+        if (b2bQuinaBtn) {
+            if (gameKey === 'quina') {
+                b2bQuinaBtn.style.animation = 'pulseGlowQuina 1.8s infinite alternate';
+                b2bQuinaBtn.style.border = '2px solid #93c5fd';
+                b2bQuinaBtn.style.transform = 'scale(1.04)';
+            } else {
+                b2bQuinaBtn.style.animation = 'none';
+                b2bQuinaBtn.style.border = '1px solid #60a5fa';
+                b2bQuinaBtn.style.transform = 'none';
+            }
+        }
+        const b2bMegaBtn = document.getElementById('btn-motor-megasena');
+        if (b2bMegaBtn) {
+            if (gameKey === 'megasena') {
+                b2bMegaBtn.style.animation = 'pulseGlowMega 2.2s infinite alternate';
+                b2bMegaBtn.style.border = '2px solid #a7f3d0';
+                b2bMegaBtn.style.transform = 'scale(1.04)';
+            } else {
+                b2bMegaBtn.style.animation = 'none';
+                b2bMegaBtn.style.border = '1px solid #34d399';
+                b2bMegaBtn.style.transform = 'none';
+            }
+        }
+        const b2bLotofacilBtn = document.getElementById('btn-motor-lotofacil');
+        if (b2bLotofacilBtn) {
+            if (gameKey === 'lotofacil') {
+                b2bLotofacilBtn.style.animation = 'pulseGlowLotofacil 2.2s infinite alternate';
+                b2bLotofacilBtn.style.border = '2px solid #e9d5ff';
+                b2bLotofacilBtn.style.transform = 'scale(1.04)';
+            } else {
+                b2bLotofacilBtn.style.animation = 'none';
+                b2bLotofacilBtn.style.border = '1px solid #c084fc';
+                b2bLotofacilBtn.style.transform = 'none';
+            }
+        }
+
+
         this.navButtons.forEach(btn => {
             const isActive = btn.dataset.game === gameKey;
             const gameData = GAMES[btn.dataset.game];
