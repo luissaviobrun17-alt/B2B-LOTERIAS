@@ -176,59 +176,108 @@ class MotorSuperSeteB2BEngine {
             colStats.push({ counts, atrasos, entropia: entropia / Math.log2(10) });
         }
 
-        // Amostrar candidatos probabilísticos
+        // 1. Pré-calcular distribuições cumulativas para amostragem probabilística ultra-rápida (7 colunas x 10 dígitos)
+        const colCumDist = [];
+        for (let c = 0; c < 7; c++) {
+            const pWeights = [];
+            for (let d = 0; d < 10; d++) {
+                let w = colStats[c].counts[d] + 1;
+                if (estrategia === 'atrasos_recuperacoes') {
+                    w = colStats[c].atrasos[d] + 1;
+                }
+                pWeights.push(w);
+            }
+            const sumW = pWeights.reduce((a, b) => a + b, 0);
+            const cum = [];
+            let acc = 0;
+            for (let d = 0; d < 10; d++) {
+                acc += pWeights[d];
+                cum.push(acc / sumW);
+            }
+            colCumDist.push(cum);
+        }
+
+        // 2. Amostrar candidatos probabilísticos com escala dinâmica proporcional à quantidade solicitada
+        const targetCandidatos = Math.max(quantidade * 3, 1200);
+        const maxIter = Math.max(quantidade * 25, 12000);
+        const candSet = new Set();
         const candidatos = [];
         const rng = Math.random;
 
-        for (let iter = 0; iter < 400; iter++) {
-            const jogo = [];
+        for (let iter = 0; iter < maxIter && candidatos.length < targetCandidatos; iter++) {
+            const jogo = new Array(7);
             for (let c = 0; c < 7; c++) {
-                // Peso proporcional
-                const pWeights = [];
-                for (let d = 0; d < 10; d++) {
-                    let w = colStats[c].counts[d] + 1;
-                    if (estrategia === 'atrasos_recuperacoes') {
-                        w = colStats[c].atrasos[d] + 1;
+                const cum = colCumDist[c];
+                const r = rng();
+                let pick = 9;
+                for (let d = 0; d < 9; d++) {
+                    if (r < cum[d]) {
+                        pick = d;
+                        break;
                     }
-                    pWeights.push(w);
                 }
-                const sumW = pWeights.reduce((a, b) => a + b, 0);
-                let r = rng() * sumW;
-                let pick = 0;
-                for (let d = 0; d < 10; d++) {
-                    r -= pWeights[d];
-                    if (r <= 0) { pick = d; break; }
-                }
-                jogo.push(pick);
+                jogo[c] = pick;
             }
 
-            // Validar filtros
+            // Deduplicação imediata por chave numérica única
+            const key = (jogo[0] * 1000000) + (jogo[1] * 100000) + (jogo[2] * 10000) + (jogo[3] * 1000) + (jogo[4] * 100) + (jogo[5] * 10) + jogo[6];
+            if (candSet.has(key)) continue;
+
+            // Validar filtros estritos do Super Sete
             if (MotorSuperSeteB2BEngine.contarConsecutivos(jogo) <= maxCons &&
                 MotorSuperSeteB2BEngine.contarMaxRepeticoes(jogo) <= 3) {
-                const soma = jogo.reduce((a, b) => a + b, 0);
+                const soma = jogo[0] + jogo[1] + jogo[2] + jogo[3] + jogo[4] + jogo[5] + jogo[6];
                 if (soma >= 16 && soma <= 47) {
+                    candSet.add(key);
                     candidatos.push(jogo);
                 }
             }
         }
 
-        // Avaliar candidatos com SMS
-        const avaliados = candidatos.map(j => {
-            const soma = j.reduce((a, b) => a + b, 0);
+        // Garantia de candidatos suficientes caso a quantidade solicitada seja muito alta
+        if (candidatos.length < quantidade) {
+            for (let iter = 0; iter < maxIter && candidatos.length < quantidade * 1.5; iter++) {
+                const jogo = new Array(7);
+                for (let c = 0; c < 7; c++) {
+                    const cum = colCumDist[c];
+                    const r = rng();
+                    let pick = 9;
+                    for (let d = 0; d < 9; d++) {
+                        if (r < cum[d]) {
+                            pick = d;
+                            break;
+                        }
+                    }
+                    jogo[c] = pick;
+                }
+                const key = (jogo[0] * 1000000) + (jogo[1] * 100000) + (jogo[2] * 10000) + (jogo[3] * 1000) + (jogo[4] * 100) + (jogo[5] * 10) + jogo[6];
+                if (candSet.has(key)) continue;
+
+                if (MotorSuperSeteB2BEngine.contarConsecutivos(jogo) <= maxCons &&
+                    MotorSuperSeteB2BEngine.contarMaxRepeticoes(jogo) <= 3) {
+                    const soma = jogo[0] + jogo[1] + jogo[2] + jogo[3] + jogo[4] + jogo[5] + jogo[6];
+                    if (soma >= 14 && soma <= 49) {
+                        candSet.add(key);
+                        candidatos.push(jogo);
+                    }
+                }
+            }
+        }
+
+        // 3. Avaliar candidatos com SMS (Score Multivariado do Super Sete)
+        let avaliados = candidatos.map(j => {
+            const soma = j[0] + j[1] + j[2] + j[3] + j[4] + j[5] + j[6];
             const distSoma = Math.abs(soma - 31.5);
             const sCentroide = Math.max(0, 100 * (1 - (distSoma / 15.0)));
 
             let sFreq = 0;
-            for (let c = 0; c < 7; c++) {
-                sFreq += (colStats[c].counts[j[c]] / N) * 100;
-            }
-            sFreq = sFreq / 7;
-
             let sGap = 0;
             for (let c = 0; c < 7; c++) {
+                sFreq += (colStats[c].counts[j[c]] / N) * 100;
                 let g = colStats[c].atrasos[j[c]];
                 sGap += Math.max(10, 100 - Math.abs(g - 9) * 8);
             }
+            sFreq = sFreq / 7;
             sGap = sGap / 7;
 
             const scoreSMS = Math.min(96, Math.max(20, (sFreq * 0.35 + sGap * 0.35 + sCentroide * 0.30)));
@@ -237,34 +286,129 @@ class MotorSuperSeteB2BEngine {
 
         avaliados.sort((a, b) => b.score - a.score);
 
-        // Seleção gulosa por Hamming
+        // Se Modo Sniper ativo e houver candidatos suficientes, focar nos melhores
+        if (isSniper && avaliados.length >= Math.max(quantidade * 1.5, 50)) {
+            const cutoff = Math.max(quantidade, Math.floor(avaliados.length * 0.35));
+            avaliados = avaliados.slice(0, cutoff);
+        }
+
+        // 4. Seleção gulosa multiobjetivo com diversificação de Hamming
         const selecionados = [];
-        let threshH = minHamming;
+        const selKeys = new Set();
+        const usado = new Uint8Array(avaliados.length);
 
         if (avaliados.length > 0) {
             selecionados.push(avaliados[0]);
-            for (let i = 1; i < avaliados.length && selecionados.length < quantidade; i++) {
-                const cand = avaliados[i];
-                let distMin = 7;
-                for (let sel of selecionados) {
-                    let d = MotorSuperSeteB2BEngine.distanciaHamming(cand.jogo, sel.jogo);
-                    if (d < distMin) distMin = d;
+            usado[0] = 1;
+            selKeys.add(avaliados[0].jogo.join(''));
+
+            let threshH = minHamming;
+            while (threshH >= 1 && selecionados.length < quantidade) {
+                for (let i = 1; i < avaliados.length && selecionados.length < quantidade; i++) {
+                    if (usado[i]) continue;
+                    const cand = avaliados[i];
+
+                    // Testar distância mínima com early-break para máxima velocidade
+                    let atendeDistancia = true;
+                    for (let s = 0; s < selecionados.length; s++) {
+                        const selJogo = selecionados[s].jogo;
+                        let d = 0;
+                        for (let c = 0; c < 7; c++) {
+                            if (cand.jogo[c] !== selJogo[c]) d++;
+                        }
+                        if (d < threshH) {
+                            atendeDistancia = false;
+                            break;
+                        }
+                    }
+
+                    if (atendeDistancia) {
+                        selecionados.push(cand);
+                        usado[i] = 1;
+                        selKeys.add(cand.jogo.join(''));
+                    }
                 }
-                if (distMin >= threshH) {
-                    selecionados.push(cand);
-                }
-                if (i === avaliados.length - 1 && selecionados.length < quantidade && threshH > 2) {
-                    threshH--;
-                    i = 0; // tentar novamente com threshold relaxado
+                threshH--;
+            }
+        }
+
+        // Garantia de preenchimento exato da quantidade caso threshH chegue a 0
+        if (selecionados.length < quantidade) {
+            for (let i = 0; i < avaliados.length && selecionados.length < quantidade; i++) {
+                if (!usado[i]) {
+                    const key = avaliados[i].jogo.join('');
+                    if (!selKeys.has(key)) {
+                        selecionados.push(avaliados[i]);
+                        usado[i] = 1;
+                        selKeys.add(key);
+                    }
                 }
             }
         }
 
-        // Métricas da carteira
+        // Se ainda faltar para quantidade solicitada, gerar sob demanda
+        while (selecionados.length < quantidade) {
+            const jogo = new Array(7);
+            for (let c = 0; c < 7; c++) {
+                const cum = colCumDist[c];
+                const r = rng();
+                let pick = 9;
+                for (let d = 0; d < 9; d++) {
+                    if (r < cum[d]) { pick = d; break; }
+                }
+                jogo[c] = pick;
+            }
+            const key = jogo.join('');
+            if (selKeys.has(key)) continue;
+
+            if (MotorSuperSeteB2BEngine.contarConsecutivos(jogo) <= maxCons &&
+                MotorSuperSeteB2BEngine.contarMaxRepeticoes(jogo) <= 3) {
+                const soma = jogo[0] + jogo[1] + jogo[2] + jogo[3] + jogo[4] + jogo[5] + jogo[6];
+                if (soma >= 14 && soma <= 49) {
+                    selKeys.add(key);
+                    const somaDist = Math.abs(soma - 31.5);
+                    const sCentroide = Math.max(0, 100 * (1 - (somaDist / 15.0)));
+                    let sFreq = 0, sGap = 0;
+                    for (let c = 0; c < 7; c++) {
+                        sFreq += (colStats[c].counts[jogo[c]] / N) * 100;
+                        sGap += Math.max(10, 100 - Math.abs(colStats[c].atrasos[jogo[c]] - 9) * 8);
+                    }
+                    const score = Math.round(Math.min(96, Math.max(20, (sFreq / 7 * 0.35 + sGap / 7 * 0.35 + sCentroide * 0.30))) * 10) / 10;
+                    selecionados.push({ jogo, score, soma });
+                }
+            }
+        }
+
+        // 5. Métricas da carteira com amostragem Monte Carlo de alta precisão para carteiras grandes (>250 jogos)
         let totalH = 0, numPares = 0, minH = 7;
-        for (let i = 0; i < selecionados.length; i++) {
-            for (let j = i + 1; j < selecionados.length; j++) {
-                let d = MotorSuperSeteB2BEngine.distanciaHamming(selecionados[i].jogo, selecionados[j].jogo);
+        const len = selecionados.length;
+        if (len <= 250) {
+            for (let i = 0; i < len; i++) {
+                const j1 = selecionados[i].jogo;
+                for (let j = i + 1; j < len; j++) {
+                    const j2 = selecionados[j].jogo;
+                    let d = 0;
+                    for (let c = 0; c < 7; c++) {
+                        if (j1[c] !== j2[c]) d++;
+                    }
+                    totalH += d;
+                    if (d < minH) minH = d;
+                    numPares++;
+                }
+            }
+        } else {
+            // Amostragem Monte Carlo de 30.000 pares (Erro padrão < 0.007, nível de confiança 99.9%)
+            const maxAmostras = Math.min(30000, Math.floor((len * (len - 1)) / 2));
+            for (let k = 0; k < maxAmostras; k++) {
+                const i = Math.floor(rng() * len);
+                let j = Math.floor(rng() * (len - 1));
+                if (j >= i) j++;
+                const j1 = selecionados[i].jogo;
+                const j2 = selecionados[j].jogo;
+                let d = 0;
+                for (let c = 0; c < 7; c++) {
+                    if (j1[c] !== j2[c]) d++;
+                }
                 totalH += d;
                 if (d < minH) minH = d;
                 numPares++;

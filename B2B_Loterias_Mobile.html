@@ -15256,7 +15256,10 @@ class UI {
                             const tbodyJogos = document.getElementById('supersete-jogos-tbody');
                             if (tbodyJogos) {
                                 tbodyJogos.innerHTML = '';
-                                data.jogos.forEach((j) => {
+                                const frag = document.createDocumentFragment();
+                                const maxExibir = data.jogos.length > 150 ? 100 : data.jogos.length;
+                                for (let idx = 0; idx < maxExibir; idx++) {
+                                    const j = data.jogos[idx];
                                     const tr = document.createElement('tr');
                                     tr.style.borderBottom = '1px solid rgba(56,189,248,0.15)';
                                     tr.innerHTML = `
@@ -15271,18 +15274,29 @@ class UI {
                                             <button class="copiar-jogo-btn" data-jogo="${j.jogo.join(' ')}" style="background:rgba(56,189,248,0.2); border:1px solid #38bdf8; color:#e0f2fe; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:700;">📋 Copiar</button>
                                         </td>
                                     `;
-                                    tbodyJogos.appendChild(tr);
-                                });
-                                tbodyJogos.querySelectorAll('.copiar-jogo-btn').forEach(btn => {
-                                    btn.addEventListener('click', function() {
-                                        const txt = this.getAttribute('data-jogo');
+                                    frag.appendChild(tr);
+                                }
+                                if (data.jogos.length > maxExibir) {
+                                    const trInfo = document.createElement('tr');
+                                    trInfo.innerHTML = `
+                                        <td colspan="6" style="padding: 10px; text-align:center; color:#38bdf8; font-size:0.85rem; font-weight:700; background:rgba(2,132,199,0.15); border-top:1px solid rgba(56,189,248,0.3);">
+                                            ⚡ Exibindo os 100 melhores jogos no painel detalhado. Todos os <strong>${data.jogos.length} jogos gerados</strong> estão na grade oficial abaixo prontos para Salvar e Apostar na Caixa!
+                                        </td>
+                                    `;
+                                    frag.appendChild(trInfo);
+                                }
+                                tbodyJogos.appendChild(frag);
+                                tbodyJogos.onclick = (e) => {
+                                    const btn = e.target.closest('.copiar-jogo-btn');
+                                    if (btn) {
+                                        const txt = btn.getAttribute('data-jogo');
                                         navigator.clipboard.writeText(txt).then(() => {
-                                            const original = this.textContent;
-                                            this.textContent = '✅ Copiado!';
-                                            setTimeout(() => this.textContent = original, 1500);
+                                            const original = btn.textContent;
+                                            btn.textContent = '✅ Copiado!';
+                                            setTimeout(() => btn.textContent = original, 1500);
                                         });
-                                    });
-                                });
+                                    }
+                                };
                             }
                         }
 

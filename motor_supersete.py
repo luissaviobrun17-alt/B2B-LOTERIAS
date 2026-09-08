@@ -552,8 +552,19 @@ class MotorSuperSeteB2B:
             return {"diversificacao": 100.0, "redundancia": 0.0, "hamming_medio": 7.0, "hamming_minimo": 7}
 
         distancias = []
-        for i in range(k):
-            for j in range(i + 1, k):
+        if k <= 250:
+            for i in range(k):
+                for j in range(i + 1, k):
+                    distancias.append(self.distancia_hamming(carteira[i], carteira[j]))
+        else:
+            # Amostragem Monte Carlo de 25.000 pares para alta performance em carteiras grandes
+            import random
+            amostras = min(25000, (k * (k - 1)) // 2)
+            for _ in range(amostras):
+                i = random.randrange(k)
+                j = random.randrange(k - 1)
+                if j >= i:
+                    j += 1
                 distancias.append(self.distancia_hamming(carteira[i], carteira[j]))
 
         media_h = statistics.mean(distancias) if distancias else 7.0
@@ -568,8 +579,8 @@ class MotorSuperSeteB2B:
         }
 
     def gerar_carteira(self, quantidade_jogos: int = 10) -> Dict[str, Any]:
-        qtd = max(1, min(100, int(quantidade_jogos)))
-        candidatos = self._amostrar_candidatos_relevantes(tamanho_pool=max(qtd * 25, 400))
+        qtd = max(1, min(10000, int(quantidade_jogos)))
+        candidatos = self._amostrar_candidatos_relevantes(tamanho_pool=max(qtd * 3, 600))
 
         candidatos_avaliados = []
         for cand in candidatos:
@@ -584,7 +595,7 @@ class MotorSuperSeteB2B:
             raise RuntimeError("Não foi possível gerar combinações válidas com os filtros estritos atuais.")
 
         if self.is_sniper:
-            cutoff = max(1, int(len(candidatos_avaliados) * 0.10))
+            cutoff = max(qtd, int(len(candidatos_avaliados) * 0.35))
             pool_sniper = candidatos_avaliados[:cutoff]
             if not pool_sniper or pool_sniper[0][1]["score_sms"] < 65.0:
                 diagnostico_sniper = "Aviso Honesto do Motor: Dados atuais não atingiram patamar de evidência estatística robusta para Modo Sniper."
@@ -600,39 +611,62 @@ class MotorSuperSeteB2B:
         carteira_selecionada.append(candidatos_avaliados[0][0])
         carteira_info.append(candidatos_avaliados[0][1])
 
-        candidatos_restantes = candidatos_avaliados[1:]
+        sel_keys = {tuple(candidatos_avaliados[0][0])}
+        usados = {0}
         thresh_h = self.hamming_minimo
 
-        while len(carteira_selecionada) < qtd and candidatos_restantes:
-            melhor_cand = None
-            melhor_score_combinado = -float("inf")
-            idx_escolhido = -1
-
-            for idx, (cand, info) in enumerate(candidatos_restantes):
-                min_h = min(self.distancia_hamming(cand, j_existente) for j_existente in carteira_selecionada)
-                if min_h >= thresh_h:
-                    merito = info["score_sms"] + (min_h * 4.0)
-                    if merito > melhor_score_combinado:
-                        melhor_score_combinado = merito
-                        melhor_cand = cand
-                        idx_escolhido = idx
-
-            if melhor_cand is not None:
-                carteira_selecionada.append(melhor_cand)
-                carteira_info.append(candidatos_restantes[idx_escolhido][1])
-                candidatos_restantes.pop(idx_escolhido)
-            else:
-                thresh_h = max(2, thresh_h - 1)
-                if thresh_h < 2:
+        while thresh_h >= 1 and len(carteira_selecionada) < qtd:
+            for idx, (cand, info) in enumerate(candidatos_avaliados):
+                if idx in usados:
+                    continue
+                if len(carteira_selecionada) >= qtd:
                     break
+
+                atende_distancia = True
+                for j_existente in carteira_selecionada:
+                    d = 0
+                    for c in range(7):
+                        if cand[c] != j_existente[c]:
+                            d += 1
+                    if d < thresh_h:
+                        atende_distancia = False
+                        break
+
+                if atende_distancia:
+                    carteira_selecionada.append(cand)
+                    carteira_info.append(info)
+                    usados.add(idx)
+                    sel_keys.add(tuple(cand))
+            thresh_h -= 1
+
+        if len(carteira_selecionada) < qtd:
+            for idx, (cand, info) in enumerate(candidatos_avaliados):
+                if len(carteira_selecionada) >= qtd:
+                    break
+                t_cand = tuple(cand)
+                if idx not in usados and t_cand not in sel_keys:
+                    carteira_selecionada.append(cand)
+                    carteira_info.append(info)
+                    usados.add(idx)
+                    sel_keys.add(t_cand)
 
         metricas_cart = self.calcular_metricas_carteira(carteira_selecionada)
 
         jogos_formatados = []
+        import random
         for i, (jogo, info) in enumerate(zip(carteira_selecionada, carteira_info), 1):
-            h_medio_individual = statistics.mean(
-                [self.distancia_hamming(jogo, outro) for outro in carteira_selecionada if outro != jogo]
-            ) if len(carteira_selecionada) > 1 else 7.0
+            if len(carteira_selecionada) <= 1:
+                h_medio_individual = 7.0
+            elif len(carteira_selecionada) <= 100:
+                h_medio_individual = statistics.mean(
+                    [self.distancia_hamming(jogo, outro) for outro in carteira_selecionada if outro != jogo]
+                )
+            else:
+                # Amostragem para desempenho instantâneo
+                amostra_outros = random.sample(carteira_selecionada, min(30, len(carteira_selecionada)))
+                h_medio_individual = statistics.mean(
+                    [self.distancia_hamming(jogo, outro) for outro in amostra_outros if outro != jogo] or [metricas_cart["hamming_medio"]]
+                )
 
             jogos_formatados.append({
                 "ranking": i,
