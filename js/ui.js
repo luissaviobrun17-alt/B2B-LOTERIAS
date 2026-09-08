@@ -1629,10 +1629,18 @@ class UI {
                     estrategiaTime = 'fixo';
                 }
 
-                // Configurar pool se reduzido
+                // Configurar pool inteligente: prioriza números do volante se selecionados, senão distribui equilibradamente pelos 4 grupos analíticos
                 let pool = null;
-                if (poolSize < 80) {
-                    pool = Array.from({ length: poolSize }, (_, i) => i + 1);
+                const userSelected = (this.selectedNumbers && this.selectedNumbers.size >= 10)
+                    ? Array.from(this.selectedNumbers).filter(n => n >= 1 && n <= 80)
+                    : [];
+
+                if (userSelected.length >= 10) {
+                    pool = userSelected.sort((a, b) => a - b);
+                } else if (poolSize < 80) {
+                    pool = (typeof MotorTimemaniaB2BEngine !== 'undefined' && typeof MotorTimemaniaB2BEngine.obterPoolBalanceado === 'function')
+                        ? MotorTimemaniaB2BEngine.obterPoolBalanceado(poolSize)
+                        : null;
                 }
 
                 const origText = btnExecutarTimemania.innerHTML;
@@ -4125,6 +4133,27 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 b2bLotofacilBtn.style.animation = 'none';
                 b2bLotofacilBtn.style.border = '1px solid #c084fc';
                 b2bLotofacilBtn.style.transform = 'none';
+            }
+        }
+        const b2bTimemaniaBtn = document.getElementById('btn-motor-timemania');
+        if (b2bTimemaniaBtn) {
+            if (gameKey === 'timemania') {
+                b2bTimemaniaBtn.style.animation = 'pulseGlowMega 2.2s infinite alternate';
+                b2bTimemaniaBtn.style.border = '2px solid #34d399';
+                b2bTimemaniaBtn.style.transform = 'scale(1.04)';
+            } else {
+                b2bTimemaniaBtn.style.animation = 'none';
+                b2bTimemaniaBtn.style.border = '1px solid #34d399';
+                b2bTimemaniaBtn.style.transform = 'none';
+            }
+        }
+        if (gameKey === 'timemania') {
+            const timePanel = document.getElementById('motor-timemania-panel');
+            if (timePanel) {
+                timePanel.style.display = 'block';
+                setTimeout(() => {
+                    timePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
             }
         }
 
