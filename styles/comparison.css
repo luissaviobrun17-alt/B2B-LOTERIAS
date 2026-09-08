@@ -1,0 +1,299 @@
+/* ═══════════════════════════════════════════════════════════
+   COMPARISON PANEL — Estilos do Comparativo de Estratégias
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes compFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes compFadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-10px); }
+}
+
+.comp-panel {
+    background: linear-gradient(165deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.95));
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 16px;
+    padding: 0;
+    margin-top: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    animation: compFadeIn 0.4s ease;
+    overflow: hidden;
+}
+
+.comp-header {
+    padding: 18px 20px 14px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.06), rgba(15, 23, 42, 0.9));
+    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.comp-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.comp-icon {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.3));
+}
+
+.comp-title {
+    font-weight: 900;
+    font-size: 0.95rem;
+    color: #FFD700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.comp-subtitle {
+    font-size: 0.7rem;
+    color: #64748B;
+    margin-top: 2px;
+}
+
+.comp-close {
+    margin-left: auto;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #F87171;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.comp-close:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: #EF4444;
+}
+
+.comp-winner-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid;
+}
+
+.comp-winner-crown {
+    font-size: 1.3rem;
+    animation: crownBounce 2s ease-in-out infinite;
+}
+@keyframes crownBounce {
+    0%, 100% { transform: rotate(-5deg) scale(1); }
+    50% { transform: rotate(5deg) scale(1.15); }
+}
+
+.comp-winner-score {
+    margin-left: auto;
+    font-weight: 900;
+    font-size: 1.2rem;
+    font-family: 'Inter', monospace;
+}
+
+/* Legenda */
+.comp-legend {
+    display: flex;
+    gap: 16px;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    flex-wrap: wrap;
+}
+
+.comp-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.comp-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.comp-legend-name {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #CBD5E1;
+}
+
+.comp-legend-count {
+    font-size: 0.65rem;
+    color: #475569;
+    font-weight: 600;
+}
+
+/* Gráficos */
+.comp-charts {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.comp-metric {
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.comp-metric-global {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.06), rgba(0, 0, 0, 0.25));
+    border-color: rgba(255, 215, 0, 0.15);
+}
+
+.comp-metric-header {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #94A3B8;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.comp-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.comp-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comp-bar-label {
+    width: 30px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-align: right;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+}
+
+.comp-bar-track {
+    flex: 1;
+    height: 14px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 7px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.comp-bar-fill {
+    height: 100%;
+    border-radius: 7px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    min-width: 2px;
+}
+
+.comp-bar-winner::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    animation: barShine 2s ease-in-out infinite;
+}
+@keyframes barShine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.comp-bar-value {
+    width: 60px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-align: right;
+    flex-shrink: 0;
+    font-family: 'Inter', monospace;
+}
+
+/* Probabilidades */
+.comp-prob-section {
+    padding: 14px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.comp-prob-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #94A3B8;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+}
+
+.comp-prob-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.comp-prob-card {
+    text-align: center;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+    border: 1px solid;
+}
+
+.comp-prob-mode {
+    font-size: 0.7rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.comp-prob-value {
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: #E2E8F0;
+    font-family: 'Inter', monospace;
+}
+
+.comp-prob-detail {
+    font-size: 0.6rem;
+    color: #475569;
+    margin-top: 3px;
+}
+
+/* Footer */
+.comp-footer {
+    padding: 12px 20px 14px;
+    background: rgba(0, 0, 0, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.comp-footer-note {
+    font-size: 0.65rem;
+    color: #475569;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .comp-panel { margin-top: 8px; }
+    .comp-title { font-size: 0.8rem; letter-spacing: 1px; }
+    .comp-legend { gap: 10px; padding: 8px 14px; }
+    .comp-charts { padding: 12px 14px; }
+    .comp-bar-label { width: 24px; font-size: 0.55rem; }
+    .comp-bar-value { width: 50px; font-size: 0.6rem; }
+    .comp-prob-grid { grid-template-columns: 1fr 1fr; }
+}

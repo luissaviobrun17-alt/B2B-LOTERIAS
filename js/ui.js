@@ -5231,16 +5231,17 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             const isCapped = result.games.length > 1000;
 
             const isSS = (gameKey === 'supersete');
+            const isSingleLineGame = (gameKey !== 'lotofacil' && gameKey !== 'lotomania');
             result.games.slice(0, renderLimit).forEach((gameNumbers, index) => {
                 const nums = gameNumbers.map((n, colIdx) => {
                     if (isSS) {
-                        return `<div class="ball" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:38px;min-height:40px;padding:2px;border-color:#38bdf8;"><span style="font-size:0.52rem;color:#94a3b8;font-weight:800;line-height:1;">C${colIdx+1}</span><span style="font-size:1rem;font-weight:900;color:#38bdf8;line-height:1.1;">${n}</span></div>`;
+                        return `<div class="ball" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:35px;height:38px;min-width:28px;max-width:38px;padding:2px 0;border-color:#38bdf8;flex:0 0 auto;"><span style="font-size:0.55rem;color:#94a3b8;font-weight:800;line-height:1;letter-spacing:0.3px;">C${colIdx+1}</span><span style="font-size:1.05rem;font-weight:900;color:#38bdf8;line-height:1.1;">${n}</span></div>`;
                     }
                     const padded = n.toString().padStart(2, '0');
                     if (hasFixed && fixedSet.has(n)) {
-                        return `<div class="ball fixed" style="border-color:#F59E0B;color:#F59E0B;text-shadow:0 0 6px rgba(245,158,11,0.4);font-weight:900">${padded}</div>`;
+                        return `<div class="ball fixed" style="border-color:#F59E0B;color:#F59E0B;text-shadow:0 0 6px rgba(245,158,11,0.4);font-weight:900;flex:0 0 auto;">${padded}</div>`;
                     }
-                    return `<div class="ball">${padded}</div>`;
+                    return `<div class="ball" style="flex:0 0 auto;">${padded}</div>`;
                 }).join('');
                 
                 let extraHtml = '';
@@ -5259,7 +5260,8 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                         extraHtml = `<span style="font-size:0.75em;color:#10B981;background:rgba(16,185,129,0.18);padding:2px 6px;border-radius:4px;margin-left:auto;font-weight:bold;">🍀 ${trStr}</span>`;
                     }
                 }
-                chunks.push(`<div class="game-card"><div style="display:flex;align-items:center;margin-bottom:5px"><div class="game-index-badge" style="position:static">Jogo ${index + 1}</div>${extraHtml}</div><div class="game-numbers-wrapper">${nums}</div></div>`);
+                const wrapperStyle = isSingleLineGame ? 'display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:5px;width:100%;' : 'display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;width:100%;';
+                chunks.push(`<div class="game-card"><div style="display:flex;align-items:center;margin-bottom:5px"><div class="game-index-badge" style="position:static">Jogo ${index + 1}</div>${extraHtml}</div><div class="game-numbers-wrapper" style="${wrapperStyle}">${nums}</div></div>`);
             });
 
             this.gamesContainer.innerHTML = chunks.join('');
@@ -5345,6 +5347,15 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             // Wrapper for numbers
             const numbersWrapper = document.createElement('div');
             numbersWrapper.className = 'game-numbers-wrapper';
+            const isSingleLineGame = (gameKey !== 'lotofacil' && gameKey !== 'lotomania');
+            if (isSingleLineGame) {
+                numbersWrapper.style.display = 'flex';
+                numbersWrapper.style.flexWrap = 'nowrap';
+                numbersWrapper.style.justifyContent = 'center';
+                numbersWrapper.style.alignItems = 'center';
+                numbersWrapper.style.gap = '5px';
+                numbersWrapper.style.width = '100%';
+            }
 
             gameNumbers.forEach((num, colIdx) => {
                 const ball = this.createBall(num, colIdx, gameKey);
@@ -5369,13 +5380,17 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             ball.style.flexDirection = 'column';
             ball.style.alignItems = 'center';
             ball.style.justifyContent = 'center';
-            ball.style.minWidth = '42px';
-            ball.style.minHeight = '42px';
-            ball.style.padding = '2px';
+            ball.style.width = '35px';
+            ball.style.height = '38px';
+            ball.style.minWidth = '28px';
+            ball.style.maxWidth = '38px';
+            ball.style.padding = '2px 0';
             ball.style.borderColor = '#38bdf8';
-            ball.innerHTML = `<span style="font-size:0.58rem; color:#94a3b8; font-weight:800; line-height:1; letter-spacing:0.5px;">C${colIdx + 1}</span><span style="font-size:1.1rem; font-weight:900; line-height:1.1; color:#38bdf8;">${number}</span>`;
+            ball.style.flex = '0 0 auto';
+            ball.innerHTML = `<span style="font-size:0.55rem; color:#94a3b8; font-weight:800; line-height:1; letter-spacing:0.3px;">C${colIdx + 1}</span><span style="font-size:1.05rem; font-weight:900; line-height:1.1; color:#38bdf8;">${number}</span>`;
         } else {
             ball.textContent = number.toString().padStart(2, '0');
+            ball.style.flex = '0 0 auto';
         }
         return ball;
     }

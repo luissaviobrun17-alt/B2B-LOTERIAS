@@ -1,0 +1,544 @@
+/* =====================================================
+   B2B Loterias - CSS Responsivo
+   Celular, Tablet e Desktop
+   ===================================================== */
+
+/* ===========================
+   TABLET (768px - 1024px)
+   =========================== */
+@media screen and (max-width: 1024px) {
+    .app-container {
+        padding: 0.5rem;
+    }
+
+    /* Layout: sidebar vai para baixo */
+    .content-wrapper {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+
+    .investment-sidebar {
+        order: 2;
+    }
+
+    /* Header */
+    .logo-container {
+        width: 160px;
+        height: 160px;
+    }
+
+    /* Nav: 2 linhas */
+    nav {
+        flex-wrap: wrap !important;
+        gap: 4px;
+        padding: 6px;
+    }
+
+    .nav-btn {
+        flex: 1 1 calc(25% - 4px);
+        min-width: 80px;
+        padding: 8px 4px;
+    }
+
+    .nav-name {
+        font-size: 0.8rem;
+    }
+
+    .nav-prize {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+
+    /* Controles: empilhar */
+    .control-row {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.8rem;
+    }
+
+    /* Grid de números */
+    .number-grid {
+        grid-template-columns: repeat(10, 1fr);
+        gap: 4px;
+    }
+
+    .grid-num {
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
+    }
+
+    /* Cards de jogos */
+    .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+
+    /* Stats */
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Painel IA */
+    .quantum-card {
+        margin: 0;
+    }
+}
+
+/* ===========================
+   CELULAR (até 767px)
+   =========================== */
+@media screen and (max-width: 767px) {
+    .app-container {
+        padding: 0.3rem;
+        overflow-x: hidden;
+    }
+
+    /* Header: compacto */
+    header {
+        padding: 0.5rem 0.5rem 0;
+    }
+
+    .header-top {
+        min-height: 70px !important;
+        padding: 0 10px !important;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start !important;
+        gap: 0;
+    }
+
+    .logo-container {
+        width: 60px;
+        height: 60px;
+        flex-shrink: 0;
+    }
+
+    .header-logo-img {
+        transform: scale(1.2) !important;
+    }
+
+    .header-top h1 {
+        display: none;
+    }
+
+    /* Brand logo: compacto à esquerda */
+    .brand-logo {
+        flex-direction: row;
+        align-items: center;
+        gap: 0;
+        margin: 0;
+        flex-shrink: 0;
+        order: -1;
+    }
+
+    /* Nav: scroll horizontal */
+    nav {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 3px;
+        padding: 4px;
+        border-radius: 10px;
+    }
+
+    nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-btn {
+        flex: 0 0 auto;
+        min-width: 70px;
+        padding: 6px 3px;
+        border-radius: 8px;
+    }
+
+    .nav-name {
+        font-size: 0.7rem;
+    }
+
+    .nav-prize {
+        font-size: 0.55rem;
+        padding: 1px 5px;
+    }
+
+    /* Layout: coluna única */
+    .content-wrapper {
+        grid-template-columns: 1fr !important;
+        gap: 0.8rem;
+    }
+
+    /* Controles: empilhados */
+    .control-row {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem;
+    }
+
+    /* Painéis */
+    .game-config,
+    .stats-panel,
+    .results-area,
+    .sidebar-card {
+        padding: 0.8rem;
+        border-radius: 10px;
+    }
+
+    .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .panel-header h2 {
+        font-size: 1.2rem;
+    }
+
+    /* Grid de números: 6 colunas para celular */
+    .number-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 3px;
+    }
+
+    .grid-num {
+        width: 42px;
+        height: 42px;
+        font-size: 1.15rem;
+    }
+
+    /* Botão Gerar */
+    .action-btn,
+    #generate-btn {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.1rem;
+        border-radius: 10px;
+    }
+
+    /* Cards de jogos: 1 coluna */
+    .games-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .game-card {
+        padding: 0.8rem;
+    }
+
+    /* Ações dos resultados */
+    .results-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .results-actions {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .secondary-btn {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 8px 10px;
+        font-size: 0.75rem;
+        text-align: center;
+    }
+
+    .sm-btn, .stat-toggle {
+        font-size: 0.7rem;
+        padding: 4px 10px;
+    }
+
+    /* Stats */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .stats-controls {
+        flex-wrap: wrap;
+        gap: 3px;
+    }
+
+    .stats-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    /* Sidebar */
+    .investment-sidebar {
+        order: 2;
+    }
+
+    /* Sidebar Action Cards - Mobile */
+    .sidebar-action-card {
+        margin-top: 0.5rem;
+    }
+
+    .sidebar-modern-btn {
+        padding: 0.8rem !important;
+    }
+
+    .sidebar-btn-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 1rem !important;
+    }
+
+    .sidebar-btn-title {
+        font-size: 0.75rem !important;
+    }
+
+    .sidebar-btn-desc {
+        font-size: 0.6rem !important;
+    }
+
+    /* Custo */
+    .cost-total strong {
+        font-size: 1.2rem;
+    }
+
+    /* Modais */
+    .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        max-width: none !important;
+        padding: 1rem;
+        border-radius: 16px 16px 0 0;
+        max-height: 90vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Share Menu - Mobile: aparece como bottom sheet */
+    .share-context-menu {
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        border-radius: 16px 16px 0 0 !important;
+        padding: 1rem !important;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .share-menu-item {
+        padding: 0.8rem !important;
+        font-size: 0.95rem !important;
+    }
+
+    .share-icon {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    /* Painel IA */
+    .quantum-groups-container {
+        grid-template-columns: 1fr !important;
+    }
+
+    .quantum-controls-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .quantum-btn-generate {
+        width: 100%;
+    }
+
+    .quantum-btn-use {
+        width: calc(100% - 2rem);
+    }
+
+    .formula-display {
+        font-size: 0.6rem;
+        word-break: break-all;
+    }
+
+    /* Seleção */
+    .selection-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+    }
+
+    .selection-info {
+        font-size: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    /* Prêmio */
+    .prize-display {
+        width: 100%;
+    }
+
+    .prize-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+    }
+
+    /* Estimativas */
+    .closing-estimates {
+        gap: 0.5rem;
+    }
+
+    .estimate-value {
+        font-size: 0.85rem;
+    }
+
+    /* Esconder tagline antigo no celular (mantém o novo inline) */
+    .tagline-container {
+        display: none !important;
+    }
+
+    /* Animações de fundo: desabilitar no celular (performance) */
+    .header-anim-container {
+        display: none;
+    }
+
+    /* Controles do custo inline */
+    #current-bet-cost {
+        text-align: center !important;
+    }
+}
+
+/* ===========================
+   CELULAR PEQUENO (até 380px)
+   =========================== */
+@media screen and (max-width: 380px) {
+    .number-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 2px;
+    }
+
+    .grid-num {
+        width: 38px;
+        height: 38px;
+        font-size: 1.05rem;
+    }
+
+    .nav-btn {
+        min-width: 60px;
+        padding: 4px 2px;
+    }
+
+    .nav-name {
+        font-size: 0.6rem;
+    }
+
+    .nav-prize {
+        display: none;
+    }
+
+    .logo-container {
+        width: 80px;
+        height: 80px;
+    }
+
+    .panel-header h2 {
+        font-size: 1rem;
+    }
+
+    .game-card {
+        padding: 0.6rem;
+    }
+
+    .ball {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+}
+
+/* ===========================
+   DESKTOP GRANDE (1400px+)
+   =========================== */
+@media screen and (min-width: 1400px) {
+    .app-container {
+        max-width: 1600px;
+    }
+
+    .content-wrapper {
+        grid-template-columns: 1fr 380px;
+    }
+
+    .number-grid {
+        grid-template-columns: repeat(10, 1fr);
+        gap: 6px;
+    }
+
+    .grid-num {
+        width: 42px;
+        height: 42px;
+        font-size: 1.15rem;
+    }
+
+    .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+}
+
+/* ===========================
+   ORIENTAÇÃO PAISAGEM NO CELULAR
+   =========================== */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    header {
+        padding: 0.3rem;
+    }
+
+    .header-top {
+        min-height: auto !important;
+    }
+
+    .logo-container {
+        width: 60px;
+        height: 60px;
+    }
+
+    nav {
+        padding: 3px;
+    }
+
+    .nav-btn {
+        padding: 4px 2px;
+    }
+
+    .tagline-container {
+        display: none !important;
+    }
+}
+
+/* ===========================
+   TOUCH: melhor UX em toque
+   =========================== */
+@media (pointer: coarse) {
+    .grid-num {
+        min-width: 38px;
+        min-height: 38px;
+    }
+
+    .nav-btn {
+        min-height: 44px;
+    }
+
+    .sm-btn, .stat-toggle {
+        min-height: 36px;
+        padding: 6px 12px;
+    }
+
+    .action-btn {
+        min-height: 48px;
+    }
+
+    select, input[type="number"] {
+        min-height: 44px;
+        font-size: 16px; /* Evita zoom automático no iOS */
+    }
+}

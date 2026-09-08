@@ -1,0 +1,160 @@
+/* Lottery Specific Styles */
+
+/* Dynamic accent color injection usually happens via JS or inline styles for specific elements,
+   but we can define base classes here. */
+
+/* Ball Colors - Minimalist Approach:
+   Instead of complex 3D gradients, we use solid colors or subtle borders. 
+   The JS Engine typically sets the specific color from games.js. 
+   Here we ensure they look good on dark mode.
+*/
+
+.ball {
+    font-family: monospace;
+    letter-spacing: -1px;
+}
+
+/* Specific Game Theme Overrides (if needed) */
+/* We rely on CSS Variables set by JS mostly, but we can set defaults */
+
+[data-game="megasena"] {
+    --primary-accent: #209869;
+}
+
+[data-game="lotofacil"] {
+    --primary-accent: #930089;
+}
+
+[data-game="quina"] {
+    --primary-accent: #260085;
+}
+
+[data-game="duplasena"] {
+    --primary-accent: #a61324;
+}
+
+[data-game="lotomania"] {
+    --primary-accent: #f78100;
+}
+
+[data-game="timemania"] {
+    --primary-accent: #fff600;
+}
+
+[data-game="diadesorte"] {
+    --primary-accent: #cb852b;
+}
+
+/* In Timemania/DiaDeSorte the accent might be too bright/dark for text, handle constructs if needed */
+/* Since we use black text on accent background for 'Selected' state, bright accents like yellow work. */
+
+/* Quantum Feature Styles */
+.quantum-panel {
+    background: linear-gradient(180deg, rgba(6, 28, 18, 0.6) 0%, rgba(16, 185, 129, 0.1) 100%);
+    /* Green Tint */
+    border-radius: var(--radius-sm);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    /* Reduced padding */
+    border-radius: 20px;
+    /* More pill-shaped */
+    font-size: 0.85rem;
+    /* Smaller font */
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    backdrop-filter: blur(5px);
+    /* Removed padding-top tweak which might have caused disproportion */
+    flex: 1;
+    /* Distribute evenly */
+    justify-content: center;
+    /* Center content */
+}
+
+/* Statistics Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    /* Ultra tight */
+    margin-top: 0.5rem;
+}
+
+.stat-box {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem;
+    /* Very compact box */
+    border: 1px solid var(--border-color);
+}
+
+.stat-box h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.quantum-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #10B981, #fff, transparent);
+    /* Green/White Scan */
+    animation: quantumScan 3s infinite linear;
+}
+
+@keyframes quantumScan {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+#quantum-results .ball.quantum-hit {
+    box-shadow: 0 0 10px var(--primary-accent);
+    border-color: var(--primary-accent);
+    animation: quantumPulse 2s infinite;
+    /* Force size match with Stats/Grid (32px) instead of Game Cards (46px) */
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.9rem !important;
+    flex: 0 0 32px;
+    /* Prevent flex growing/shrinking */
+    margin: 0;
+}
+
+@keyframes quantumPulse {
+    0% {
+        box-shadow: 0 0 5px var(--primary-accent);
+    }
+
+    50% {
+        box-shadow: 0 0 15px #fff;
+    }
+
+    100% {
+        box-shadow: 0 0 5px var(--primary-accent);
+    }
+}
