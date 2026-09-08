@@ -1515,6 +1515,293 @@ input:focus {
 #print-tutorial:hover {
     text-decoration: underline;
     opacity: 0.8;
+}
+
+/* ==========================================================================
+   CYBER HUD GLASSMORPHISM NEON BUTTONS (B2B LOTERIAS FUTURISTA)
+   ========================================================================== */
+.cyber-btn {
+    position: relative;
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.88) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    color: #f8fafc;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    text-decoration: none;
+    outline: none;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.cyber-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    opacity: 0.8;
+    transition: opacity 0.2s, box-shadow 0.2s;
+}
+
+.cyber-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.cyber-btn:active {
+    transform: translateY(0);
+}
+
+.cyber-led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: box-shadow 0.25s ease;
+}
+
+.cyber-name {
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cyber-tag {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas;
+    letter-spacing: 0.5px;
+}
+
+.cyber-btn-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* --- Top Row Controls --- */
+.cyber-top-manual {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.85) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: #e2e8f0;
+}
+.cyber-top-manual::before { background: #94a3b8; box-shadow: 0 0 10px #94a3b8; }
+.cyber-top-manual:hover {
+    border-color: rgba(148, 163, 184, 0.7);
+    box-shadow: 0 0 16px rgba(148, 163, 184, 0.25);
+}
+.cyber-top-manual .cyber-tag {
+    background: rgba(51, 65, 85, 0.8);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.cyber-top-cobertura {
+    background: linear-gradient(180deg, rgba(5, 150, 105, 0.25) 0%, rgba(15, 23, 42, 0.88) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #ecfdf5;
+}
+.cyber-top-cobertura::before { background: #10b981; box-shadow: 0 0 12px #10b981; }
+.cyber-top-cobertura:hover {
+    border-color: #34d399;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+.cyber-top-cobertura .cyber-tag {
+    background: rgba(6, 78, 59, 0.8);
+    color: #a7f3d0;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.cyber-top-sniper {
+    background: linear-gradient(180deg, rgba(217, 119, 6, 0.28) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.6);
+    color: #fef3c7;
+}
+.cyber-top-sniper::before { background: #f59e0b; box-shadow: 0 0 12px #f59e0b; }
+.cyber-top-sniper:hover {
+    border-color: #fbbf24;
+    box-shadow: 0 0 22px rgba(245, 158, 11, 0.45);
+}
+.cyber-top-sniper .cyber-tag,
+.cyber-tag-sniper {
+    background: rgba(120, 53, 15, 0.85);
+    color: #fde68a;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.cyber-top-smart {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.25) 0%, rgba(15, 23, 42, 0.88) 100%);
+    border: 1px solid rgba(6, 182, 212, 0.5);
+    color: #cffafe;
+}
+.cyber-top-smart::before { background: #06b6d4; box-shadow: 0 0 12px #06b6d4; }
+.cyber-top-smart:hover {
+    border-color: #22d3ee;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+}
+.cyber-top-smart .cyber-tag {
+    background: rgba(22, 78, 99, 0.8);
+    color: #a5f3fc;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+/* --- 10 Motores de Loteria --- */
+/* 1. Mega-Sena */
+.cyber-mega { border: 1px solid rgba(16, 185, 129, 0.45); }
+.cyber-mega::before { background: #10b981; box-shadow: 0 0 10px #10b981; }
+.cyber-mega:hover { border-color: #34d399; box-shadow: 0 0 18px rgba(16, 185, 129, 0.35); }
+.cyber-mega .cyber-led { background: #34d399; box-shadow: 0 0 8px #34d399; }
+.cyber-mega .cyber-tag { background: rgba(6, 78, 59, 0.8); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+/* 2. Super Sete */
+.cyber-super { border: 1px solid rgba(56, 189, 248, 0.45); }
+.cyber-super::before { background: #38bdf8; box-shadow: 0 0 10px #38bdf8; }
+.cyber-super:hover { border-color: #7dd3fc; box-shadow: 0 0 18px rgba(56, 189, 248, 0.35); }
+.cyber-super .cyber-led { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+.cyber-super .cyber-tag { background: rgba(12, 74, 110, 0.8); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+/* 3. Lotofácil */
+.cyber-loto { border: 1px solid rgba(192, 132, 252, 0.45); }
+.cyber-loto::before { background: #c084fc; box-shadow: 0 0 10px #c084fc; }
+.cyber-loto:hover { border-color: #e9d5ff; box-shadow: 0 0 18px rgba(192, 132, 252, 0.35); }
+.cyber-loto .cyber-led { background: #c084fc; box-shadow: 0 0 8px #c084fc; }
+.cyber-loto .cyber-tag { background: rgba(88, 28, 135, 0.8); color: #d8b4fe; border: 1px solid rgba(192, 132, 252, 0.3); }
+
+/* 4. Quina */
+.cyber-quina { border: 1px solid rgba(96, 165, 250, 0.45); }
+.cyber-quina::before { background: #60a5fa; box-shadow: 0 0 10px #60a5fa; }
+.cyber-quina:hover { border-color: #93c5fd; box-shadow: 0 0 18px rgba(96, 165, 250, 0.35); }
+.cyber-quina .cyber-led { background: #60a5fa; box-shadow: 0 0 8px #60a5fa; }
+.cyber-quina .cyber-tag { background: rgba(30, 58, 138, 0.8); color: #93c5fd; border: 1px solid rgba(96, 165, 250, 0.3); }
+
+/* 5. Dupla Sena */
+.cyber-dupla { border: 1px solid rgba(248, 113, 113, 0.45); }
+.cyber-dupla::before { background: #f87171; box-shadow: 0 0 10px #f87171; }
+.cyber-dupla:hover { border-color: #fca5a5; box-shadow: 0 0 18px rgba(248, 113, 113, 0.35); }
+.cyber-dupla .cyber-led { background: #f87171; box-shadow: 0 0 8px #f87171; }
+.cyber-dupla .cyber-tag { background: rgba(127, 29, 29, 0.8); color: #fca5a5; border: 1px solid rgba(248, 113, 113, 0.3); }
+
+/* 6. +Milionária */
+.cyber-mil { border: 1px solid rgba(45, 212, 191, 0.5); }
+.cyber-mil::before { background: #2dd4bf; box-shadow: 0 0 10px #2dd4bf; }
+.cyber-mil:hover { border-color: #5eead4; box-shadow: 0 0 18px rgba(45, 212, 191, 0.35); }
+.cyber-mil .cyber-led { background: #2dd4bf; box-shadow: 0 0 8px #2dd4bf; }
+.cyber-mil .cyber-tag { background: rgba(19, 78, 74, 0.8); color: #5eead4; border: 1px solid rgba(45, 212, 191, 0.3); }
+
+/* 7. Lotomania */
+.cyber-mania { border: 1px solid rgba(34, 211, 238, 0.45); }
+.cyber-mania::before { background: #22d3ee; box-shadow: 0 0 10px #22d3ee; }
+.cyber-mania:hover { border-color: #67e8f9; box-shadow: 0 0 18px rgba(34, 211, 238, 0.35); }
+.cyber-mania .cyber-led { background: #22d3ee; box-shadow: 0 0 8px #22d3ee; }
+.cyber-mania .cyber-tag { background: rgba(22, 78, 99, 0.8); color: #67e8f9; border: 1px solid rgba(34, 211, 238, 0.3); }
+
+/* 8. Dia de Sorte */
+.cyber-sorte { border: 1px solid rgba(251, 191, 36, 0.45); }
+.cyber-sorte::before { background: #fbbf24; box-shadow: 0 0 10px #fbbf24; }
+.cyber-sorte:hover { border-color: #fde68a; box-shadow: 0 0 18px rgba(251, 191, 36, 0.35); }
+.cyber-sorte .cyber-led { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+.cyber-sorte .cyber-tag { background: rgba(120, 53, 15, 0.8); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.3); }
+
+/* 9. Timemania */
+.cyber-time { border: 1px solid rgba(163, 230, 53, 0.45); }
+.cyber-time::before { background: #a3e635; box-shadow: 0 0 10px #a3e635; }
+.cyber-time:hover { border-color: #bef264; box-shadow: 0 0 18px rgba(163, 230, 53, 0.35); }
+.cyber-time .cyber-led { background: #a3e635; box-shadow: 0 0 8px #a3e635; }
+.cyber-time .cyber-tag { background: rgba(54, 83, 20, 0.8); color: #bef264; border: 1px solid rgba(163, 230, 53, 0.3); }
+
+/* 10. Loteca */
+.cyber-loteca { border: 1px solid rgba(74, 222, 128, 0.45); }
+.cyber-loteca::before { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+.cyber-loteca:hover { border-color: #86efac; box-shadow: 0 0 18px rgba(74, 222, 128, 0.35); }
+.cyber-loteca .cyber-led { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+.cyber-loteca .cyber-tag { background: rgba(20, 83, 45, 0.8); color: #86efac; border: 1px solid rgba(74, 222, 128, 0.3); }
+
+/* --- Destaques Ativos (Cyber Glow) --- */
+.cyber-btn.cyber-active {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.cyber-mega.cyber-active {
+    border-color: #34d399 !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.55), inset 0 0 10px rgba(16, 185, 129, 0.2) !important;
+}
+.cyber-super.cyber-active {
+    border-color: #7dd3fc !important;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.55), inset 0 0 10px rgba(56, 189, 248, 0.2) !important;
+}
+.cyber-loto.cyber-active {
+    border-color: #e9d5ff !important;
+    box-shadow: 0 0 20px rgba(192, 132, 252, 0.55), inset 0 0 10px rgba(192, 132, 252, 0.2) !important;
+}
+.cyber-quina.cyber-active {
+    border-color: #93c5fd !important;
+    box-shadow: 0 0 20px rgba(96, 165, 250, 0.55), inset 0 0 10px rgba(96, 165, 250, 0.2) !important;
+}
+.cyber-dupla.cyber-active {
+    border-color: #fca5a5 !important;
+    box-shadow: 0 0 20px rgba(248, 113, 113, 0.55), inset 0 0 10px rgba(248, 113, 113, 0.2) !important;
+}
+.cyber-mil.cyber-active {
+    border-color: #5eead4 !important;
+    box-shadow: 0 0 20px rgba(45, 212, 191, 0.55), inset 0 0 10px rgba(45, 212, 191, 0.2) !important;
+}
+.cyber-mania.cyber-active {
+    border-color: #67e8f9 !important;
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.55), inset 0 0 10px rgba(34, 211, 238, 0.2) !important;
+}
+.cyber-sorte.cyber-active {
+    border-color: #fde68a !important;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.55), inset 0 0 10px rgba(251, 191, 36, 0.2) !important;
+}
+.cyber-time.cyber-active {
+    border-color: #bef264 !important;
+    box-shadow: 0 0 20px rgba(163, 230, 53, 0.55), inset 0 0 10px rgba(163, 230, 53, 0.2) !important;
+}
+.cyber-loteca.cyber-active {
+    border-color: #86efac !important;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.55), inset 0 0 10px rgba(74, 222, 128, 0.2) !important;
+}
+
+@media (max-width: 768px) {
+    #action-buttons-row {
+        flex-direction: column !important;
+    }
+    #b2b-motors-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .cyber-btn {
+        padding: 9px 10px;
+        font-size: 0.74rem;
+    }
+    .cyber-name {
+        font-size: 0.74rem;
+    }
+    .cyber-tag {
+        font-size: 0.58rem;
+        padding: 1.5px 4px;
+    }
 }</style>
     <style>/* styles/components.css */
 /* Component Styles for Modern Glassmorphism UI */
@@ -3811,28 +4098,77 @@ select:focus {
                             </div>
                         </div>
 
-                        <!-- Botões de Ação — MOTORES PRINCIPAIS -->
+                        <!-- Botões de Ação — MOTORES PRINCIPAIS (DESIGN FUTURISTA PADRONIZADO) -->
                         <div id="action-buttons-row" style="display:flex;gap:10px;align-items:stretch;margin-top:10px;">
-                            <button id="generate-btn" class="action-btn" style="flex: 1; min-width: 0; padding: 14px 10px; background: linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%); border: 1px solid #10B981; color: #ecfdf5; font-size: 0.95rem;" title="Gera jogos com os seus números selecionados no volante. Cobertura combinatória otimizada (Greedy Set Cover) + Filtros P5-P95 + ROI honesto. Você escolhe os números, o motor otimiza a distribuição.">🎲 Manual</button>
-                            <button id="generate-coverage-btn" class="action-btn" style="flex: 1; min-width: 0; padding: 14px 10px; background: linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%); border: 1px solid #10B981; color: #ecfdf5; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 15px rgba(16,185,129,0.3);" title="Motor de Cobertura Pura — Matemática combinatória. Greedy Set Cover + filtros P5-P95. Ative o Sniper para focar em um pool reduzido baseado em evidência estatística real.">📐 Cobertura IA</button>
-                            <button id="btn-gerador-inteligente" class="action-btn" style="flex: 1; min-width: 0; padding: 14px 10px; background: linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%); border: 1px solid #10B981; color: #ecfdf5; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 15px rgba(14,165,233,0.3);" title="Motor unificado de Cobertura Pura — Matemática combinatória sem previsão. Usa TODOS os números, Greedy Set Cover, filtros P5-P95, anti-concentração. Mostra ROI honesto ANTES de gerar. Toggle Sniper disponível.">🎯 Gerador Inteligente</button>
+                            <button id="generate-btn" class="cyber-btn cyber-top-manual" style="flex:1;min-width:0;" title="Gera jogos com os seus números selecionados no volante. Cobertura combinatória otimizada (Greedy Set Cover) + Filtros P5-P95 + ROI honesto. Você escolhe os números, o motor otimiza a distribuição.">
+                                <span class="cyber-btn-icon">🎲</span>
+                                <span class="cyber-name">MANUAL</span>
+                                <span class="cyber-tag">VOLANTE</span>
+                            </button>
+                            <button id="generate-coverage-btn" class="cyber-btn cyber-top-cobertura" style="flex:1;min-width:0;" title="Motor de Cobertura Pura — Matemática combinatória. Greedy Set Cover + filtros P5-P95. Ative o Sniper para focar em um pool reduzido baseado em evidência estatística real.">
+                                <span class="cyber-btn-icon">📐</span>
+                                <span class="cyber-name">COBERTURA IA</span>
+                                <span class="cyber-tag">COMBINATÓRIA</span>
+                            </button>
+                            <button id="btn-gerador-inteligente" class="cyber-btn cyber-top-smart" style="flex:1;min-width:0;" title="Motor unificado de Cobertura Pura — Matemática combinatória sem previsão. Usa TODOS os números, Greedy Set Cover, filtros P5-P95, anti-concentração. Mostra ROI honesto ANTES de gerar. Toggle Sniper disponível.">
+                                <span class="cyber-btn-icon">⚡</span>
+                                <span class="cyber-name">GERADOR INTELIGENTE</span>
+                                <span class="cyber-tag">UNIFICADO</span>
+                            </button>
                         </div>
 
-                        <!-- MOTORES EXCLUSIVOS B2B LOTERIAS (Lado a Lado) -->
+                        <!-- MOTORES EXCLUSIVOS B2B LOTERIAS (Cyber HUD Padronizado) -->
                         <div id="b2b-motors-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-top: 8px;">
-                            <button id="btn-motor-megasena" class="action-btn" style="padding: 14px 12px; animation: pulseGlowMega 2.5s infinite alternate; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); border: 1px solid #34d399; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(16,185,129,0.35); cursor:pointer;" title="MOTOR MEGA-SENA — B2B LOTERIAS: Grupos A (01-30) e B (31-60), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico, Auto-pesos, Modo Sniper e Honestidade Matemática.">⚡ MOTOR MEGA-SENA (B2B)</button>
-                            <button id="btn-motor-supersete" class="action-btn" style="padding: 14px 12px; animation: pulseGlowSuperSete 2.5s infinite alternate; background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #075985 100%); border: 1px solid #38bdf8; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(56,189,248,0.35); cursor:pointer;" title="MOTOR SUPER SETE — B2B LOTERIAS: 7 Modelos de Colunas (C1..C7), 0 a 9, Lift Intercolunas Regularizado, Centróide Simétrico (μ=31.5, σ=7.60), Diversificação de Hamming (dH ≥ 4), Modo Sniper, Score SMS e Honestidade Matemática.">⚡ MOTOR SUPER SETE (B2B)</button>
-
-                            <button id="btn-motor-lotofacil" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #4c1d95 100%); border: 1px solid #c084fc; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(192,132,252,0.35); cursor:pointer;" title="MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS: Análise obrigatória 10 concursos, divisões dinâmicas, relações 7/8, 8/7, 6/9, 9/6, consecutividade máx 5, Score B2B e Transparência Matemática.">⚡ MOTOR LOTOFÁCIL (B2B)</button>
-                            <button id="btn-motor-quina" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #1e40af 100%); border: 1px solid #60a5fa; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(37,99,235,0.35); cursor:pointer;" title="MOTOR QUINA — B2B LOTERIAS: Grupos A (01-40) e B (41-80), 5 dezenas, modelos 3/2, 2/3, 4/1, 1/4, 5/0, 0/5, máx 2 consecutivos, Lift/Z-score, Centróide Simétrico (202.5), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">🔷 MOTOR QUINA (B2B)</button>
-
-                            <button id="btn-motor-duplasena" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #b91c1c 0%, #dc2626 50%, #991b1b 100%); border: 1px solid #f87171; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(220,38,38,0.35); cursor:pointer;" title="MOTOR DUPLA SENA — B2B LOTERIAS: Grupos A (01-25) e B (26-50), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico (153), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">🔴 MOTOR DUPLA SENA (B2B)</button>
-                            <button id="btn-motor-milionaria" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); border: 1px solid #34d399; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(16,185,129,0.35); cursor:pointer;" title="MOTOR +MILIONÁRIA — B2B LOTERIAS: 50 Números, 6 Dezenas + 2 Trevos, Pool de 20 a 50 dezenas, Score IFM 10D, Centróide Simétrico, Diversificação Máxima, Modo Sniper e Honestidade Científica.">🍀 +MILIONÁRIA</button>
-
-                            <button id="btn-motor-lotomania" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #0284c7 0%, #0f766e 100%); border: 1px solid #38bdf8; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(56,189,248,0.35); cursor:pointer;" title="MOTOR LOTOMANIA — B2B LOTERIAS: 5 Conjuntos estritos de 20 numeros, 10 por conjunto (5x10=50), consecutividade maxima de 4 no jogo ordenado, scoring estatistico e auditoria 10 pontos.">⚛️ MOTOR LOTOMANIA (B2B)</button>
-                            <button id="btn-motor-diadesorte" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%); border: 1px solid #f59e0b; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(245,158,11,0.35); cursor:pointer;" title="MOTOR DIA DE SORTE — B2B LOTERIAS: Grupos A (01-15) e B (16-31), modelos 3+4, 4+3, 5+2, 2+5, filtro máx 3 consecutivos, Lift/Z-score, auto-pesos e Mês da Sorte com Honestidade Matemática.">🍀 MOTOR DIA DE SORTE (B2B)</button>
-                            <button id="btn-motor-timemania" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #064e3b 100%); border: 1px solid #34d399; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(52,211,153,0.35); cursor:pointer;" title="MOTOR TIMEMANIA — B2B LOTERIAS: Divisão analítica em 4 Grupos (G1..G4), 10 dezenas por jogo, IFM 8D, Time do Coração (80 clubes), Bloqueio de 3 Consecutivos no grupo, SNIPER adaptativo e Auditoria 10 pontos.">🎯 MOTOR TIMEMANIA (B2B)</button>
-                            <button id="btn-motor-loteca" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #166534 100%); border: 1px solid #4ade80; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(34,197,94,0.35); cursor:pointer;" title="MOTOR LOTECA — B2B LOTERIAS: 14 Jogos, Dixon-Coles Bivariado, Monte Carlo 100k, Entropia de Shannon, 7 Duques, 4 Ternos/Trios, Fechamentos Reduzidos e 12 Seções Técnicas.">⚽ MOTOR LOTECA (B2B)</button>
+                            <button id="btn-motor-megasena" class="cyber-btn cyber-mega" title="MOTOR MEGA-SENA — B2B LOTERIAS: Grupos A (01-30) e B (31-60), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico, Auto-pesos, Modo Sniper e Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">MEGA-SENA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-supersete" class="cyber-btn cyber-super" title="MOTOR SUPER SETE — B2B LOTERIAS: 7 Modelos de Colunas (C1..C7), 0 a 9, Lift Intercolunas Regularizado, Centróide Simétrico (μ=31.5, σ=7.60), Diversificação de Hamming (dH ≥ 4), Modo Sniper, Score SMS e Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">SUPER SETE</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-lotofacil" class="cyber-btn cyber-loto" title="MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS: Análise obrigatória 10 concursos, divisões dinâmicas, relações 7/8, 8/7, 6/9, 9/6, consecutividade máx 5, Score B2B e Transparência Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">LOTOFÁCIL</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-quina" class="cyber-btn cyber-quina" title="MOTOR QUINA — B2B LOTERIAS: Grupos A (01-40) e B (41-80), 5 dezenas, modelos 3/2, 2/3, 4/1, 1/4, 5/0, 0/5, máx 2 consecutivos, Lift/Z-score, Centróide Simétrico (202.5), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">QUINA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-duplasena" class="cyber-btn cyber-dupla" title="MOTOR DUPLA SENA — B2B LOTERIAS: Grupos A (01-25) e B (26-50), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico (153), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">DUPLA SENA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-milionaria" class="cyber-btn cyber-mil" title="MOTOR +MILIONÁRIA — B2B LOTERIAS: 50 Números, 6 Dezenas + 2 Trevos, Pool de 20 a 50 dezenas, Score IFM 10D, Centróide Simétrico, Diversificação Máxima, Modo Sniper e Honestidade Científica.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">+MILIONÁRIA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-lotomania" class="cyber-btn cyber-mania" title="MOTOR LOTOMANIA — B2B LOTERIAS: 5 Conjuntos estritos de 20 numeros, 10 por conjunto (5x10=50), consecutividade maxima de 4 no jogo ordenado, scoring estatistico e auditoria 10 pontos.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">LOTOMANIA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-diadesorte" class="cyber-btn cyber-sorte" title="MOTOR DIA DE SORTE — B2B LOTERIAS: Grupos A (01-15) e B (16-31), modelos 3+4, 4+3, 5+2, 2+5, filtro máx 3 consecutivos, Lift/Z-score, auto-pesos e Mês da Sorte com Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">DIA DE SORTE</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-timemania" class="cyber-btn cyber-time" title="MOTOR TIMEMANIA — B2B LOTERIAS: Divisão analítica em 4 Grupos (G1..G4), 10 dezenas por jogo, IFM 8D, Time do Coração (80 clubes), Bloqueio de 3 Consecutivos no grupo, SNIPER adaptativo e Auditoria 10 pontos.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">TIMEMANIA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-loteca" class="cyber-btn cyber-loteca" title="MOTOR LOTECA — B2B LOTERIAS: 14 Jogos, Dixon-Coles Bivariado, Monte Carlo 100k, Entropia de Shannon, 7 Duques, 4 Ternos/Trios, Fechamentos Reduzidos e 12 Seções Técnicas.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">LOTECA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
                         </div>
 
                         <!-- PAINEL MOTOR MEGA-SENA DO B2B LOTERIAS -->
@@ -17485,17 +17821,19 @@ class UI {
             const _self = this;
             const _applyPrecisionUI = (checked) => {
                 if (checked) {
-                    _self.generateCoverageBtn.innerHTML = '🎯 SNIPER';
-                    _self.generateCoverageBtn.style.background = 'linear-gradient(135deg, #D97706, #92400E)';
-                    _self.generateCoverageBtn.style.boxShadow = '0 6px 25px rgba(217, 119, 6, 0.5)';
-                    _self.generateCoverageBtn.style.borderColor = '#F59E0B';
+                    _self.generateCoverageBtn.innerHTML = '<span class="cyber-btn-icon">🎯</span><span class="cyber-name">MODO SNIPER</span><span class="cyber-tag cyber-tag-sniper">PRECISÃO</span>';
+                    _self.generateCoverageBtn.className = 'cyber-btn cyber-top-sniper';
+                    _self.generateCoverageBtn.style.background = '';
+                    _self.generateCoverageBtn.style.boxShadow = '';
+                    _self.generateCoverageBtn.style.borderColor = '';
                     precisionPoolRow.style.display = 'flex';
                     _self._updatePrecisionPoolLimits();
                 } else {
-                    _self.generateCoverageBtn.innerHTML = '📐 Cobertura IA';
-                    _self.generateCoverageBtn.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%)';
+                    _self.generateCoverageBtn.innerHTML = '<span class="cyber-btn-icon">📐</span><span class="cyber-name">COBERTURA IA</span><span class="cyber-tag">COMBINATÓRIA</span>';
+                    _self.generateCoverageBtn.className = 'cyber-btn cyber-top-cobertura';
+                    _self.generateCoverageBtn.style.background = '';
                     _self.generateCoverageBtn.style.boxShadow = '';
-                    _self.generateCoverageBtn.style.borderColor = '#10B981';
+                    _self.generateCoverageBtn.style.borderColor = '';
                     precisionPoolRow.style.display = 'none';
                 }
             };
@@ -18748,18 +19086,34 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         if (btnQuickLoteca) {
             btnQuickLoteca.style.display = (gameKey === 'loteca') ? 'inline-block' : 'none';
         }
-        const b2bLotecaBtn = document.getElementById('btn-motor-loteca');
-        if (b2bLotecaBtn) {
-            if (gameKey === 'loteca') {
-                b2bLotecaBtn.style.animation = 'pulseGlowMega 2.2s infinite alternate';
-                b2bLotecaBtn.style.border = '2px solid #86efac';
-                b2bLotecaBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bLotecaBtn.style.animation = 'none';
-                b2bLotecaBtn.style.border = '1px solid #4ade80';
-                b2bLotecaBtn.style.transform = 'none';
+        // ━━ DESTAQUE VISUAL DOS 10 MOTORES EM B2B-MOTORS-ROW CONFORME A LOTERIA SELECIONADA ━━
+        const motorKeyMap = {
+            'megasena': 'btn-motor-megasena',
+            'supersete': 'btn-motor-supersete',
+            'lotofacil': 'btn-motor-lotofacil',
+            'quina': 'btn-motor-quina',
+            'duplasena': 'btn-motor-duplasena',
+            'milionaria': 'btn-motor-milionaria',
+            'lotomania': 'btn-motor-lotomania',
+            'diadesorte': 'btn-motor-diadesorte',
+            'timemania': 'btn-motor-timemania',
+            'loteca': 'btn-motor-loteca'
+        };
+
+        Object.entries(motorKeyMap).forEach(([k, btnId]) => {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.style.animation = '';
+                btn.style.border = '';
+                btn.style.transform = '';
+                if (k === gameKey) {
+                    btn.classList.add('cyber-active');
+                } else {
+                    btn.classList.remove('cyber-active');
+                }
             }
-        }
+        });
+
         if (gameKey === 'loteca') {
             const lotecaPanel = document.getElementById('motor-loteca-panel');
             if (lotecaPanel) {
@@ -18774,32 +19128,6 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 }, 100);
             }
         }
-
-        // ━━ DESTAQUE VISUAL DOS MOTORES EM B2B-MOTORS-ROW CONFORME A LOTERIA SELECIONADA ━━
-        const b2bQuinaBtn = document.getElementById('btn-motor-quina');
-        if (b2bQuinaBtn) {
-            if (gameKey === 'quina') {
-                b2bQuinaBtn.style.animation = 'pulseGlowQuina 1.8s infinite alternate';
-                b2bQuinaBtn.style.border = '2px solid #93c5fd';
-                b2bQuinaBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bQuinaBtn.style.animation = 'none';
-                b2bQuinaBtn.style.border = '1px solid #60a5fa';
-                b2bQuinaBtn.style.transform = 'none';
-            }
-        }
-        const b2bSuperSeteBtn = document.getElementById('btn-motor-supersete');
-        if (b2bSuperSeteBtn) {
-            if (gameKey === 'supersete') {
-                b2bSuperSeteBtn.style.animation = 'pulseGlowSuperSete 2.2s infinite alternate';
-                b2bSuperSeteBtn.style.border = '2px solid #7dd3fc';
-                b2bSuperSeteBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bSuperSeteBtn.style.animation = 'none';
-                b2bSuperSeteBtn.style.border = '1px solid #38bdf8';
-                b2bSuperSeteBtn.style.transform = 'none';
-            }
-        }
         if (gameKey === 'supersete') {
             const ssPanel = document.getElementById('motor-supersete-panel');
             if (ssPanel) {
@@ -18807,42 +19135,6 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 setTimeout(() => {
                     ssPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
-            }
-        }
-        const b2bMegaBtn = document.getElementById('btn-motor-megasena');
-        if (b2bMegaBtn) {
-            if (gameKey === 'megasena') {
-                b2bMegaBtn.style.animation = 'pulseGlowMega 2.2s infinite alternate';
-                b2bMegaBtn.style.border = '2px solid #a7f3d0';
-                b2bMegaBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bMegaBtn.style.animation = 'none';
-                b2bMegaBtn.style.border = '1px solid #34d399';
-                b2bMegaBtn.style.transform = 'none';
-            }
-        }
-        const b2bLotofacilBtn = document.getElementById('btn-motor-lotofacil');
-        if (b2bLotofacilBtn) {
-            if (gameKey === 'lotofacil') {
-                b2bLotofacilBtn.style.animation = 'pulseGlowLotofacil 2.2s infinite alternate';
-                b2bLotofacilBtn.style.border = '2px solid #e9d5ff';
-                b2bLotofacilBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bLotofacilBtn.style.animation = 'none';
-                b2bLotofacilBtn.style.border = '1px solid #c084fc';
-                b2bLotofacilBtn.style.transform = 'none';
-            }
-        }
-        const b2bTimemaniaBtn = document.getElementById('btn-motor-timemania');
-        if (b2bTimemaniaBtn) {
-            if (gameKey === 'timemania') {
-                b2bTimemaniaBtn.style.animation = 'pulseGlowMega 2.2s infinite alternate';
-                b2bTimemaniaBtn.style.border = '2px solid #34d399';
-                b2bTimemaniaBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bTimemaniaBtn.style.animation = 'none';
-                b2bTimemaniaBtn.style.border = '1px solid #34d399';
-                b2bTimemaniaBtn.style.transform = 'none';
             }
         }
         if (gameKey === 'timemania') {

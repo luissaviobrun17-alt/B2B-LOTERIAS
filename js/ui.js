@@ -2876,17 +2876,19 @@ class UI {
             const _self = this;
             const _applyPrecisionUI = (checked) => {
                 if (checked) {
-                    _self.generateCoverageBtn.innerHTML = '🎯 SNIPER';
-                    _self.generateCoverageBtn.style.background = 'linear-gradient(135deg, #D97706, #92400E)';
-                    _self.generateCoverageBtn.style.boxShadow = '0 6px 25px rgba(217, 119, 6, 0.5)';
-                    _self.generateCoverageBtn.style.borderColor = '#F59E0B';
+                    _self.generateCoverageBtn.innerHTML = '<span class="cyber-btn-icon">🎯</span><span class="cyber-name">MODO SNIPER</span><span class="cyber-tag cyber-tag-sniper">PRECISÃO</span>';
+                    _self.generateCoverageBtn.className = 'cyber-btn cyber-top-sniper';
+                    _self.generateCoverageBtn.style.background = '';
+                    _self.generateCoverageBtn.style.boxShadow = '';
+                    _self.generateCoverageBtn.style.borderColor = '';
                     precisionPoolRow.style.display = 'flex';
                     _self._updatePrecisionPoolLimits();
                 } else {
-                    _self.generateCoverageBtn.innerHTML = '📐 Cobertura IA';
-                    _self.generateCoverageBtn.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%)';
+                    _self.generateCoverageBtn.innerHTML = '<span class="cyber-btn-icon">📐</span><span class="cyber-name">COBERTURA IA</span><span class="cyber-tag">COMBINATÓRIA</span>';
+                    _self.generateCoverageBtn.className = 'cyber-btn cyber-top-cobertura';
+                    _self.generateCoverageBtn.style.background = '';
                     _self.generateCoverageBtn.style.boxShadow = '';
-                    _self.generateCoverageBtn.style.borderColor = '#10B981';
+                    _self.generateCoverageBtn.style.borderColor = '';
                     precisionPoolRow.style.display = 'none';
                 }
             };
@@ -4064,18 +4066,34 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         if (btnQuickLoteca) {
             btnQuickLoteca.style.display = (gameKey === 'loteca') ? 'inline-block' : 'none';
         }
-        const b2bLotecaBtn = document.getElementById('btn-motor-loteca');
-        if (b2bLotecaBtn) {
-            if (gameKey === 'loteca') {
-                b2bLotecaBtn.style.animation = 'pulseGlowMega 2.2s infinite alternate';
-                b2bLotecaBtn.style.border = '2px solid #86efac';
-                b2bLotecaBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bLotecaBtn.style.animation = 'none';
-                b2bLotecaBtn.style.border = '1px solid #4ade80';
-                b2bLotecaBtn.style.transform = 'none';
+        // ━━ DESTAQUE VISUAL DOS 10 MOTORES EM B2B-MOTORS-ROW CONFORME A LOTERIA SELECIONADA ━━
+        const motorKeyMap = {
+            'megasena': 'btn-motor-megasena',
+            'supersete': 'btn-motor-supersete',
+            'lotofacil': 'btn-motor-lotofacil',
+            'quina': 'btn-motor-quina',
+            'duplasena': 'btn-motor-duplasena',
+            'milionaria': 'btn-motor-milionaria',
+            'lotomania': 'btn-motor-lotomania',
+            'diadesorte': 'btn-motor-diadesorte',
+            'timemania': 'btn-motor-timemania',
+            'loteca': 'btn-motor-loteca'
+        };
+
+        Object.entries(motorKeyMap).forEach(([k, btnId]) => {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.style.animation = '';
+                btn.style.border = '';
+                btn.style.transform = '';
+                if (k === gameKey) {
+                    btn.classList.add('cyber-active');
+                } else {
+                    btn.classList.remove('cyber-active');
+                }
             }
-        }
+        });
+
         if (gameKey === 'loteca') {
             const lotecaPanel = document.getElementById('motor-loteca-panel');
             if (lotecaPanel) {
@@ -4090,32 +4108,6 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 }, 100);
             }
         }
-
-        // ━━ DESTAQUE VISUAL DOS MOTORES EM B2B-MOTORS-ROW CONFORME A LOTERIA SELECIONADA ━━
-        const b2bQuinaBtn = document.getElementById('btn-motor-quina');
-        if (b2bQuinaBtn) {
-            if (gameKey === 'quina') {
-                b2bQuinaBtn.style.animation = 'pulseGlowQuina 1.8s infinite alternate';
-                b2bQuinaBtn.style.border = '2px solid #93c5fd';
-                b2bQuinaBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bQuinaBtn.style.animation = 'none';
-                b2bQuinaBtn.style.border = '1px solid #60a5fa';
-                b2bQuinaBtn.style.transform = 'none';
-            }
-        }
-        const b2bSuperSeteBtn = document.getElementById('btn-motor-supersete');
-        if (b2bSuperSeteBtn) {
-            if (gameKey === 'supersete') {
-                b2bSuperSeteBtn.style.animation = 'pulseGlowSuperSete 2.2s infinite alternate';
-                b2bSuperSeteBtn.style.border = '2px solid #7dd3fc';
-                b2bSuperSeteBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bSuperSeteBtn.style.animation = 'none';
-                b2bSuperSeteBtn.style.border = '1px solid #38bdf8';
-                b2bSuperSeteBtn.style.transform = 'none';
-            }
-        }
         if (gameKey === 'supersete') {
             const ssPanel = document.getElementById('motor-supersete-panel');
             if (ssPanel) {
@@ -4123,42 +4115,6 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 setTimeout(() => {
                     ssPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
-            }
-        }
-        const b2bMegaBtn = document.getElementById('btn-motor-megasena');
-        if (b2bMegaBtn) {
-            if (gameKey === 'megasena') {
-                b2bMegaBtn.style.animation = 'pulseGlowMega 2.2s infinite alternate';
-                b2bMegaBtn.style.border = '2px solid #a7f3d0';
-                b2bMegaBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bMegaBtn.style.animation = 'none';
-                b2bMegaBtn.style.border = '1px solid #34d399';
-                b2bMegaBtn.style.transform = 'none';
-            }
-        }
-        const b2bLotofacilBtn = document.getElementById('btn-motor-lotofacil');
-        if (b2bLotofacilBtn) {
-            if (gameKey === 'lotofacil') {
-                b2bLotofacilBtn.style.animation = 'pulseGlowLotofacil 2.2s infinite alternate';
-                b2bLotofacilBtn.style.border = '2px solid #e9d5ff';
-                b2bLotofacilBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bLotofacilBtn.style.animation = 'none';
-                b2bLotofacilBtn.style.border = '1px solid #c084fc';
-                b2bLotofacilBtn.style.transform = 'none';
-            }
-        }
-        const b2bTimemaniaBtn = document.getElementById('btn-motor-timemania');
-        if (b2bTimemaniaBtn) {
-            if (gameKey === 'timemania') {
-                b2bTimemaniaBtn.style.animation = 'pulseGlowMega 2.2s infinite alternate';
-                b2bTimemaniaBtn.style.border = '2px solid #34d399';
-                b2bTimemaniaBtn.style.transform = 'scale(1.04)';
-            } else {
-                b2bTimemaniaBtn.style.animation = 'none';
-                b2bTimemaniaBtn.style.border = '1px solid #34d399';
-                b2bTimemaniaBtn.style.transform = 'none';
             }
         }
         if (gameKey === 'timemania') {

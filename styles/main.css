@@ -1405,3 +1405,290 @@ input:focus {
     text-decoration: underline;
     opacity: 0.8;
 }
+
+/* ==========================================================================
+   CYBER HUD GLASSMORPHISM NEON BUTTONS (B2B LOTERIAS FUTURISTA)
+   ========================================================================== */
+.cyber-btn {
+    position: relative;
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.88) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    color: #f8fafc;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    text-decoration: none;
+    outline: none;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.cyber-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    opacity: 0.8;
+    transition: opacity 0.2s, box-shadow 0.2s;
+}
+
+.cyber-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.cyber-btn:active {
+    transform: translateY(0);
+}
+
+.cyber-led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: box-shadow 0.25s ease;
+}
+
+.cyber-name {
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cyber-tag {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas;
+    letter-spacing: 0.5px;
+}
+
+.cyber-btn-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* --- Top Row Controls --- */
+.cyber-top-manual {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.85) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: #e2e8f0;
+}
+.cyber-top-manual::before { background: #94a3b8; box-shadow: 0 0 10px #94a3b8; }
+.cyber-top-manual:hover {
+    border-color: rgba(148, 163, 184, 0.7);
+    box-shadow: 0 0 16px rgba(148, 163, 184, 0.25);
+}
+.cyber-top-manual .cyber-tag {
+    background: rgba(51, 65, 85, 0.8);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.cyber-top-cobertura {
+    background: linear-gradient(180deg, rgba(5, 150, 105, 0.25) 0%, rgba(15, 23, 42, 0.88) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #ecfdf5;
+}
+.cyber-top-cobertura::before { background: #10b981; box-shadow: 0 0 12px #10b981; }
+.cyber-top-cobertura:hover {
+    border-color: #34d399;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+.cyber-top-cobertura .cyber-tag {
+    background: rgba(6, 78, 59, 0.8);
+    color: #a7f3d0;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.cyber-top-sniper {
+    background: linear-gradient(180deg, rgba(217, 119, 6, 0.28) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.6);
+    color: #fef3c7;
+}
+.cyber-top-sniper::before { background: #f59e0b; box-shadow: 0 0 12px #f59e0b; }
+.cyber-top-sniper:hover {
+    border-color: #fbbf24;
+    box-shadow: 0 0 22px rgba(245, 158, 11, 0.45);
+}
+.cyber-top-sniper .cyber-tag,
+.cyber-tag-sniper {
+    background: rgba(120, 53, 15, 0.85);
+    color: #fde68a;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.cyber-top-smart {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.25) 0%, rgba(15, 23, 42, 0.88) 100%);
+    border: 1px solid rgba(6, 182, 212, 0.5);
+    color: #cffafe;
+}
+.cyber-top-smart::before { background: #06b6d4; box-shadow: 0 0 12px #06b6d4; }
+.cyber-top-smart:hover {
+    border-color: #22d3ee;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+}
+.cyber-top-smart .cyber-tag {
+    background: rgba(22, 78, 99, 0.8);
+    color: #a5f3fc;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+/* --- 10 Motores de Loteria --- */
+/* 1. Mega-Sena */
+.cyber-mega { border: 1px solid rgba(16, 185, 129, 0.45); }
+.cyber-mega::before { background: #10b981; box-shadow: 0 0 10px #10b981; }
+.cyber-mega:hover { border-color: #34d399; box-shadow: 0 0 18px rgba(16, 185, 129, 0.35); }
+.cyber-mega .cyber-led { background: #34d399; box-shadow: 0 0 8px #34d399; }
+.cyber-mega .cyber-tag { background: rgba(6, 78, 59, 0.8); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+/* 2. Super Sete */
+.cyber-super { border: 1px solid rgba(56, 189, 248, 0.45); }
+.cyber-super::before { background: #38bdf8; box-shadow: 0 0 10px #38bdf8; }
+.cyber-super:hover { border-color: #7dd3fc; box-shadow: 0 0 18px rgba(56, 189, 248, 0.35); }
+.cyber-super .cyber-led { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+.cyber-super .cyber-tag { background: rgba(12, 74, 110, 0.8); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+/* 3. Lotofácil */
+.cyber-loto { border: 1px solid rgba(192, 132, 252, 0.45); }
+.cyber-loto::before { background: #c084fc; box-shadow: 0 0 10px #c084fc; }
+.cyber-loto:hover { border-color: #e9d5ff; box-shadow: 0 0 18px rgba(192, 132, 252, 0.35); }
+.cyber-loto .cyber-led { background: #c084fc; box-shadow: 0 0 8px #c084fc; }
+.cyber-loto .cyber-tag { background: rgba(88, 28, 135, 0.8); color: #d8b4fe; border: 1px solid rgba(192, 132, 252, 0.3); }
+
+/* 4. Quina */
+.cyber-quina { border: 1px solid rgba(96, 165, 250, 0.45); }
+.cyber-quina::before { background: #60a5fa; box-shadow: 0 0 10px #60a5fa; }
+.cyber-quina:hover { border-color: #93c5fd; box-shadow: 0 0 18px rgba(96, 165, 250, 0.35); }
+.cyber-quina .cyber-led { background: #60a5fa; box-shadow: 0 0 8px #60a5fa; }
+.cyber-quina .cyber-tag { background: rgba(30, 58, 138, 0.8); color: #93c5fd; border: 1px solid rgba(96, 165, 250, 0.3); }
+
+/* 5. Dupla Sena */
+.cyber-dupla { border: 1px solid rgba(248, 113, 113, 0.45); }
+.cyber-dupla::before { background: #f87171; box-shadow: 0 0 10px #f87171; }
+.cyber-dupla:hover { border-color: #fca5a5; box-shadow: 0 0 18px rgba(248, 113, 113, 0.35); }
+.cyber-dupla .cyber-led { background: #f87171; box-shadow: 0 0 8px #f87171; }
+.cyber-dupla .cyber-tag { background: rgba(127, 29, 29, 0.8); color: #fca5a5; border: 1px solid rgba(248, 113, 113, 0.3); }
+
+/* 6. +Milionária */
+.cyber-mil { border: 1px solid rgba(45, 212, 191, 0.5); }
+.cyber-mil::before { background: #2dd4bf; box-shadow: 0 0 10px #2dd4bf; }
+.cyber-mil:hover { border-color: #5eead4; box-shadow: 0 0 18px rgba(45, 212, 191, 0.35); }
+.cyber-mil .cyber-led { background: #2dd4bf; box-shadow: 0 0 8px #2dd4bf; }
+.cyber-mil .cyber-tag { background: rgba(19, 78, 74, 0.8); color: #5eead4; border: 1px solid rgba(45, 212, 191, 0.3); }
+
+/* 7. Lotomania */
+.cyber-mania { border: 1px solid rgba(34, 211, 238, 0.45); }
+.cyber-mania::before { background: #22d3ee; box-shadow: 0 0 10px #22d3ee; }
+.cyber-mania:hover { border-color: #67e8f9; box-shadow: 0 0 18px rgba(34, 211, 238, 0.35); }
+.cyber-mania .cyber-led { background: #22d3ee; box-shadow: 0 0 8px #22d3ee; }
+.cyber-mania .cyber-tag { background: rgba(22, 78, 99, 0.8); color: #67e8f9; border: 1px solid rgba(34, 211, 238, 0.3); }
+
+/* 8. Dia de Sorte */
+.cyber-sorte { border: 1px solid rgba(251, 191, 36, 0.45); }
+.cyber-sorte::before { background: #fbbf24; box-shadow: 0 0 10px #fbbf24; }
+.cyber-sorte:hover { border-color: #fde68a; box-shadow: 0 0 18px rgba(251, 191, 36, 0.35); }
+.cyber-sorte .cyber-led { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+.cyber-sorte .cyber-tag { background: rgba(120, 53, 15, 0.8); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.3); }
+
+/* 9. Timemania */
+.cyber-time { border: 1px solid rgba(163, 230, 53, 0.45); }
+.cyber-time::before { background: #a3e635; box-shadow: 0 0 10px #a3e635; }
+.cyber-time:hover { border-color: #bef264; box-shadow: 0 0 18px rgba(163, 230, 53, 0.35); }
+.cyber-time .cyber-led { background: #a3e635; box-shadow: 0 0 8px #a3e635; }
+.cyber-time .cyber-tag { background: rgba(54, 83, 20, 0.8); color: #bef264; border: 1px solid rgba(163, 230, 53, 0.3); }
+
+/* 10. Loteca */
+.cyber-loteca { border: 1px solid rgba(74, 222, 128, 0.45); }
+.cyber-loteca::before { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+.cyber-loteca:hover { border-color: #86efac; box-shadow: 0 0 18px rgba(74, 222, 128, 0.35); }
+.cyber-loteca .cyber-led { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+.cyber-loteca .cyber-tag { background: rgba(20, 83, 45, 0.8); color: #86efac; border: 1px solid rgba(74, 222, 128, 0.3); }
+
+/* --- Destaques Ativos (Cyber Glow) --- */
+.cyber-btn.cyber-active {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.cyber-mega.cyber-active {
+    border-color: #34d399 !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.55), inset 0 0 10px rgba(16, 185, 129, 0.2) !important;
+}
+.cyber-super.cyber-active {
+    border-color: #7dd3fc !important;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.55), inset 0 0 10px rgba(56, 189, 248, 0.2) !important;
+}
+.cyber-loto.cyber-active {
+    border-color: #e9d5ff !important;
+    box-shadow: 0 0 20px rgba(192, 132, 252, 0.55), inset 0 0 10px rgba(192, 132, 252, 0.2) !important;
+}
+.cyber-quina.cyber-active {
+    border-color: #93c5fd !important;
+    box-shadow: 0 0 20px rgba(96, 165, 250, 0.55), inset 0 0 10px rgba(96, 165, 250, 0.2) !important;
+}
+.cyber-dupla.cyber-active {
+    border-color: #fca5a5 !important;
+    box-shadow: 0 0 20px rgba(248, 113, 113, 0.55), inset 0 0 10px rgba(248, 113, 113, 0.2) !important;
+}
+.cyber-mil.cyber-active {
+    border-color: #5eead4 !important;
+    box-shadow: 0 0 20px rgba(45, 212, 191, 0.55), inset 0 0 10px rgba(45, 212, 191, 0.2) !important;
+}
+.cyber-mania.cyber-active {
+    border-color: #67e8f9 !important;
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.55), inset 0 0 10px rgba(34, 211, 238, 0.2) !important;
+}
+.cyber-sorte.cyber-active {
+    border-color: #fde68a !important;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.55), inset 0 0 10px rgba(251, 191, 36, 0.2) !important;
+}
+.cyber-time.cyber-active {
+    border-color: #bef264 !important;
+    box-shadow: 0 0 20px rgba(163, 230, 53, 0.55), inset 0 0 10px rgba(163, 230, 53, 0.2) !important;
+}
+.cyber-loteca.cyber-active {
+    border-color: #86efac !important;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.55), inset 0 0 10px rgba(74, 222, 128, 0.2) !important;
+}
+
+@media (max-width: 768px) {
+    #action-buttons-row {
+        flex-direction: column !important;
+    }
+    #b2b-motors-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .cyber-btn {
+        padding: 9px 10px;
+        font-size: 0.74rem;
+    }
+    .cyber-name {
+        font-size: 0.74rem;
+    }
+    .cyber-tag {
+        font-size: 0.58rem;
+        padding: 1.5px 4px;
+    }
+}

@@ -346,28 +346,77 @@
                             </div>
                         </div>
 
-                        <!-- Botões de Ação — MOTORES PRINCIPAIS -->
+                        <!-- Botões de Ação — MOTORES PRINCIPAIS (DESIGN FUTURISTA PADRONIZADO) -->
                         <div id="action-buttons-row" style="display:flex;gap:10px;align-items:stretch;margin-top:10px;">
-                            <button id="generate-btn" class="action-btn" style="flex: 1; min-width: 0; padding: 14px 10px; background: linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%); border: 1px solid #10B981; color: #ecfdf5; font-size: 0.95rem;" title="Gera jogos com os seus números selecionados no volante. Cobertura combinatória otimizada (Greedy Set Cover) + Filtros P5-P95 + ROI honesto. Você escolhe os números, o motor otimiza a distribuição.">🎲 Manual</button>
-                            <button id="generate-coverage-btn" class="action-btn" style="flex: 1; min-width: 0; padding: 14px 10px; background: linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%); border: 1px solid #10B981; color: #ecfdf5; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 15px rgba(16,185,129,0.3);" title="Motor de Cobertura Pura — Matemática combinatória. Greedy Set Cover + filtros P5-P95. Ative o Sniper para focar em um pool reduzido baseado em evidência estatística real.">📐 Cobertura IA</button>
-                            <button id="btn-gerador-inteligente" class="action-btn" style="flex: 1; min-width: 0; padding: 14px 10px; background: linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%); border: 1px solid #10B981; color: #ecfdf5; font-weight: 800; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 15px rgba(14,165,233,0.3);" title="Motor unificado de Cobertura Pura — Matemática combinatória sem previsão. Usa TODOS os números, Greedy Set Cover, filtros P5-P95, anti-concentração. Mostra ROI honesto ANTES de gerar. Toggle Sniper disponível.">🎯 Gerador Inteligente</button>
+                            <button id="generate-btn" class="cyber-btn cyber-top-manual" style="flex:1;min-width:0;" title="Gera jogos com os seus números selecionados no volante. Cobertura combinatória otimizada (Greedy Set Cover) + Filtros P5-P95 + ROI honesto. Você escolhe os números, o motor otimiza a distribuição.">
+                                <span class="cyber-btn-icon">🎲</span>
+                                <span class="cyber-name">MANUAL</span>
+                                <span class="cyber-tag">VOLANTE</span>
+                            </button>
+                            <button id="generate-coverage-btn" class="cyber-btn cyber-top-cobertura" style="flex:1;min-width:0;" title="Motor de Cobertura Pura — Matemática combinatória. Greedy Set Cover + filtros P5-P95. Ative o Sniper para focar em um pool reduzido baseado em evidência estatística real.">
+                                <span class="cyber-btn-icon">📐</span>
+                                <span class="cyber-name">COBERTURA IA</span>
+                                <span class="cyber-tag">COMBINATÓRIA</span>
+                            </button>
+                            <button id="btn-gerador-inteligente" class="cyber-btn cyber-top-smart" style="flex:1;min-width:0;" title="Motor unificado de Cobertura Pura — Matemática combinatória sem previsão. Usa TODOS os números, Greedy Set Cover, filtros P5-P95, anti-concentração. Mostra ROI honesto ANTES de gerar. Toggle Sniper disponível.">
+                                <span class="cyber-btn-icon">⚡</span>
+                                <span class="cyber-name">GERADOR INTELIGENTE</span>
+                                <span class="cyber-tag">UNIFICADO</span>
+                            </button>
                         </div>
 
-                        <!-- MOTORES EXCLUSIVOS B2B LOTERIAS (Lado a Lado) -->
+                        <!-- MOTORES EXCLUSIVOS B2B LOTERIAS (Cyber HUD Padronizado) -->
                         <div id="b2b-motors-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-top: 8px;">
-                            <button id="btn-motor-megasena" class="action-btn" style="padding: 14px 12px; animation: pulseGlowMega 2.5s infinite alternate; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); border: 1px solid #34d399; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(16,185,129,0.35); cursor:pointer;" title="MOTOR MEGA-SENA — B2B LOTERIAS: Grupos A (01-30) e B (31-60), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico, Auto-pesos, Modo Sniper e Honestidade Matemática.">⚡ MOTOR MEGA-SENA (B2B)</button>
-                            <button id="btn-motor-supersete" class="action-btn" style="padding: 14px 12px; animation: pulseGlowSuperSete 2.5s infinite alternate; background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #075985 100%); border: 1px solid #38bdf8; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(56,189,248,0.35); cursor:pointer;" title="MOTOR SUPER SETE — B2B LOTERIAS: 7 Modelos de Colunas (C1..C7), 0 a 9, Lift Intercolunas Regularizado, Centróide Simétrico (μ=31.5, σ=7.60), Diversificação de Hamming (dH ≥ 4), Modo Sniper, Score SMS e Honestidade Matemática.">⚡ MOTOR SUPER SETE (B2B)</button>
-
-                            <button id="btn-motor-lotofacil" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #4c1d95 100%); border: 1px solid #c084fc; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(192,132,252,0.35); cursor:pointer;" title="MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS: Análise obrigatória 10 concursos, divisões dinâmicas, relações 7/8, 8/7, 6/9, 9/6, consecutividade máx 5, Score B2B e Transparência Matemática.">⚡ MOTOR LOTOFÁCIL (B2B)</button>
-                            <button id="btn-motor-quina" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #1e40af 100%); border: 1px solid #60a5fa; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(37,99,235,0.35); cursor:pointer;" title="MOTOR QUINA — B2B LOTERIAS: Grupos A (01-40) e B (41-80), 5 dezenas, modelos 3/2, 2/3, 4/1, 1/4, 5/0, 0/5, máx 2 consecutivos, Lift/Z-score, Centróide Simétrico (202.5), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">🔷 MOTOR QUINA (B2B)</button>
-
-                            <button id="btn-motor-duplasena" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #b91c1c 0%, #dc2626 50%, #991b1b 100%); border: 1px solid #f87171; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(220,38,38,0.35); cursor:pointer;" title="MOTOR DUPLA SENA — B2B LOTERIAS: Grupos A (01-25) e B (26-50), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico (153), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">🔴 MOTOR DUPLA SENA (B2B)</button>
-                            <button id="btn-motor-milionaria" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); border: 1px solid #34d399; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(16,185,129,0.35); cursor:pointer;" title="MOTOR +MILIONÁRIA — B2B LOTERIAS: 50 Números, 6 Dezenas + 2 Trevos, Pool de 20 a 50 dezenas, Score IFM 10D, Centróide Simétrico, Diversificação Máxima, Modo Sniper e Honestidade Científica.">🍀 +MILIONÁRIA</button>
-
-                            <button id="btn-motor-lotomania" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #0284c7 0%, #0f766e 100%); border: 1px solid #38bdf8; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(56,189,248,0.35); cursor:pointer;" title="MOTOR LOTOMANIA — B2B LOTERIAS: 5 Conjuntos estritos de 20 numeros, 10 por conjunto (5x10=50), consecutividade maxima de 4 no jogo ordenado, scoring estatistico e auditoria 10 pontos.">⚛️ MOTOR LOTOMANIA (B2B)</button>
-                            <button id="btn-motor-diadesorte" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%); border: 1px solid #f59e0b; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(245,158,11,0.35); cursor:pointer;" title="MOTOR DIA DE SORTE — B2B LOTERIAS: Grupos A (01-15) e B (16-31), modelos 3+4, 4+3, 5+2, 2+5, filtro máx 3 consecutivos, Lift/Z-score, auto-pesos e Mês da Sorte com Honestidade Matemática.">🍀 MOTOR DIA DE SORTE (B2B)</button>
-                            <button id="btn-motor-timemania" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #064e3b 100%); border: 1px solid #34d399; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(52,211,153,0.35); cursor:pointer;" title="MOTOR TIMEMANIA — B2B LOTERIAS: Divisão analítica em 4 Grupos (G1..G4), 10 dezenas por jogo, IFM 8D, Time do Coração (80 clubes), Bloqueio de 3 Consecutivos no grupo, SNIPER adaptativo e Auditoria 10 pontos.">🎯 MOTOR TIMEMANIA (B2B)</button>
-                            <button id="btn-motor-loteca" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #166534 100%); border: 1px solid #4ade80; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(34,197,94,0.35); cursor:pointer;" title="MOTOR LOTECA — B2B LOTERIAS: 14 Jogos, Dixon-Coles Bivariado, Monte Carlo 100k, Entropia de Shannon, 7 Duques, 4 Ternos/Trios, Fechamentos Reduzidos e 12 Seções Técnicas.">⚽ MOTOR LOTECA (B2B)</button>
+                            <button id="btn-motor-megasena" class="cyber-btn cyber-mega" title="MOTOR MEGA-SENA — B2B LOTERIAS: Grupos A (01-30) e B (31-60), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico, Auto-pesos, Modo Sniper e Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">MEGA-SENA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-supersete" class="cyber-btn cyber-super" title="MOTOR SUPER SETE — B2B LOTERIAS: 7 Modelos de Colunas (C1..C7), 0 a 9, Lift Intercolunas Regularizado, Centróide Simétrico (μ=31.5, σ=7.60), Diversificação de Hamming (dH ≥ 4), Modo Sniper, Score SMS e Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">SUPER SETE</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-lotofacil" class="cyber-btn cyber-loto" title="MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS: Análise obrigatória 10 concursos, divisões dinâmicas, relações 7/8, 8/7, 6/9, 9/6, consecutividade máx 5, Score B2B e Transparência Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">LOTOFÁCIL</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-quina" class="cyber-btn cyber-quina" title="MOTOR QUINA — B2B LOTERIAS: Grupos A (01-40) e B (41-80), 5 dezenas, modelos 3/2, 2/3, 4/1, 1/4, 5/0, 0/5, máx 2 consecutivos, Lift/Z-score, Centróide Simétrico (202.5), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">QUINA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-duplasena" class="cyber-btn cyber-dupla" title="MOTOR DUPLA SENA — B2B LOTERIAS: Grupos A (01-25) e B (26-50), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico (153), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">DUPLA SENA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-milionaria" class="cyber-btn cyber-mil" title="MOTOR +MILIONÁRIA — B2B LOTERIAS: 50 Números, 6 Dezenas + 2 Trevos, Pool de 20 a 50 dezenas, Score IFM 10D, Centróide Simétrico, Diversificação Máxima, Modo Sniper e Honestidade Científica.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">+MILIONÁRIA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-lotomania" class="cyber-btn cyber-mania" title="MOTOR LOTOMANIA — B2B LOTERIAS: 5 Conjuntos estritos de 20 numeros, 10 por conjunto (5x10=50), consecutividade maxima de 4 no jogo ordenado, scoring estatistico e auditoria 10 pontos.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">LOTOMANIA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-diadesorte" class="cyber-btn cyber-sorte" title="MOTOR DIA DE SORTE — B2B LOTERIAS: Grupos A (01-15) e B (16-31), modelos 3+4, 4+3, 5+2, 2+5, filtro máx 3 consecutivos, Lift/Z-score, auto-pesos e Mês da Sorte com Honestidade Matemática.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">DIA DE SORTE</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-timemania" class="cyber-btn cyber-time" title="MOTOR TIMEMANIA — B2B LOTERIAS: Divisão analítica em 4 Grupos (G1..G4), 10 dezenas por jogo, IFM 8D, Time do Coração (80 clubes), Bloqueio de 3 Consecutivos no grupo, SNIPER adaptativo e Auditoria 10 pontos.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">TIMEMANIA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
+                            <button id="btn-motor-loteca" class="cyber-btn cyber-loteca" title="MOTOR LOTECA — B2B LOTERIAS: 14 Jogos, Dixon-Coles Bivariado, Monte Carlo 100k, Entropia de Shannon, 7 Duques, 4 Ternos/Trios, Fechamentos Reduzidos e 12 Seções Técnicas.">
+                                <span class="cyber-led"></span>
+                                <span class="cyber-name">LOTECA</span>
+                                <span class="cyber-tag">B2B</span>
+                            </button>
                         </div>
 
                         <!-- PAINEL MOTOR MEGA-SENA DO B2B LOTERIAS -->
