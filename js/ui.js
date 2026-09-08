@@ -6139,10 +6139,8 @@ function isVolanteReady(){
     return!1;
   }
   if(IS_SS){
-    var ssCols=document.querySelectorAll(".coluna,[class*='coluna'],[ng-repeat*='coluna']");
-    if(ssCols.length>=7)return!0;
-    var ssBtns=document.querySelectorAll(".dezena,.numero,a[id^='n'],li[id^='n'],button[id^='n']");
-    if(ssBtns.length>=7)return!0;
+    var bSS=document.querySelector(".box-super-sete")||document.getElementById("n1")||document.querySelector(".escolhe-numero.super-sete");
+    if(bSS&&bSS.offsetParent!==null)return!0;
   }
   var el=document.getElementById("n00")||document.getElementById("n01")||document.getElementById("d01")||(MIL&&document.getElementById("trevo1"))||document.querySelector(".dezena,.numero,a[id^='n'],li[id^='n'],button[id^='n'],img[id^='trevo'],.coluna,[class*='coluna']");
   return(el&&el.offsetParent!==null)?!0:!1;
@@ -6219,6 +6217,18 @@ function ct(t){
 
 function lmp(){
   fm();
+  if(IS_SS){
+    try{
+      var scSS=angular.element(document.querySelector('.escolhe-numero.super-sete')||document.getElementById('container-volante')||document.body).scope();
+      var vmSS=scSS?(scSS.vm||scSS):null;
+      if(vmSS&&typeof vmSS.limparVolante==='function'){
+        vmSS.limparVolante();
+        if(scSS&&scSS.$apply)scSS.$apply();
+      }
+    }catch(e){}
+    var bSS=document.getElementById("limparvolante")||document.querySelector(".data-limpar-volante-super-sete");
+    if(bSS&&bSS.offsetParent!==null)return rc(bSS);
+  }
   var b=document.getElementById("limparvolante");
   if(b)return rc(b);
   b=document.querySelector("[id*=limpar]");
@@ -6235,6 +6245,24 @@ async function car(){
   fm();await d(300);
   if(TM){await selTime();await d(600)}
   if(DS){await selMes();await d(600)}
+
+  // Garantir que não bloqueie com popup de 'continuar apostando'
+  try{localStorage.setItem("ngStorage-continuarApostando","true")}catch(e){}
+
+  var sc=angular.element(document.querySelector('.escolhe-numero.super-sete')||document.getElementById('container-volante')||document.getElementById('colocarnocarrinho')||document.body).scope();
+  var vm=sc?(sc.vm||sc):null;
+
+  // No Super Sete, disparar vm.incluirAposta() diretamente se disponível
+  if(IS_SS&&vm&&typeof vm.incluirAposta==='function'){
+    try{
+      vm.incluirAposta();
+      if(sc&&sc.$apply)sc.$apply();
+      await d(800);
+      fm();
+    }catch(e){
+      console.warn("[B2B] Erro no vm.incluirAposta():", e);
+    }
+  }
   if(IS_LOTECA){
     try{
       var scL=angular.element(document.querySelector('.loteca')||document.querySelector('[ng-controller*="Loteca"]')||document.body).scope();
@@ -6317,7 +6345,7 @@ async function car(){
 
   try{var rs=angular.element(document.body).scope();if(rs&&rs.$apply)rs.$apply()}catch(ae){}
   for(var t=0;t<15;t++){
-    var b=document.getElementById("colocarnocarrinho")||document.querySelector(".data-incluir-aposta-loteca");
+    var b=document.getElementById("colocarnocarrinho")||document.querySelector(".data-incluir-aposta-super-sete")||document.querySelector(".data-incluir-aposta-loteca");
     if(b&&b.offsetParent!==null){
       try{
         var scBtn=angular.element(b).scope();
@@ -6488,92 +6516,91 @@ async function clearLoteca(){
 
 async function fillSuperSete(digits){
   fm();
-  if(!Array.isArray(digits)||digits.length<7)return!1;
-  try{
-    var scSS=angular.element(document.querySelector('.super-sete')||document.querySelector('[ng-controller*="SuperSete"]')||document.querySelector('[ng-controller*="supersete"]')||document.querySelector('.volante')||document.body).scope();
-    var vmSS=scSS?(scSS.vm||scSS):null;
-    if(vmSS){
-      var cols=vmSS.colunas||(vmSS.aposta&&vmSS.aposta.colunas)||vmSS.matriz;
-      if(Array.isArray(cols)&&cols.length>=7){
-        for(var c=0;c<7;c++){
-          var target=digits[c];
-          var colObj=cols[c];
-          if(colObj&&Array.isArray(colObj.numeros)){
-            for(var n=0;n<colObj.numeros.length;n++){
-              colObj.numeros[n].selecionado=(colObj.numeros[n].numero===target||colObj.numeros[n].valor===target||n===target);
-            }
-          }else if(typeof vmSS.selecionarNumero==='function'){
-            vmSS.selecionarNumero(c,target);
-          }else if(typeof vmSS.marcarNumero==='function'){
-            vmSS.marcarNumero(c,target);
-          }
-        }
-        if(typeof vmSS.atualizarValorAposta==='function')vmSS.atualizarValorAposta();
-        if(typeof vmSS.calcularValorAposta==='function')vmSS.calcularValorAposta();
-        try{scSS.$apply()}catch(e){}
-        await d(200);
-      }
-    }
-  }catch(e){}
-
-  var colElements=document.querySelectorAll(".coluna,[class*='coluna-super-sete'],[ng-repeat*='coluna'],.col-supersete,.coluna-volante");
-  var validCols=[];
-  colElements.forEach(function(el){
-    if(el.querySelectorAll(".dezena,.numero,li,button,a").length>=5){
-      validCols.push(el);
-    }
-  });
-
-  if(validCols.length>=7){
-    for(var c=0;c<7;c++){
-      var colEl=validCols[c];
-      var target=digits[c];
-      var btnElements=colEl.querySelectorAll(".dezena,.numero,li,button,a,span");
-      var clicked=!1;
-      for(var b=0;b<btnElements.length;b++){
-        var tx=btnElements[b].textContent.trim();
-        if(tx===String(target)&&btnElements[b].children.length<=1){
-          rc(btnElements[b]);
-          clicked=!0;
-          await d(35);
-          break;
-        }
-      }
-      if(!clicked&&btnElements.length>=10&&btnElements[target]){
-        rc(btnElements[target]);
-        await d(35);
-      }
-    }
-    return!0;
+  if(!Array.isArray(digits)||digits.length<7){
+    console.error("[B2B] ❌ Formato inválido para Super Sete:", digits);
+    return!1;
   }
 
-  var allDezenas=document.querySelectorAll(".dezena,.numero,a[id*='n'],li[id*='n'],button[id*='n']");
-  var volanteDezenas=[];
-  allDezenas.forEach(function(el){
-    if(!el.closest||!el.closest("[class*='carrinho'],[id*='carrinho'],[class*='resumo'],[class*='sidebar']")){
-      volanteDezenas.push(el);
-    }
-  });
+  // 1. Obter escopo Angular da Caixa
+  var sc=angular.element(
+    document.querySelector('.escolhe-numero.super-sete')||
+    document.querySelector('.box-super-sete')||
+    document.getElementById('container-volante')||
+    document.getElementById('colocarnocarrinho')||
+    document.body
+  ).scope();
+  var vm=sc?(sc.vm||sc):null;
 
-  if(volanteDezenas.length===70){
-    for(var c=0;c<7;c++){
-      var idx=c*10+digits[c];
-      if(volanteDezenas[idx]){
-        rc(volanteDezenas[idx]);
-        await d(40);
-      }
-    }
-    return!0;
+  // 2. Limpar qualquer seleção anterior
+  if(vm&&typeof vm.limparVolante==='function'){
+    try{vm.limparVolante();if(sc&&sc.$apply)sc.$apply();}catch(e){}
   }
+  var btnLmp=document.getElementById("limparvolante")||document.querySelector(".data-limpar-volante-super-sete");
+  if(btnLmp&&btnLmp.offsetParent!==null){
+    rc(btnLmp);
+  }
+  await d(300);
+  fm();
 
+  // 3. Preenchimento das 7 colunas (c: 0..6) com o dígito (d: 0..9)
+  // Fórmula OFICIAL da Caixa Econômica Federal (SuperSeteController):
+  // valor = 7 * d + c + 1
+  // ID do elemento DOM = "n" + valor
   for(var c=0;c<7;c++){
-    var t=digits[c];
-    var pIds=["c"+c+"_n"+t,"col"+c+"_"+t,"coluna"+c+"_"+t,"coluna_"+(c+1)+"_num_"+t,"n_"+c+"_"+t,"col_"+c+"_num_"+t];
-    for(var pi=0;pi<pIds.length;pi++){
-      var el=document.getElementById(pIds[pi])||document.querySelector("[id*='"+pIds[pi]+"']");
-      if(el){rc(el);await d(40);break;}
+    var dVal=parseInt(digits[c]);
+    if(isNaN(dVal)||dVal<0||dVal>9)dVal=0;
+    var valor=7*dVal+c+1;
+    var idBtn="n"+valor;
+
+    // Método A: Invocação direta no controlador Angular da Caixa (Nativo)
+    if(vm&&typeof vm.selecionar==='function'&&Array.isArray(vm.numerosCartela)){
+      var itemCartela=vm.numerosCartela.find(function(it){return it&&it.valor===valor;})||vm.numerosCartela[valor-1];
+      if(itemCartela&&!itemCartela.selecionado){
+        try{
+          vm.selecionar(itemCartela);
+        }catch(e){
+          console.warn("[B2B] Fallback vm.selecionar coluna "+(c+1)+":", e);
+        }
+      }
     }
+
+    // Método B: Clique no elemento DOM correspondente
+    var btnEl=document.getElementById(idBtn);
+    if(btnEl){
+      if(!btnEl.classList.contains("selected")&&!(btnEl.parentElement&&btnEl.parentElement.classList.contains("selected"))){
+        rc(btnEl);
+      }
+    }else{
+      var allA=document.querySelectorAll(".escolhe-numero.super-sete a, ul.escolhe-numero a");
+      if(allA.length>=70&&allA[valor-1]){
+        rc(allA[valor-1]);
+      }
+    }
+    await d(60);
   }
+
+  // Sincronizar Angular digest
+  try{if(sc&&sc.$apply)sc.$apply();}catch(e){}
+  await d(300);
+
+  // 4. Verificação defensiva de integridade (7 números selecionados)
+  var marcados=(vm&&vm.numerosSelecionados)?vm.numerosSelecionados.length:document.querySelectorAll(".escolhe-numero.super-sete a.selected, a.selected[id^='n']").length;
+  if(marcados<7){
+    console.warn("[B2B] ⚠️ Marcados apenas "+marcados+"/7. Reforçando colunas...");
+    for(var c=0;c<7;c++){
+      var dVal=parseInt(digits[c]);
+      var valor=7*dVal+c+1;
+      var el=document.getElementById("n"+valor);
+      if(el&&!el.classList.contains("selected")){
+        rc(el);
+        await d(80);
+      }
+    }
+    try{if(sc&&sc.$apply)sc.$apply();}catch(e){}
+    await d(250);
+  }
+
+  console.log("[B2B] 🎯 Super Sete preenchido com sucesso: "+digits.map(function(d,ci){return "C"+(ci+1)+":"+d;}).join(" | "));
   return!0;
 }
 
