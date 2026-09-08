@@ -180,6 +180,10 @@
                         .tagline-main-5d { font-size: 1.1rem; }
                         .tagline-sub-5d { font-size: 0.6rem; letter-spacing: 3px; }
                     }
+                    @keyframes pulseGlowSuperSete {
+                        0% { box-shadow: 0 4px 15px rgba(56,189,248,0.35); border-color: #38bdf8; }
+                        100% { box-shadow: 0 0 22px rgba(56,189,248,0.85), 0 0 35px rgba(2,132,199,0.6); border-color: #bae6fd; transform: translateY(-1px); }
+                    }
                     @keyframes pulseGlowMega {
                         0% { box-shadow: 0 4px 15px rgba(16,185,129,0.35); border-color: #34d399; }
                         100% { box-shadow: 0 0 22px rgba(16,185,129,0.85), 0 0 35px rgba(5,150,105,0.6); border-color: #a7f3d0; }
@@ -237,6 +241,14 @@
                     <span class="nav-name">+Milionária</span>
                     <span class="nav-prize" id="prize-nav-milionaria">R$ 10,0 M</span>
                 </button>
+                <button class="nav-btn" data-game="supersete">
+                    <span class="nav-name">Super Sete</span>
+                    <span class="nav-prize" id="prize-nav-supersete">R$ 2,0 M</span>
+                </button>
+                <button class="nav-btn" data-game="loteca">
+                    <span class="nav-name">Loteca</span>
+                    <span class="nav-prize" id="prize-nav-loteca">R$ 1,5 M</span>
+                </button>
 
             </nav>
         </header>
@@ -275,6 +287,8 @@
                                     <button id="btn-quick-motor-quina" class="sm-btn" style="background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #ffffff; border: 1px solid #60a5fa; font-weight: 800; cursor: pointer; box-shadow: 0 0 10px rgba(37,99,235,0.4); display: none;" title="Abrir Motor Quina (B2B)">🔷 Motor Quina (B2B)</button>
                                     <button id="btn-quick-motor-megasena" class="sm-btn" style="background: linear-gradient(135deg, #059669, #10b981); color: #ffffff; border: 1px solid #34d399; font-weight: 800; cursor: pointer; box-shadow: 0 0 10px rgba(16,185,129,0.4); display: none;" title="Abrir Motor Inteligente Mega-Sena (B2B)">⚡ Motor Mega-Sena</button>
                                     <button id="btn-quick-motor-lotofacil" class="sm-btn" style="background: linear-gradient(135deg, #7c3aed, #9333ea); color: #ffffff; border: 1px solid #c084fc; font-weight: 800; cursor: pointer; box-shadow: 0 0 10px rgba(192,132,252,0.4); display: none;" title="Abrir Motor Inteligente Lotofácil (B2B)">⚡ Motor Lotofácil</button>
+                                    <button id="btn-quick-motor-loteca" class="sm-btn" style="background: linear-gradient(135deg, #15803d, #16a34a); color: #ffffff; border: 1px solid #4ade80; font-weight: 800; cursor: pointer; box-shadow: 0 0 10px rgba(34,197,94,0.4); display: none;" title="Abrir Motor Loteca (B2B)">⚽ Motor Loteca (B2B)</button>
+                                    <button id="btn-quick-motor-duplasena" class="sm-btn" style="background: linear-gradient(135deg, #b91c1c, #dc2626); color: #ffffff; border: 1px solid #f87171; font-weight: 800; cursor: pointer; box-shadow: 0 0 10px rgba(220,38,38,0.4); display: none;" title="Abrir Motor Dupla Sena (B2B)">🎯 Motor Dupla Sena (B2B)</button>
                                     <button id="btn-clear-selection" class="sm-btn" title="Limpar todos os números selecionados e jogos gerados" style="margin-left: auto;">🗑️ Excluir Tudo</button>
                                 </div>
                             </div>
@@ -342,14 +356,18 @@
                         <!-- MOTORES EXCLUSIVOS B2B LOTERIAS (Lado a Lado) -->
                         <div id="b2b-motors-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-top: 8px;">
                             <button id="btn-motor-megasena" class="action-btn" style="padding: 14px 12px; animation: pulseGlowMega 2.5s infinite alternate; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); border: 1px solid #34d399; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(16,185,129,0.35); cursor:pointer;" title="MOTOR MEGA-SENA — B2B LOTERIAS: Grupos A (01-30) e B (31-60), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico, Auto-pesos, Modo Sniper e Honestidade Matemática.">⚡ MOTOR MEGA-SENA (B2B)</button>
+                            <button id="btn-motor-supersete" class="action-btn" style="padding: 14px 12px; animation: pulseGlowSuperSete 2.5s infinite alternate; background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #075985 100%); border: 1px solid #38bdf8; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(56,189,248,0.35); cursor:pointer;" title="MOTOR SUPER SETE — B2B LOTERIAS: 7 Modelos de Colunas (C1..C7), 0 a 9, Lift Intercolunas Regularizado, Centróide Simétrico (μ=31.5, σ=7.60), Diversificação de Hamming (dH ≥ 4), Modo Sniper, Score SMS e Honestidade Matemática.">⚡ MOTOR SUPER SETE (B2B)</button>
+
                             <button id="btn-motor-lotofacil" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #4c1d95 100%); border: 1px solid #c084fc; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(192,132,252,0.35); cursor:pointer;" title="MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS: Análise obrigatória 10 concursos, divisões dinâmicas, relações 7/8, 8/7, 6/9, 9/6, consecutividade máx 5, Score B2B e Transparência Matemática.">⚡ MOTOR LOTOFÁCIL (B2B)</button>
                             <button id="btn-motor-quina" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #1e40af 100%); border: 1px solid #60a5fa; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(37,99,235,0.35); cursor:pointer;" title="MOTOR QUINA — B2B LOTERIAS: Grupos A (01-40) e B (41-80), 5 dezenas, modelos 3/2, 2/3, 4/1, 1/4, 5/0, 0/5, máx 2 consecutivos, Lift/Z-score, Centróide Simétrico (202.5), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">🔷 MOTOR QUINA (B2B)</button>
 
+                            <button id="btn-motor-duplasena" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #b91c1c 0%, #dc2626 50%, #991b1b 100%); border: 1px solid #f87171; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(220,38,38,0.35); cursor:pointer;" title="MOTOR DUPLA SENA — B2B LOTERIAS: Grupos A (01-25) e B (26-50), modelos 3/3, 2/4, 4/2, 1/5, 5/1, filtro rígido máx 3 consecutivos, Lift, Z-score, Centróide Simétrico (153), Auto-pesos, IGA (0-100), Modo Sniper e Honestidade Matemática.">🔴 MOTOR DUPLA SENA (B2B)</button>
                             <button id="btn-motor-milionaria" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); border: 1px solid #34d399; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(16,185,129,0.35); cursor:pointer;" title="MOTOR +MILIONÁRIA — B2B LOTERIAS: 50 Números, 6 Dezenas + 2 Trevos, Pool de 20 a 50 dezenas, Score IFM 10D, Centróide Simétrico, Diversificação Máxima, Modo Sniper e Honestidade Científica.">🍀 +MILIONÁRIA</button>
 
                             <button id="btn-motor-lotomania" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #0284c7 0%, #0f766e 100%); border: 1px solid #38bdf8; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(56,189,248,0.35); cursor:pointer;" title="MOTOR LOTOMANIA — B2B LOTERIAS: 5 Conjuntos estritos de 20 numeros, 10 por conjunto (5x10=50), consecutividade maxima de 4 no jogo ordenado, scoring estatistico e auditoria 10 pontos.">⚛️ MOTOR LOTOMANIA (B2B)</button>
                             <button id="btn-motor-diadesorte" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%); border: 1px solid #f59e0b; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(245,158,11,0.35); cursor:pointer;" title="MOTOR DIA DE SORTE — B2B LOTERIAS: Grupos A (01-15) e B (16-31), modelos 3+4, 4+3, 5+2, 2+5, filtro máx 3 consecutivos, Lift/Z-score, auto-pesos e Mês da Sorte com Honestidade Matemática.">🍀 MOTOR DIA DE SORTE (B2B)</button>
                             <button id="btn-motor-timemania" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #064e3b 100%); border: 1px solid #34d399; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(52,211,153,0.35); cursor:pointer;" title="MOTOR TIMEMANIA — B2B LOTERIAS: Divisão analítica em 4 Grupos (G1..G4), 10 dezenas por jogo, IFM 8D, Time do Coração (80 clubes), Bloqueio de 3 Consecutivos no grupo, SNIPER adaptativo e Auditoria 10 pontos.">🎯 MOTOR TIMEMANIA (B2B)</button>
+                            <button id="btn-motor-loteca" class="action-btn" style="padding: 12px 10px; background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #166534 100%); border: 1px solid #4ade80; color: #ffffff; font-weight: 800; font-size: 0.90rem; text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(34,197,94,0.35); cursor:pointer;" title="MOTOR LOTECA — B2B LOTERIAS: 14 Jogos, Dixon-Coles Bivariado, Monte Carlo 100k, Entropia de Shannon, 7 Duques, 4 Ternos/Trios, Fechamentos Reduzidos e 12 Seções Técnicas.">⚽ MOTOR LOTECA (B2B)</button>
                         </div>
 
                         <!-- PAINEL MOTOR MEGA-SENA DO B2B LOTERIAS -->
@@ -424,6 +442,130 @@
                             </div>
                         </div>
 
+                        <!-- PAINEL MOTOR SUPER SETE DO B2B LOTERIAS -->
+                        <div id="motor-supersete-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(2, 132, 199, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #0284c7; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                <div style="font-size: 1.05rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+                                    ⚡ MOTOR INTELIGENTE SUPER SETE — B2B LOTERIAS
+                                </div>
+                                <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #bae6fd; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 700;">
+                                    7 Colunas (C1..C7) • 10.000.000 Combinações • 0 a 9 • Lift Laplace • Centróide Simétrico (μ=31.5) • Hamming dH ≥ 4 • Modo Sniper
+                                </span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.5; margin: 0 0 12px 0;">
+                                Motor de alta precisão matemática, física e estatística. Opera com <strong style="color:#38bdf8;">7 modelos independentes de colunas (M1 a M7)</strong> para os algarismos 0 a 9, matriz de coocorrência e <strong style="color:#fcd34d;">Lift regularizado por Laplace</strong>, centróide estrutural ($\mu=31.5, \sigma=7.60$), bloqueio de mais de 3 consecutivos adjacentes, <strong style="color:#a7f3d0;">otimização de diversificação por Distância de Hamming</strong> e conformidade rigorosa com a <em>Verdade Matemática</em>.
+                            </p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Janela Histórica:</label>
+                                    <select id="select-historico-supersete" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="0">Todos os Concursos (Recomendado)</option>
+                                        <option value="10">Últimos 10 Concursos</option>
+                                        <option value="20">Últimos 20 Concursos</option>
+                                        <option value="30">Últimos 30 Concursos</option>
+                                        <option value="50">Últimos 50 Concursos</option>
+                                        <option value="100">Últimos 100 Concursos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia do Motor:</label>
+                                    <select id="select-estrategia-supersete" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="equilibrada" selected>1 — Equilibrada (Padrão Multicritério)</option>
+                                        <option value="sniper">2 — 🎯 Modo Sniper (Alta Seletividade)</option>
+                                        <option value="frequencia_historica">3 — Frequência Histórica</option>
+                                        <option value="frequencia_recente">4 — Frequência Recente</option>
+                                        <option value="atrasos_recuperacoes">5 — Modelo de Gaps e Atrasos</option>
+                                        <option value="coocorrencia_lift">6 — Coocorrência e Lift Intercolunas</option>
+                                        <option value="auto_pesos">7 — Auto-Pesos Adaptativos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Máx. Consecutivos Adjacentes:</label>
+                                    <select id="select-consecutivos-supersete" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="2">Máximo 2 Consecutivos</option>
+                                        <option value="3" selected>Máximo 3 Consecutivos (Padrão Oficial)</option>
+                                        <option value="4">Máximo 4 Consecutivos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Hamming Mínimo (Diversificação):</label>
+                                    <select id="select-hamming-supersete" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="3">dH ≥ 3 (Moderada)</option>
+                                        <option value="4" selected>dH ≥ 4 (Alta Diversificação — Recomendado)</option>
+                                        <option value="5">dH ≥ 5 (Máxima Dispersão)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Quantidade de Jogos:</label>
+                                    <input type="number" id="input-qtd-supersete" value="10" min="1" max="100" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; box-sizing: border-box;">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                                <button id="btn-executar-motor-supersete" style="flex: 2; min-width: 220px; background: linear-gradient(135deg, #0284c7, #0369a1); border: 1px solid #38bdf8; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(56,189,248,0.4);">
+                                    ⚡ GERAR CARTEIRA (MOTOR SUPER SETE)
+                                </button>
+                                <button id="btn-relatorio-motor-supersete" style="flex: 1; min-width: 180px; background: rgba(15,23,42,0.8); border: 1px solid #0284c7; color: #7dd3fc; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    🔬 RELATÓRIO TÉCNICO (7 COLUNAS)
+                                </button>
+                                <button id="btn-backtest-motor-supersete" style="flex: 1; min-width: 180px; background: rgba(15,23,42,0.8); border: 1px solid #f59e0b; color: #fde68a; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    📈 BACKTESTING WALK-FORWARD (VS ACASO)
+                                </button>
+                            </div>
+
+                            <!-- ÁREA DE RESULTADOS DO MOTOR SUPER SETE -->
+                            <div id="supersete-resultado-container" style="display:none; margin-top: 12px; padding: 12px; background: rgba(15, 23, 42, 0.7); border-radius: 8px; border: 1px solid rgba(56,189,248,0.2);">
+                                <!-- FRASE OBRIGATÓRIA DE HONESTIDADE CIENTÍFICA -->
+                                <div style="padding: 10px 14px; margin-bottom: 12px; background: rgba(2, 132, 199, 0.12); border-left: 4px solid #38bdf8; border-radius: 4px; font-size: 0.78rem; color: #bae6fd; line-height: 1.45;">
+                                    <strong>Aviso Obrigatório do Motor:</strong> Este motor não prevê o sorteio. Ele utiliza matemática, estatística, simulação e otimização para selecionar as combinações mais bem classificadas dentro dos critérios definidos. Nenhum método possui garantia de acerto em um sorteio aleatório.
+                                </div>
+
+                                <!-- BADGES DE MÉTRICAS GLOBAIS -->
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                                    <div style="flex: 1; min-width: 120px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; border: 1px solid rgba(56,189,248,0.3); text-align: center;">
+                                        <div style="font-size: 0.70rem; color: #94a3b8; font-weight: 700;">ICM GLOBAL</div>
+                                        <div id="supersete-val-icm" style="font-size: 1.2rem; font-weight: 900; color: #38bdf8;">--/100</div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 120px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; border: 1px solid rgba(52,211,153,0.3); text-align: center;">
+                                        <div style="font-size: 0.70rem; color: #94a3b8; font-weight: 700;">DIVERSIFICAÇÃO</div>
+                                        <div id="supersete-val-div" style="font-size: 1.2rem; font-weight: 900; color: #34d399;">--%</div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 120px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; border: 1px solid rgba(244,114,182,0.3); text-align: center;">
+                                        <div style="font-size: 0.70rem; color: #94a3b8; font-weight: 700;">REDUNDÂNCIA</div>
+                                        <div id="supersete-val-red" style="font-size: 1.2rem; font-weight: 900; color: #f472b6;">--%</div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 120px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; border: 1px solid rgba(251,191,36,0.3); text-align: center;">
+                                        <div style="font-size: 0.70rem; color: #94a3b8; font-weight: 700;">DIST. HAMMING MÉDIA</div>
+                                        <div id="supersete-val-hamming" style="font-size: 1.2rem; font-weight: 900; color: #fbbf24;">-- / 7</div>
+                                    </div>
+                                </div>
+
+                                <!-- DIAGNÓSTICO CIENTÍFICO -->
+                                <div id="supersete-diagnostico-box" style="margin-bottom: 12px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(56,189,248,0.2); font-size: 0.80rem; color: #cbd5e1;">
+                                    <div style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;" id="supersete-diagnostico-titulo">DIAGNÓSTICO: CARREGANDO...</div>
+                                    <div id="supersete-diagnostico-texto">Aguardando geração da carteira...</div>
+                                </div>
+
+                                <!-- TABELA DE JOGOS CLASSIFICADOS -->
+                                <div style="overflow-x: auto;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+                                        <thead>
+                                            <tr style="background: rgba(2,132,199,0.25); color: #bae6fd; border-bottom: 1px solid #0284c7;">
+                                                <th style="padding: 8px 6px;">#</th>
+                                                <th style="padding: 8px 6px;">Jogo (C1 a C7)</th>
+                                                <th style="padding: 8px 6px; text-align: center;">SMS</th>
+                                                <th style="padding: 8px 6px; text-align: center;">ICM</th>
+                                                <th style="padding: 8px 6px; text-align: center;">Diversificação</th>
+                                                <th style="padding: 8px 6px; text-align: center;">Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="supersete-jogos-tbody">
+                                            <!-- Inserido dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- PAINEL MOTOR LOTOFÁCIL DO B2B LOTERIAS -->
                         <div id="motor-lotofacil-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(147, 51, 234, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #a855f7; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
                             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
@@ -460,6 +602,88 @@
                             <div style="display: flex; gap: 8px;">
                                 <button id="btn-executar-motor-lotofacil" style="flex: 2; background: linear-gradient(135deg, #7c3aed, #059669); border: 1px solid #a855f7; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(168,85,247,0.4);">
                                     ⚡ GERAR CARTEIRA (MOTOR LOTOFÁCIL)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PAINEL MOTOR DUPLA SENA DO B2B LOTERIAS -->
+                        <div id="motor-duplasena-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(220, 38, 38, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #ef4444; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                <div style="font-size: 1.05rem; font-weight: 800; color: #f87171; display: flex; align-items: center; gap: 8px;">
+                                    🔴 MOTOR INTELIGENTE DUPLA SENA — B2B LOTERIAS
+                                </div>
+                                <span style="font-size: 0.75rem; background: rgba(220, 38, 38, 0.15); color: #fca5a5; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(220, 38, 38, 0.3); font-weight: 700;">
+                                    Pool 50 (A: 01-25 | B: 26-50) • Max Consecutivo ≤ 3 • Modelos 3/3, 2/4, 4/2 • Lift/Z-Score • IGA (0-100) • Sniper
+                                </span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; margin: 0 0 12px 0;">
+                                Motor de máxima assertividade matemática, combinatória e estatística com partição obrigatória em <strong style="color:#f87171;">Grupo A (01-25)</strong> e <strong style="color:#fca5a5;">Grupo B (26-50)</strong>. Ordenação dinâmica dos modelos hipergeométricos (<strong style="color:#fcd34d;">3/3, 2/4, 4/2, 1/5, 5/1</strong>), bloqueio rígido de <strong>mais de 3 consecutivos</strong>, matriz Lift/Z-score para pares e trios com regularização Bayesiana, centróide simétrico ($\mu=25.5, \Sigma=153$), auto-pesos e modo 🎯 SNIPER.
+                            </p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Janela de Análise Histórica:</label>
+                                    <select id="select-historico-duplasena" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(220,38,38,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="3">Últimos 3 Concursos</option>
+                                        <option value="5">Últimos 5 Concursos</option>
+                                        <option value="10">Últimos 10 Concursos</option>
+                                        <option value="20">Últimos 20 Concursos</option>
+                                        <option value="30" selected>Últimos 30 Concursos (Recomendado)</option>
+                                        <option value="50">Últimos 50 Concursos</option>
+                                        <option value="75">Últimos 75 Concursos</option>
+                                        <option value="100">Últimos 100 Concursos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia do Motor:</label>
+                                    <select id="select-estrategia-duplasena" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(220,38,38,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="equilibrada" selected>1 — Equilibrada (Máxima Assertividade)</option>
+                                        <option value="sniper">2 — 🎯 Modo Sniper (Máxima Seletividade)</option>
+                                        <option value="frequencia_historica">3 — Frequência Histórica</option>
+                                        <option value="frequencia_recente">4 — Frequência Recente (Momentum)</option>
+                                        <option value="atrasos_recuperacoes">5 — Atrasos e Recuperações</option>
+                                        <option value="pares_trios">6 — Melhores Pares e Trios</option>
+                                        <option value="coocorrencia_lift_zscore">7 — Coocorrência / Lift / Z-Score</option>
+                                        <option value="auto_pesos">8 — Auto-Pesos Adaptativos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Pool de Dezenas:</label>
+                                    <select id="select-pool-duplasena" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(220,38,38,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="automatico" selected>Pool Oficial Completo (01 a 50)</option>
+                                        <option value="grupo_a">Grupo A (01 a 25)</option>
+                                        <option value="grupo_b">Grupo B (26 a 50)</option>
+                                        <option value="personalizado">Pool Personalizado (Marcados no Volante)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Modelo A/B de Composição:</label>
+                                    <select id="select-modelo-duplasena" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(220,38,38,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="auto" selected>Automático (Dinâmico pelo Histórico)</option>
+                                        <option value="3/3">Modelo 3/3 (3A + 3B — 33.3%)</option>
+                                        <option value="2/4">Modelo 2/4 (2A + 4B — 23.9%)</option>
+                                        <option value="4/2">Modelo 4/2 (4A + 2B — 23.9%)</option>
+                                        <option value="1/5">Modelo 1/5 (1A + 5B — 8.4%)</option>
+                                        <option value="5/1">Modelo 5/1 (5A + 1B — 8.4%)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Base de Sorteio:</label>
+                                    <select id="select-base-duplasena" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(220,38,38,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="1" selected>1º Sorteio Oficial</option>
+                                        <option value="2">2º Sorteio Oficial</option>
+                                        <option value="combinado">Análise Combinada (Ambos)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button id="btn-executar-motor-duplasena" style="flex: 2; min-width: 220px; background: linear-gradient(135deg, #b91c1c, #dc2626); border: 1px solid #f87171; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(220,38,38,0.4);">
+                                    🔴 GERAR CARTEIRA (MOTOR DUPLA SENA)
+                                </button>
+                                <button id="btn-relatorio-motor-duplasena" style="flex: 1; min-width: 180px; background: rgba(15,23,42,0.8); border: 1px solid #dc2626; color: #fca5a5; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    🔬 RELATÓRIO TÉCNICO
+                                </button>
+                                <button id="btn-backtest-motor-duplasena" style="flex: 1; min-width: 180px; background: rgba(15,23,42,0.8); border: 1px solid #f59e0b; color: #fde68a; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    📈 BACKTESTING WALK-FORWARD
                                 </button>
                             </div>
                         </div>
@@ -853,6 +1077,135 @@
                             <!-- Declaração Obrigatória de Honestidade Científica -->
                             <div style="margin-top: 12px; padding: 10px 14px; background: rgba(239, 68, 68, 0.08); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.76rem; color: #fca5a5; line-height: 1.4;">
                                 🛡️ <strong>DECLARAÇÃO OBRIGATÓRIA DO MOTOR:</strong> Este motor utiliza modelos matemáticos, estatísticos e combinatórios para análise e otimização de carteiras. Os resultados históricos não constituem garantia de resultados futuros. Quando não houver evidência estatística suficiente, o sistema declara explicitamente essa limitação.
+                            </div>
+                        </div>
+
+                        <!-- PAINEL MOTOR LOTECA DO B2B LOTERIAS -->
+                        <div id="motor-loteca-panel" style="display:none; margin-top: 12px; padding: 18px; background: radial-gradient(circle at top left, rgba(22, 163, 74, 0.25), rgba(15, 23, 42, 0.98)); border: 1px solid #22c55e; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                <div style="font-size: 1.1rem; font-weight: 800; color: #4ade80; display: flex; align-items: center; gap: 8px;">
+                                    ⚽ MOTOR INTELIGENTE LOTECA — B2B LOTERIAS
+                                </div>
+                                <span style="font-size: 0.75rem; background: rgba(34, 197, 94, 0.15); color: #86efac; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(34, 197, 94, 0.4); font-weight: 700;">
+                                    14 Jogos • Dixon-Coles Poisson • Monte Carlo 100k • 7 Duques • 4 Ternos • Shannon
+                                </span>
+                            </div>
+                            <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; margin: 0 0 14px 0;">
+                                Motor de máxima honestidade matemática para os 14 jogos da grade Caixa. Modela expected goals (xG), Dixon-Coles com correção <strong style="color:#4ade80;">&tau;</strong> para empates, 100.000 iterações Monte Carlo, Entropia de Shannon (Incerteza), Detector de Armadilhas, <strong>7 Duques estratégicos</strong> e <strong>4 Ternos / Trios</strong> com fechamentos reduzidos (-50% a -66.7%).
+                            </p>
+
+                            <!-- Controles de Configuração -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #4ade80; font-weight: 800; display: block; margin-bottom: 4px;">🎮 Qtd. de Jogos / Volantes:</label>
+                                    <input type="number" id="loteca-games-quantity" min="1" max="50000" value="10" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #22c55e; color: #4ade80; padding: 7px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 800; box-sizing: border-box;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Orçamento / Volante:</label>
+                                    <select id="select-orcamento-loteca" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(34,197,94,0.4); color: #e2e8f0; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">
+                                        <option value="4.0" selected>R$ 4,00 (1 Duplo — 2 Apostas)</option>
+                                        <option value="12.0">R$ 12,00 (1 Triplo — 3 Apostas)</option>
+                                        <option value="16.0">R$ 16,00 (2 Duplos — 4 Apostas)</option>
+                                        <option value="48.0">R$ 48,00 (1 Duplo + 1 Triplo — 6 Apostas) [Recomendado]</option>
+                                        <option value="64.0">R$ 64,00 (3 Duplos — 8 Apostas)</option>
+                                        <option value="144.0">R$ 144,00 (2 Duplos + 1 Triplo — 12 Apostas)</option>
+                                        <option value="256.0">R$ 256,00 (4 Duplos — 16 Apostas)</option>
+                                        <option value="288.0">R$ 288,00 (1 Duplo + 2 Triplos — 18 Apostas)</option>
+                                        <option value="576.0">R$ 576,00 (3 Duplos + 1 Triplo — 24 Apostas)</option>
+                                        <option value="864.0">R$ 864,00 (2 Duplos + 2 Triplos — 36 Apostas Caixa)</option>
+                                        <option value="1728.0">R$ 1.728,00 (3 Duplos + 2 Triplos — 72 Apostas)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia do Motor:</label>
+                                    <select id="select-estrategia-loteca" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(34,197,94,0.4); color: #e2e8f0; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">
+                                        <option value="equilibrada" selected>1 — Equilibrada (Máximo EV / Valor Esperado)</option>
+                                        <option value="conservadora">2 — Conservadora (Foco Favoritos / Menor Risco)</option>
+                                        <option value="agressiva">3 — Caça-Zebras (Alta Seletividade / Alto Prêmio)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Modo de Visualização / Análise:</label>
+                                    <select id="select-visao-loteca" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(34,197,94,0.4); color: #e2e8f0; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">
+                                        <option value="carteira_volantes" selected>Carteira de Volantes Gerados</option>
+                                        <option value="grade_14">Grade Técnica dos 14 Jogos</option>
+                                        <option value="7_duques">Módulo dos 7 Duques (Pares)</option>
+                                        <option value="4_ternos">Módulo dos 4 Ternos / Trios (27 Comb.)</option>
+                                        <option value="fechamentos">Fechamentos Reduzidos Caixa</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- GRADE INTERATIVA DE PALPITES DO APOSTADOR (MODO MANUAL E HÍBRIDO IA) -->
+                            <div id="loteca-grade-editor-container" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                                    <div>
+                                        <span style="color: #4ade80; font-weight: 800; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+                                            🎯 GRADE DE PALPITES DO APOSTADOR (MANUAL &amp; IA)
+                                        </span>
+                                        <span style="display: block; font-size: 0.72rem; color: #94a3b8; margin-top: 2px;">
+                                            Fixe seus Secos, marque Duplos/Triplos ou use a inteligência estatística para alta assertividade.
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                        <button id="btn-carregar-grade-caixa" type="button" style="background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #86efac; border-radius: 6px; padding: 5px 11px; font-size: 0.75rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                            🏦 Carregar Grade Caixa
+                                        </button>
+                                        <button id="btn-preencher-ia-loteca" type="button" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; border-radius: 6px; padding: 5px 11px; font-size: 0.75rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                            ✨ Sugerir Palpites IA
+                                        </button>
+                                        <button id="btn-limpar-palpites-loteca" type="button" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; border-radius: 6px; padding: 5px 9px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                                            🧹 Limpar
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- 14 Partidas Compactas com botões [1] [X] [2] -->
+                                <div id="loteca-interactive-matches-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
+                                    <!-- Preenchido dinamicamente pelo ui.js -->
+                                </div>
+                            </div>
+
+                            <!-- Botões de Ação do Motor Loteca -->
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button id="btn-executar-motor-loteca" style="flex: 2; min-width: 200px; background: linear-gradient(135deg, #15803d, #22c55e); border: 1px solid #4ade80; color: white; padding: 11px 16px; border-radius: 6px; font-weight: 800; font-size: 0.90rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 14px rgba(34,197,94,0.4);">
+                                    ⚽ GERAR CARTEIRA DE JOGOS
+                                </button>
+                                <button id="btn-loteca-duques" style="flex: 1; min-width: 120px; background: rgba(34,197,94,0.15); border: 1px solid #22c55e; color: #86efac; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    👥 7 Duques
+                                </button>
+                                <button id="btn-loteca-ternos" style="flex: 1; min-width: 120px; background: rgba(34,197,94,0.15); border: 1px solid #22c55e; color: #86efac; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    📐 4 Ternos
+                                </button>
+                                <button id="btn-loteca-fechamento" style="flex: 1; min-width: 120px; background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; color: #fcd34d; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    ✂️ Fechamentos
+                                </button>
+                                <button id="btn-relatorio-motor-loteca" style="flex: 1; min-width: 110px; background: rgba(15,23,42,0.8); border: 1px solid #4ade80; color: #a7f3d0; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    🔬 12 Seções
+                                </button>
+                            </div>
+
+                            <!-- Barra de Simulações Avançadas -->
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                                <button id="btn-simular-motor-loteca" style="flex: 2; min-width: 220px; background: linear-gradient(135deg, #0284c7, #0ea5e9); border: 1px solid #38bdf8; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(14,165,233,0.3);">
+                                    🎲 SIMULAR 10.000 CONCURSOS (MONTE CARLO)
+                                </button>
+                                <button id="btn-cenarios-motor-loteca" style="flex: 1; min-width: 160px; background: rgba(14,165,233,0.15); border: 1px solid #0ea5e9; color: #7dd3fc; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    ⚡ Testar Cenários
+                                </button>
+                                <button id="btn-gabarito-motor-loteca" style="flex: 1; min-width: 160px; background: rgba(168,85,247,0.15); border: 1px solid #a855f7; color: #d8b4fe; padding: 10px 12px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                                    🎯 Gabarito Interativo
+                                </button>
+                            </div>
+
+                            <!-- Container de Simulações e Gabarito da Loteca -->
+                            <div id="loteca-simulation-dashboard" style="display:none; margin-top: 14px;"></div>
+
+                            <!-- Container Interativo de Resultados da Loteca -->
+                            <div id="loteca-results-container" style="display:none; margin-top: 14px;"></div>
+
+                            <!-- Declaração de Honestidade Matemática -->
+                            <div style="margin-top: 12px; padding: 10px 14px; background: rgba(22, 101, 52, 0.15); border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.3); font-size: 0.76rem; color: #86efac; line-height: 1.4;">
+                                🛡️ <strong>HONESTIDADE MATEMÁTICA LOTECA:</strong> O futebol possui alta componente estocástica. O motor Dixon-Coles não adivinha o futuro, mas calcula as probabilidades reais corrigidas por empates de poucos gols (&tau;), eliminando o viés do público geral e otimizando seus volantes.
                             </div>
                         </div>
 
@@ -1980,11 +2333,16 @@
             <script src="js/engines/pure_coverage_engine.js?v=1781904543"></script>
             <script src="js/engines/roi_dashboard.js?v=1781904541"></script>
             <script src="js/engines/motor_megasena_engine.js?v=20260904_V3"></script>
+            <script src="js/engines/motor_supersete_engine.js?v=20260908_V1"></script>
+
+                        <script src="js/engines/motor_quina_engine.js?v=20260905_V2"></script>
+<script src="js/engines/motor_duplasena_engine.js?v=20260904_V2"></script>
             <script src="js/engines/motor_lotomania_engine.js?v=1781904545"></script>
-            <script src="js/engines/motor_lotofacil_engine.js?v=1781904580"></script>
+            <script src="js/engines/motor_lotofacil_engine.js?v=20260907_V3"></script>
             <script src="js/engines/motor_diadesorte_engine.js?v=20260903"></script>
             <script src="js/engines/motor_timemania_engine.js?v=1781904590"></script>
-            <script src="js/engines/motor_milionaria_engine.js?v=1781904595"></script>
+            <script src="js/engines/motor_milionaria_engine.js?v=20260907_V2"></script>
+            <script src="js/engines/motor_loteca_engine.js?v=20260907_V1"></script>
 
             <script>
             (function() {
@@ -2176,39 +2534,22 @@
                 console.log('[B2B] repairGameLotomania injetado com sucesso no escopo global das classes.');
             })();
             </script>
-            <script src="js/ui.js?v=20260905_V2"></script>
+            <script src="js/ui.js?v=20260907_V3"></script>
             <script src="js/main.js?v=1781904541"></script>
 
     <!-- v11: Coverage handler inline REMOVIDO — handler canônico está em ui.js -->
 
 
-    <!-- DIAGNÓSTICO INLINE v8.0 — NÃO DEPENDE DE CACHE -->
+    <!-- DIAGNÓSTICO INLINE v9.0 — VERIFICAÇÃO DE MOTORES ATIVOS -->
     <script>
     (function() {
-        console.log('%c[L99-DIAG] === DIAGNÓSTICO v8.0 INLINE ===', 'color: #FFD700; font-size: 18px; font-weight: bold; background: #1a1a2e; padding: 8px;');
-        console.log('[L99-DIAG] NovaEraEngine: ' + (typeof NovaEraEngine));
-        console.log('[L99-DIAG] SmartBetsEngine: ' + (typeof SmartBetsEngine));
-        console.log('[L99-DIAG] GAMES: ' + (typeof GAMES));
-        console.log('[L99-DIAG] StatsService: ' + (typeof StatsService));
-        
-        // Interceptar SmartBetsEngine.generate para garantir que funciona
-        if (typeof SmartBetsEngine !== 'undefined' && SmartBetsEngine.generate) {
-            var _originalGenerate = SmartBetsEngine.generate.bind(SmartBetsEngine);
-            SmartBetsEngine.generate = function(gameKey, numGames, sel, fixed, drawSize) {
-                console.log('%c[L99-DIAG] SmartBetsEngine.generate() INTERCEPTADO! gameKey=' + gameKey + ' numGames=' + numGames, 'color: #FF0000; font-size: 16px; font-weight: bold;');
-                console.log('[L99-DIAG] NovaEraEngine disponível: ' + (typeof NovaEraEngine !== 'undefined'));
-                
-                var result = _originalGenerate(gameKey, numGames, sel, fixed, drawSize);
-                
-                if (result && result.analysis) {
-                    console.log('%c[L99-DIAG] RESULTADO: confidence=' + result.analysis.confidence + '% | coverage=' + result.analysis.coverage + '% | diversity=' + result.analysis.diversity + '%', 'color: #00FF00; font-size: 14px;');
-                }
-                return result;
-            };
-            console.log('[L99-DIAG] ✅ SmartBetsEngine.generate() INTERCEPTADO com sucesso');
-        } else {
-            console.error('[L99-DIAG] ❌ SmartBetsEngine NÃO ENCONTRADO!');
-        }
+        console.log('%c[B2B-DIAG] === MOTORES E SERVIÇOS ATIVOS ===', 'color: #FFD700; font-size: 14px; font-weight: bold; background: #1a1a2e; padding: 4px 8px; border-radius: 4px;');
+        console.log('[B2B-DIAG] PureCoverageEngine: ' + (typeof PureCoverageEngine !== 'undefined' ? '✅ Ativo' : '❌'));
+        console.log('[B2B-DIAG] MotorFechamentoManual: ' + (typeof MotorFechamentoManual !== 'undefined' ? '✅ Ativo' : '❌'));
+        console.log('[B2B-DIAG] MotorLotofacilB2BEngine: ' + (typeof MotorLotofacilB2BEngine !== 'undefined' ? '✅ Ativo' : '❌'));
+        console.log('[B2B-DIAG] ClosingEngine: ' + (typeof ClosingEngine !== 'undefined' ? '✅ Ativo' : '❌'));
+        console.log('[B2B-DIAG] GAMES: ' + (typeof GAMES !== 'undefined' ? '✅ Ativo' : '❌'));
+        console.log('[B2B-DIAG] StatsService: ' + (typeof StatsService !== 'undefined' ? '✅ Ativo' : '❌'));
     })();
     </script>
 
@@ -2343,13 +2684,5 @@
         // 5. Botão "Compartilhar Link" — proteção removida para não bloquear o menu de compartilhamento
     })();
     </script>
-
-
-
-
 </body>
-
 </html>
-
-
-

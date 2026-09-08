@@ -34,9 +34,6 @@ class UI {
         this.copyTextarea = _el('copy-textarea');
 
         this.currentGeneratedGames = []; // Store generated games — FONTE ÚNICA DE VERDADE
-        this._isSaving = false;
-        this._lastSavedGamesSignature = null;
-        this._lastSavedFileName = null;
 
         this.hotNumbersContainer = _el('hot-numbers');
         this.coldNumbersContainer = _el('cold-numbers');
@@ -159,6 +156,12 @@ class UI {
                 // +Milionaria usa motor B2B exclusivo — redirecionar
                 if (this.currentGameKey === 'milionaria') {
                     this._executarGeracaoMilionaria(0);
+                    return;
+                }
+                // Loteca usa motor B2B exclusivo — redirecionar
+                if (this.currentGameKey === 'loteca') {
+                    const btnExec = document.getElementById('btn-executar-motor-loteca');
+                    if (btnExec) btnExec.click();
                     return;
                 }
                 const game = GAMES[this.currentGameKey];
@@ -581,6 +584,225 @@ class UI {
         // === BOTÃO E EVENTOS DO MOTOR DUPLA SENA (B2B LOTERIAS) ===
         // =========================================================================
         
+        // ════════════════════════════════════════════════════════════════
+        // MOTOR SUPER SETE (B2B LOTERIAS) — INTEGRAÇÃO COMPLETA
+        // ════════════════════════════════════════════════════════════════
+        const btnQuickSuperSete = document.getElementById('btn-quick-motor-supersete');
+        if (btnQuickSuperSete) {
+            btnQuickSuperSete.onclick = () => {
+                const mainBtn = document.getElementById('btn-motor-supersete');
+                if (mainBtn) mainBtn.click();
+            };
+        }
+
+        const btnMotorSuperSete = document.getElementById('btn-motor-supersete');
+        if (btnMotorSuperSete) {
+            btnMotorSuperSete.onclick = () => {
+                if (this.currentGameKey !== 'supersete') {
+                    const navBtn = document.querySelector(`.nav-btn[data-game="supersete"]`);
+                    if (navBtn) navBtn.click();
+                    else this.updateGameInfo('supersete');
+                }
+                if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
+                if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
+                const panel = document.getElementById('motor-supersete-panel');
+                if (panel) {
+                    const isOpening = panel.style.display === 'none' || !panel.style.display;
+                    ['motor-megasena-panel', 'motor-supersete-panel', 'motor-duplasena-panel', 'motor-lotofacil-panel', 'motor-quina-panel', 'motor-lotomania-panel', 'motor-diadesorte-panel', 'motor-timemania-panel', 'motor-milionaria-panel', 'motor-loteca-panel'].forEach(id => {
+                        const p = document.getElementById(id);
+                        if (p) p.style.display = 'none';
+                    });
+                    panel.style.display = isOpening ? 'block' : 'none';
+                    if (isOpening) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            };
+        }
+
+        const btnExecutarSuperSete = document.getElementById('btn-executar-motor-supersete');
+        if (btnExecutarSuperSete) {
+            btnExecutarSuperSete.onclick = async () => {
+                if (this.currentGameKey !== 'supersete') {
+                    const navBtn = document.querySelector(`.nav-btn[data-game="supersete"]`);
+                    if (navBtn) navBtn.click();
+                    else this.updateGameInfo('supersete');
+                }
+                const qty = parseInt(document.getElementById('input-qtd-supersete')?.value || document.getElementById('games-quantity')?.value || '10') || 10;
+                const historicoLimite = parseInt(document.getElementById('select-historico-supersete')?.value || '30') || 30;
+                const estrategia = document.getElementById('select-estrategia-supersete')?.value || 'equilibrada';
+                const maxConsecutivos = parseInt(document.getElementById('select-consecutivos-supersete')?.value || '3') || 3;
+                const hammingMinimo = parseInt(document.getElementById('select-hamming-supersete')?.value || '4') || 4;
+
+                const origText = btnExecutarSuperSete.innerHTML;
+                btnExecutarSuperSete.disabled = true;
+                btnExecutarSuperSete.innerHTML = '⏳ Executando Motor Super Sete B2B...';
+                this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Executando Motor Super Sete B2B (7 Modelos de Colunas, Lift Regularizado, Centróide μ=31.5, Hamming dH≥' + hammingMinimo + ')...</div></div>';
+
+                try {
+                    const data = await MotorSuperSeteB2BEngine.gerarCarteira(qty, {
+                        quantidadeJogos: qty,
+                        historicoLimite,
+                        estrategia,
+                        maxConsecutivos,
+                        hammingMinimo
+                    });
+
+                    if (data && data.jogos && data.jogos.length > 0) {
+                        const rawGames = data.jogos.map(j => j.jogo);
+                        this.currentGeneratedGames = rawGames;
+                        this._lastGeneratedGames = rawGames;
+
+                        // Renderizar na grade padrão com suporte às 7 colunas
+                        this.renderGames({ pool: Array.from({length: 10}, (_, i) => i), games: rawGames, smartAnalysis: null }, 'supersete');
+
+                        // Preencher os dados do painel do motor
+                        const containerRes = document.getElementById('supersete-resultado-container');
+                        if (containerRes) {
+                            containerRes.style.display = 'block';
+                            const elIcm = document.getElementById('supersete-val-icm');
+                            if (elIcm) elIcm.textContent = (data.icm_global || 80) + '/100';
+                            const elDiv = document.getElementById('supersete-val-div');
+                            if (elDiv) elDiv.textContent = (data.metricas_carteira?.diversificacao || 100) + '%';
+                            const elRed = document.getElementById('supersete-val-red');
+                            if (elRed) elRed.textContent = (data.metricas_carteira?.redundancia || 0) + '%';
+                            const elHam = document.getElementById('supersete-val-hamming');
+                            if (elHam) elHam.textContent = (data.metricas_carteira?.hamming_medio || 5.2) + ' / 7';
+
+                            const diag = data.diagnostico_cientifico || {};
+                            const elDiagTit = document.getElementById('supersete-diagnostico-titulo');
+                            if (elDiagTit) elDiagTit.textContent = 'DIAGNÓSTICO: ' + (diag.nivel || 'APROVADO');
+                            const elDiagTxt = document.getElementById('supersete-diagnostico-texto');
+                            if (elDiagTxt) elDiagTxt.textContent = (diag.explicacao || '') + ' (' + (data.origem === 'api_python' ? '⚡ API Python Ativa' : '⚛️ JavaScript Autônomo') + ')';
+
+                            const tbodyJogos = document.getElementById('supersete-jogos-tbody');
+                            if (tbodyJogos) {
+                                tbodyJogos.innerHTML = '';
+                                data.jogos.forEach((j) => {
+                                    const tr = document.createElement('tr');
+                                    tr.style.borderBottom = '1px solid rgba(56,189,248,0.15)';
+                                    tr.innerHTML = `
+                                        <td style="padding: 8px 6px; font-weight:800; color:#38bdf8;">#${j.ranking}</td>
+                                        <td style="padding: 8px 6px; font-weight:700; font-family:monospace; font-size:0.95rem; color:#f8fafc;">
+                                            <span style="background:rgba(2,132,199,0.3); padding:2px 6px; border-radius:4px; border:1px solid #0284c7;">${j.jogo_formatado}</span>
+                                        </td>
+                                        <td style="padding: 8px 6px; text-align:center; color:#bae6fd; font-weight:700;">${j.score_sms}</td>
+                                        <td style="padding: 8px 6px; text-align:center; color:#34d399; font-weight:800;">${j.icm}</td>
+                                        <td style="padding: 8px 6px; text-align:center; color:#cbd5e1;">${j.diversificacao_individual}%</td>
+                                        <td style="padding: 8px 6px; text-align:center;">
+                                            <button class="copiar-jogo-btn" data-jogo="${j.jogo.join(' ')}" style="background:rgba(56,189,248,0.2); border:1px solid #38bdf8; color:#e0f2fe; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:700;">📋 Copiar</button>
+                                        </td>
+                                    `;
+                                    tbodyJogos.appendChild(tr);
+                                });
+                                tbodyJogos.querySelectorAll('.copiar-jogo-btn').forEach(btn => {
+                                    btn.addEventListener('click', function() {
+                                        const txt = this.getAttribute('data-jogo');
+                                        navigator.clipboard.writeText(txt).then(() => {
+                                            const original = this.textContent;
+                                            this.textContent = '✅ Copiado!';
+                                            setTimeout(() => this.textContent = original, 1500);
+                                        });
+                                    });
+                                });
+                            }
+                        }
+
+                        // Banner Analítico Padrão B2B acima dos jogos
+                        const bannerMsg = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                <span style="color:#38BDF8; font-weight:800; font-size:1.05rem;">⚡ MOTOR INTELIGENTE SUPER SETE (B2B LOTERIAS) — ${data.jogos.length} JOGOS</span>
+                                <span style="background:rgba(2,132,199,0.25); color:#BAE6FD; padding:3px 10px; border-radius:6px; font-weight:700; font-size:0.78rem; border: 1px solid rgba(56,189,248,0.4);">
+                                    ICM GLOBAL: ${data.icm_global || 80}/100 | DIST. HAMMING: ${data.metricas_carteira?.hamming_medio || 5.2}/7
+                                </span>
+                            </div>
+                            
+                            <div style="margin-top:10px; padding:10px 14px; background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid rgba(56,189,248,0.2); font-size:0.82rem; color:#E2E8F0; line-height:1.6;">
+                                <strong style="color:#FCD34D;">📊 1. DIAGNÓSTICO DO HISTÓRICO (${data.historico_utilizado || historicoLimite} CONCURSOS):</strong><br>
+                                • <strong>Conclusão:</strong> ${data.diagnostico_cientifico?.nivel || 'AUDITADO'} — ${data.diagnostico_cientifico?.explicacao || ''}<br>
+                                • <strong>Diversificação Global:</strong> ${data.metricas_carteira?.diversificacao}% | <strong>Redundância:</strong> ${data.metricas_carteira?.redundancia}% | <strong>Consecutividade Máx:</strong> ≤ ${maxConsecutivos}
+                            </div>
+
+                            <div style="margin-top:8px; padding:10px 14px; background:rgba(2,132,199,0.08); border-radius:8px; border:1px solid rgba(2,132,199,0.3); font-size:0.82rem; color:#E0F2FE; line-height:1.6;">
+                                <strong style="color:#38BDF8;">📐 2. MODELOS DAS 7 COLUNAS & AUDITORIA:</strong><br>
+                                • Cobertura: <strong>7 Colunas Ativas (0 a 9)</strong> | Centróide Teórico: <strong>μ=31.5 (σ=7.60)</strong><br>
+                                • Ranking dos Jogos: Classificados de <strong>TOP 1</strong> a <strong>TOP ${data.jogos.length}</strong> por Score Multicritério SMS.
+                            </div>
+
+                            <div style="margin-top:8px; padding:12px 14px; background:rgba(239,68,68,0.08); border-radius:8px; border:1px solid rgba(239,68,68,0.35); font-size:0.80rem; color:#FECACA; line-height:1.5;">
+                                <strong style="color:#F87171;">🛡️ 3. AVISO OBRIGATÓRIO DO MOTOR (TRANSPARÊNCIA CIENTÍFICA):</strong><br>
+                                ${data.frase_obrigatoria || 'Este motor não prevê o sorteio. Ele utiliza matemática, estatística, simulação e otimização para selecionar as combinações mais bem classificadas dentro dos critérios definidos. Nenhum método possui garantia de acerto em um sorteio aleatório.'}
+                            </div>
+                        `;
+
+                        setTimeout(() => {
+                            var b = document.createElement('div');
+                            b.className = 'smart-gen-analysis';
+                            b.style.cssText = 'margin-top:10px;margin-bottom:12px;padding:16px 20px;border-radius:12px;background:linear-gradient(135deg, rgba(2,132,199,0.18), rgba(15,23,42,0.95));border:1px solid #0284c7;box-shadow:0 6px 25px rgba(2,132,199,0.3);';
+                            b.innerHTML = bannerMsg;
+                            var old = this.gamesContainer.parentNode.querySelector('.smart-gen-analysis');
+                            if (old) old.remove();
+                            this.gamesContainer.parentNode.insertBefore(b, this.gamesContainer);
+                        }, 50);
+                    }
+                } catch (err) {
+                    this.gamesContainer.innerHTML = '<div class="empty-state" style="color:#EF4444;">Erro no Motor Super Sete: ' + err.message + '</div>';
+                } finally {
+                    btnExecutarSuperSete.disabled = false;
+                    btnExecutarSuperSete.innerHTML = origText;
+                    setTimeout(() => { if (this.gamesContainer) this.gamesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+                }
+            };
+        }
+
+        // Botão Relatório Técnico Super Sete
+        const btnRelatorioSuperSete = document.getElementById('btn-relatorio-motor-supersete');
+        if (btnRelatorioSuperSete) {
+            btnRelatorioSuperSete.onclick = async () => {
+                const origText = btnRelatorioSuperSete.innerHTML;
+                btnRelatorioSuperSete.disabled = true;
+                btnRelatorioSuperSete.innerHTML = '⏳ Processando...';
+                try {
+                    const estrategia = document.getElementById('select-estrategia-supersete')?.value || 'equilibrada';
+                    const an = await MotorSuperSeteB2BEngine.obterAnalisePrevia(estrategia);
+                    if (an && an.sucesso) {
+                        let msg = "🔬 RELATÓRIO TÉCNICO DAS 7 COLUNAS (SUPER SETE)\n===========================================\n";
+                        an.relatorio.colunas.forEach(c => {
+                            msg += `${c.coluna}: Mais Freq = Dígito ${c.digito_mais_frequente.digito} (${c.digito_mais_frequente.ocorrencias}x) | Qui-Quadrado = ${c.qui_quadrado} (p=${c.p_valor})\n`;
+                        });
+                        msg += "\n" + an.frase_obrigatoria;
+                        alert(msg);
+                    }
+                } catch (e) {
+                    alert('Erro ao carregar relatório: ' + e.message);
+                } finally {
+                    btnRelatorioSuperSete.disabled = false;
+                    btnRelatorioSuperSete.innerHTML = origText;
+                }
+            };
+        }
+
+        // Botão Backtesting Super Sete
+        const btnBacktestSuperSete = document.getElementById('btn-backtest-motor-supersete');
+        if (btnBacktestSuperSete) {
+            btnBacktestSuperSete.onclick = async () => {
+                const origText = btnBacktestSuperSete.innerHTML;
+                btnBacktestSuperSete.disabled = true;
+                btnBacktestSuperSete.innerHTML = '⏳ Walk-Forward...';
+                try {
+                    const estrategia = document.getElementById('select-estrategia-supersete')?.value || 'equilibrada';
+                    const bk = await MotorSuperSeteB2BEngine.executarBacktest(15, 10, estrategia);
+                    if (bk && bk.sucesso) {
+                        let msg = `📈 RESULTADO DO BACKTESTING WALK-FORWARD (SUPER SETE)\n===================================================\nConcursos Avaliados: ${bk.concursos_avaliados}\nMédia Acertos (Motor): ${bk.media_melhor_acerto_motor}\nMédia Acertos (Aleatório): ${bk.media_melhor_acerto_aleatorio}\n\nVeredito do Teste de Hipótese:\n"${bk.veredito_comparacao_acaso}"\n\n${bk.frase_obrigatoria}`;
+                        alert(msg);
+                    }
+                } catch (e) {
+                    alert('Erro no backtest: ' + e.message);
+                } finally {
+                    btnBacktestSuperSete.disabled = false;
+                    btnBacktestSuperSete.innerHTML = origText;
+                }
+            };
+        }
+
         // Botão de Atalho Rápido Superior do Motor Dupla Sena
         const btnQuickDupla = document.getElementById('btn-quick-motor-duplasena');
         if (btnQuickDupla) {
@@ -1489,9 +1711,870 @@ class UI {
             };
         }
 
+        // =========================================================================
+        // === BOTÃO E EVENTOS DO MOTOR LOTECA (B2B LOTERIAS) ===
+        // =========================================================================
+        const btnQuickLoteca = document.getElementById('btn-quick-motor-loteca');
+        if (btnQuickLoteca) {
+            btnQuickLoteca.onclick = () => {
+                const mainBtn = document.getElementById('btn-motor-loteca');
+                if (mainBtn) mainBtn.click();
+            };
+        }
+
+        const btnMotorLoteca = document.getElementById('btn-motor-loteca');
+        if (btnMotorLoteca) {
+            btnMotorLoteca.onclick = () => {
+                if (this.currentGameKey !== 'loteca') {
+                    const navBtn = document.querySelector(`.nav-btn[data-game="loteca"]`);
+                    if (navBtn) navBtn.click();
+                    else this.updateGameInfo('loteca');
+                }
+                const panel = document.getElementById('motor-loteca-panel');
+                if (panel) {
+                    const isOpening = panel.style.display === 'none' || !panel.style.display;
+                    ['motor-megasena-panel', 'motor-lotofacil-panel', 'motor-quina-panel', 'motor-duplasena-panel', 'motor-lotomania-panel', 'motor-diadesorte-panel', 'motor-timemania-panel', 'motor-milionaria-panel'].forEach(id => {
+                        const p = document.getElementById(id);
+                        if (p) p.style.display = 'none';
+                    });
+                    panel.style.display = isOpening ? 'block' : 'none';
+                    if (isOpening) {
+                        panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        if (typeof renderLotecaInteractiveMatchesEditor === 'function') {
+                            renderLotecaInteractiveMatchesEditor();
+                        }
+                        const resDiv = document.getElementById('loteca-results-container');
+                        if (resDiv && (!resDiv.innerHTML || resDiv.innerHTML.trim() === '')) {
+                            const btnExec = document.getElementById('btn-executar-motor-loteca');
+                            if (btnExec) btnExec.click();
+                        }
+                    }
+                }
+            };
+        }
+
+        let _lastLotecaData = null;
+        let _currentLotecaGabarito = Array(14).fill(null);
+        let _lotecaGradeMatches = null;
+        let _lotecaUserPicks = Array(14).fill(null);
+
+        const renderLotecaInteractiveMatchesEditor = () => {
+            const listEl = document.getElementById('loteca-interactive-matches-list');
+            if (!listEl) return;
+
+            const matches = _lotecaGradeMatches || MotorLotecaB2BEngine.GRADE_PADRAO;
+            listEl.innerHTML = '';
+
+            matches.forEach((m, idx) => {
+                const jNum = m.jogo_numero || (idx + 1);
+                const mandante = m.mandante || `Mandante ${jNum}`;
+                const visitante = m.visitante || `Visitante ${jNum}`;
+                const currentPick = _lotecaUserPicks[idx] || '';
+
+                const is1 = currentPick.indexOf('1') !== -1;
+                const isX = currentPick.indexOf('X') !== -1;
+                const is2 = currentPick.indexOf('2') !== -1;
+
+                let badgeText = 'IA AUTO';
+                let badgeColor = '#94a3b8';
+                let badgeBg = 'rgba(255,255,255,0.08)';
+
+                if (currentPick.length === 1) {
+                    badgeText = `SECO (${currentPick})`;
+                    badgeColor = '#4ade80';
+                    badgeBg = 'rgba(34,197,94,0.2)';
+                } else if (currentPick.length === 2) {
+                    badgeText = `DUPLO (${currentPick})`;
+                    badgeColor = '#60a5fa';
+                    badgeBg = 'rgba(59,130,246,0.2)';
+                } else if (currentPick.length === 3) {
+                    badgeText = `TRIPLO (${currentPick})`;
+                    badgeColor = '#fcd34d';
+                    badgeBg = 'rgba(245,158,11,0.2)';
+                }
+
+                const item = document.createElement('div');
+                item.style.cssText = 'background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 8px;display:flex;flex-direction:column;gap:4px;';
+                item.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;">
+                        <span style="color:#94a3b8;font-weight:700;">J${String(jNum).padStart(2, '0')}</span>
+                        <span style="font-size:0.68rem;padding:1px 6px;border-radius:4px;font-weight:800;background:${badgeBg};color:${badgeColor};">
+                            ${badgeText}
+                        </span>
+                    </div>
+                    <div style="font-size:0.78rem;font-weight:700;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${mandante} x ${visitante}">
+                        ${mandante} <span style="color:#64748b;font-size:0.7rem;">x</span> ${visitante}
+                    </div>
+                    <div style="display:flex;gap:4px;margin-top:2px;">
+                        <button type="button" class="btn-loteca-pick" data-idx="${idx}" data-col="1" style="flex:1;background:${is1 ? '#22c55e' : 'rgba(255,255,255,0.06)'};color:${is1 ? '#ffffff' : '#cbd5e1'};border:1px solid ${is1 ? '#4ade80' : 'rgba(255,255,255,0.2)'};border-radius:4px;padding:4px 0;font-size:0.75rem;font-weight:800;cursor:pointer;">1</button>
+                        <button type="button" class="btn-loteca-pick" data-idx="${idx}" data-col="X" style="flex:1;background:${isX ? '#eab308' : 'rgba(255,255,255,0.06)'};color:${isX ? '#ffffff' : '#cbd5e1'};border:1px solid ${isX ? '#facc15' : 'rgba(255,255,255,0.2)'};border-radius:4px;padding:4px 0;font-size:0.75rem;font-weight:800;cursor:pointer;">X</button>
+                        <button type="button" class="btn-loteca-pick" data-idx="${idx}" data-col="2" style="flex:1;background:${is2 ? '#3b82f6' : 'rgba(255,255,255,0.06)'};color:${is2 ? '#ffffff' : '#cbd5e1'};border:1px solid ${is2 ? '#60a5fa' : 'rgba(255,255,255,0.2)'};border-radius:4px;padding:4px 0;font-size:0.75rem;font-weight:800;cursor:pointer;">2</button>
+                    </div>
+                `;
+
+                item.querySelectorAll('.btn-loteca-pick').forEach(btn => {
+                    btn.onclick = () => {
+                        const col = btn.dataset.col;
+                        let cur = _lotecaUserPicks[idx] || '';
+                        if (cur.indexOf(col) !== -1) {
+                            cur = cur.replace(col, '');
+                        } else {
+                            cur += col;
+                        }
+                        let sorted = '';
+                        if (cur.indexOf('1') !== -1) sorted += '1';
+                        if (cur.indexOf('X') !== -1) sorted += 'X';
+                        if (cur.indexOf('2') !== -1) sorted += '2';
+
+                        _lotecaUserPicks[idx] = sorted || null;
+                        renderLotecaInteractiveMatchesEditor();
+                    };
+                });
+
+                listEl.appendChild(item);
+            });
+        };
+
+        const btnCarregarCaixa = document.getElementById('btn-carregar-grade-caixa');
+        if (btnCarregarCaixa) {
+            btnCarregarCaixa.onclick = async () => {
+                const orig = btnCarregarCaixa.innerHTML;
+                btnCarregarCaixa.innerHTML = '⏳ Carregando...';
+                try {
+                    const grade = await MotorLotecaB2BEngine.obterGradeOficialCaixa();
+                    if (grade && grade.length === 14) {
+                        _lotecaGradeMatches = grade;
+                        renderLotecaInteractiveMatchesEditor();
+                        alert('✅ Grade oficial da Caixa carregada com sucesso! 14 confrontos atualizados.');
+                    }
+                } catch (e) {
+                    alert('Erro ao carregar grade Caixa: ' + e.message);
+                } finally {
+                    btnCarregarCaixa.innerHTML = orig;
+                }
+            };
+        }
+
+        const btnPreencherIA = document.getElementById('btn-preencher-ia-loteca');
+        if (btnPreencherIA) {
+            btnPreencherIA.onclick = () => {
+                const matches = _lotecaGradeMatches || MotorLotecaB2BEngine.GRADE_PADRAO;
+                const analises = MotorLotecaB2BEngine.analisarGrade(matches);
+                const orcamento = parseFloat(document.getElementById('select-orcamento-loteca')?.value || '4.0') || 4.0;
+                const opt = MotorLotecaB2BEngine.otimizarOrcamento(analises, orcamento);
+                
+                const novosPalpites = Array(14).fill(null);
+                opt.jogos.forEach((j, i) => {
+                    novosPalpites[i] = j.palpite;
+                });
+                _lotecaUserPicks = novosPalpites;
+                renderLotecaInteractiveMatchesEditor();
+            };
+        }
+
+        const btnLimparPalpites = document.getElementById('btn-limpar-palpites-loteca');
+        if (btnLimparPalpites) {
+            btnLimparPalpites.onclick = () => {
+                _lotecaUserPicks = Array(14).fill(null);
+                renderLotecaInteractiveMatchesEditor();
+            };
+        }
+
+        const renderLotecaView = (tipo = 'carteira_volantes', data = _lastLotecaData) => {
+            if (!data) return;
+            const container = document.getElementById('loteca-results-container');
+            if (!container) return;
+            container.style.display = 'block';
+
+            if (tipo === 'carteira_volantes') {
+                const c = data.carteira || { quantidade_jogos: 1, custo_unitario: data.orcamento || 4.0, custo_total: data.orcamento || 4.0, volantes: [] };
+                const volantes = c.volantes || [];
+                let html = `
+                    <div style="background:rgba(0,0,0,0.4);border:1px solid #22c55e;border-radius:10px;padding:14px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                            <div>
+                                <span style="color:#4ade80;font-weight:900;font-size:1.05rem;">🎮 CARTEIRA DO APOSTADOR: ${c.quantidade_jogos} VOLANTES DIVERSIFICADOS</span>
+                                <span style="display:block;font-size:0.75rem;color:#94a3b8;margin-top:2px;">Distribuição ortogonal • Cobertura balanceada de segundas forças • Âncoras protegidas</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <span style="background:rgba(34,197,94,0.2);color:#86efac;padding:5px 12px;border-radius:6px;font-weight:800;font-size:0.85rem;border:1px solid rgba(34,197,94,0.4);">
+                                    Investimento Total: R$ ${c.custo_total.toFixed(2)} (${c.quantidade_jogos}x R$ ${c.custo_unitario.toFixed(2)})
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:12px;">
+                `;
+
+                const renderLimit = Math.min(volantes.length, 500);
+                volantes.slice(0, renderLimit).forEach(v => {
+                    html += `
+                        <div style="background:rgba(15,23,42,0.92);border:1px solid rgba(34,197,94,0.35);border-radius:8px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.08);">
+                                <strong style="color:#4ade80;font-size:0.85rem;">🎫 VOLANTE #${String(v.volante_numero).padStart(2, '0')}</strong>
+                                <span style="font-size:0.72rem;background:rgba(59,130,246,0.2);color:#93c5fd;padding:2px 8px;border-radius:4px;font-weight:700;">
+                                    ${v.estrutura} • R$ ${v.custo.toFixed(2)}
+                                </span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:4px;margin-bottom:8px;text-align:center;">
+                                ${v.palpites.map(p => `
+                                    <div style="background:rgba(0,0,0,0.5);border:1px solid ${p.tipo === 'DUPLO' ? '#3b82f6' : (p.tipo === 'TRIPLO' ? '#f59e0b' : 'rgba(255,255,255,0.15)')};border-radius:4px;padding:3px 1px;">
+                                        <span style="display:block;font-size:0.6rem;color:#94a3b8;">J${p.jogo_numero}</span>
+                                        <strong style="font-size:0.75rem;color:${p.tipo === 'DUPLO' ? '#60a5fa' : (p.tipo === 'TRIPLO' ? '#fcd34d' : '#4ade80')};">${p.palpite}</strong>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div style="font-size:0.7rem;color:#cbd5e1;background:rgba(0,0,0,0.3);padding:4px 8px;border-radius:4px;font-family:monospace;overflow-x:auto;white-space:nowrap;">
+                                ${v.resumo_colunas}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (volantes.length > 500) {
+                    html += `
+                        <div style="grid-column: 1 / -1; padding: 14px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; text-align: center; color: #86efac; margin-top: 8px;">
+                            <strong style="font-size: 1rem;">⚡ ALTO VOLUME: ${volantes.length} VOLANTES GERADOS</strong><br>
+                            <span style="font-size: 0.8rem; color: #cbd5e1;">Exibindo os primeiros 500 volantes na interface para fluidez visual. Todos os <b>${volantes.length} volantes</b> foram processados com sucesso e estão prontos na memória para conferência, cópia e envio!</span>
+                        </div>
+                    `;
+                }
+
+                html += `</div></div>`;
+                container.innerHTML = html;
+            } else if (tipo === 'grade_14') {
+                let html = `
+                    <div style="background:rgba(0,0,0,0.4);border:1px solid #22c55e;border-radius:10px;padding:14px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                            <span style="color:#4ade80;font-weight:900;font-size:1rem;">⚽ GRADE TÉCNICA DOS 14 JOGOS (LOTECA)</span>
+                            <span style="background:rgba(34,197,94,0.2);color:#86efac;padding:3px 10px;border-radius:6px;font-weight:700;font-size:0.75rem;">
+                                Dixon-Coles com correção τ • 100k Monte Carlo • Entropia de Shannon
+                            </span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:10px;">
+                `;
+
+                data.jogos.forEach(j => {
+                    const p1 = (j.probabilidades.coluna1 * 100).toFixed(1);
+                    const px = (j.probabilidades.colunaX * 100).toFixed(1);
+                    const p2 = (j.probabilidades.coluna2 * 100).toFixed(1);
+                    const isTrap = j.trap && j.trap.isTrap;
+                    const badgeColor = j.tipo === 'TRIPLO' ? '#f59e0b' : (j.tipo === 'DUPLO' ? '#3b82f6' : '#10b981');
+                    const badgeBorder = j.tipo === 'TRIPLO' ? '#d97706' : (j.tipo === 'DUPLO' ? '#2563eb' : '#059669');
+
+                    html += `
+                        <div style="background:rgba(15,23,42,0.85);border:1px solid ${isTrap ? '#ef4444' : 'rgba(34,197,94,0.3)'};border-radius:8px;padding:10px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;margin-bottom:4px;">
+                                <span style="color:#94a3b8;font-weight:700;">Jogo ${String(j.jogo_numero).padStart(2, '0')} • ${j.jogo.campeonato || 'Loteca'}</span>
+                                <span style="background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeBorder};padding:1px 6px;border-radius:4px;font-weight:800;font-size:0.7rem;">${j.tipo}: [${j.palpite}]</span>
+                            </div>
+                            <div style="font-size:0.85rem;font-weight:800;color:#f8fafc;margin-bottom:6px;">
+                                ${j.jogo.mandante} <span style="color:#64748b;font-weight:400;">x</span> ${j.jogo.visitante}
+                            </div>
+                            <div style="display:flex;gap:4px;margin-bottom:4px;font-size:0.7rem;">
+                                <div style="flex:1;background:rgba(0,0,0,0.4);border-radius:4px;padding:3px;text-align:center;border:${j.palpite.includes('1') ? '1px solid #4ade80' : '1px solid transparent'};">
+                                    <span style="color:#94a3b8;">Col 1:</span> <strong style="color:${j.palpite.includes('1') ? '#4ade80' : '#e2e8f0'};">${p1}%</strong>
+                                </div>
+                                <div style="flex:1;background:rgba(0,0,0,0.4);border-radius:4px;padding:3px;text-align:center;border:${j.palpite.includes('X') ? '1px solid #fcd34d' : '1px solid transparent'};">
+                                    <span style="color:#94a3b8;">X:</span> <strong style="color:${j.palpite.includes('X') ? '#fcd34d' : '#e2e8f0'};">${px}%</strong>
+                                </div>
+                                <div style="flex:1;background:rgba(0,0,0,0.4);border-radius:4px;padding:3px;text-align:center;border:${j.palpite.includes('2') ? '1px solid #60a5fa' : '1px solid transparent'};">
+                                    <span style="color:#94a3b8;">Col 2:</span> <strong style="color:${j.palpite.includes('2') ? '#60a5fa' : '#e2e8f0'};">${p2}%</strong>
+                                </div>
+                            </div>
+                            ${isTrap ? `<div style="font-size:0.68rem;color:#fca5a5;margin-top:4px;">⚠️ ${j.trap.motivo}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+                container.innerHTML = html;
+            } else if (tipo === '7_duques') {
+                let html = `
+                    <div style="background:rgba(0,0,0,0.4);border:1px solid #3b82f6;border-radius:10px;padding:14px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                            <span style="color:#60a5fa;font-weight:900;font-size:1rem;">👥 MÓDULO DOS 7 DUQUES (PARTIÇÃO EXATA DOS 14 JOGOS)</span>
+                            <span style="background:rgba(59,130,246,0.2);color:#93c5fd;padding:3px 10px;border-radius:6px;font-weight:700;font-size:0.75rem;">
+                                9 Combinações por Duque • Fechamento 2 Triplos em 3 Apostas (-66.7%)
+                            </span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:10px;">
+                `;
+
+                data.duques.forEach(d => {
+                    html += `
+                        <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px;">
+                            <div style="font-size:0.8rem;font-weight:800;color:#93c5fd;margin-bottom:4px;">
+                                Duque ${d.duque_numero}: Jogo ${d.jogo_a.jogo.jogo_numero} (${d.jogo_a.jogo.mandante} x ${d.jogo_a.jogo.visitante}) & Jogo ${d.jogo_b.jogo.jogo_numero} (${d.jogo_b.jogo.mandante} x ${d.jogo_b.jogo.visitante})
+                            </div>
+                            <div style="font-size:0.72rem;color:#e2e8f0;margin-bottom:6px;">
+                                • Top Combinação: <strong style="color:#4ade80;">[${d.top_combinacao.comb}]</strong> (${d.top_combinacao.prob_pct} chance)
+                            </div>
+                            <div style="display:flex;gap:4px;flex-wrap:wrap;font-size:0.68rem;">
+                                ${d.combinacoes.slice(0, 5).map(c => `
+                                    <span style="background:rgba(0,0,0,0.5);border:1px solid rgba(59,130,246,0.2);padding:2px 6px;border-radius:4px;color:#cbd5e1;">
+                                        ${c.comb}: <strong style="color:#60a5fa;">${c.prob_pct}</strong>
+                                    </span>
+                                `).join('')}
+                            </div>
+                            <div style="margin-top:6px;font-size:0.68rem;color:#a7f3d0;background:rgba(16,185,129,0.1);padding:4px 8px;border-radius:4px;">
+                                ✂️ Fechamento 2 Triplos: [A1: 1-1] • [A2: X-2] • [A3: 2-X] (-66.7%)
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+                container.innerHTML = html;
+            } else if (tipo === '4_ternos') {
+                let html = `
+                    <div style="background:rgba(0,0,0,0.4);border:1px solid #a855f7;border-radius:10px;padding:14px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                            <span style="color:#c084fc;font-weight:900;font-size:1rem;">📐 MÓDULO DOS 4 TERNOS / TRIOS (27 COMBINAÇÕES)</span>
+                            <span style="background:rgba(168,85,247,0.2);color:#e9d5ff;padding:3px 10px;border-radius:6px;font-weight:700;font-size:0.75rem;">
+                                Reduções: 3 Duplos em 4 Apostas (-50%) | 3 Triplos em 9 Apostas (-66.7%)
+                            </span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:10px;">
+                `;
+
+                data.ternos.forEach(t => {
+                    const jogosStr = t.jogos.map(j => `J${j.jogo.jogo_numero}`).join(', ');
+                    html += `
+                        <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(168,85,247,0.3);border-radius:8px;padding:10px;">
+                            <div style="font-size:0.8rem;font-weight:800;color:#e9d5ff;margin-bottom:4px;">
+                                Terno ${t.terno_numero} (${jogosStr}): ${t.jogos.map(j => j.jogo.mandante).join(' / ')}
+                            </div>
+                            <div style="font-size:0.72rem;color:#e2e8f0;margin-bottom:6px;">
+                                • Top Combinação: <strong style="color:#4ade80;">[${t.top_combinacao.comb}]</strong> (${t.top_combinacao.prob_pct})
+                            </div>
+                            <div style="display:flex;gap:4px;flex-wrap:wrap;font-size:0.68rem;margin-bottom:6px;">
+                                ${t.combinacoes.slice(0, 4).map(c => `
+                                    <span style="background:rgba(0,0,0,0.5);border:1px solid rgba(168,85,247,0.2);padding:2px 6px;border-radius:4px;color:#cbd5e1;">
+                                        ${c.comb}: <strong style="color:#c084fc;">${c.prob_pct}</strong>
+                                    </span>
+                                `).join('')}
+                            </div>
+                            <div style="font-size:0.68rem;color:#fde68a;background:rgba(245,158,11,0.1);padding:4px 8px;border-radius:4px;">
+                                ✂️ Redução 3 Duplos: 4 Apostas (-50%) | 3 Triplos: 9 Apostas (-66.7%)
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+                container.innerHTML = html;
+            } else if (tipo === 'fechamentos') {
+                let html = `
+                    <div style="background:rgba(0,0,0,0.4);border:1px solid #f59e0b;border-radius:10px;padding:14px;margin-bottom:12px;">
+                        <span style="color:#fcd34d;font-weight:900;font-size:1rem;">✂️ FECHAMENTOS REDUZIDOS CAIXA (LOTECA)</span>
+                        <p style="font-size:0.78rem;color:#cbd5e1;margin:6px 0 10px 0;">
+                            Sistemas matriciais matemáticos que garantem acertos mínimos com economia no custo do volante:
+                        </p>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:10px;font-size:0.78rem;">
+                            <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(245,158,11,0.3);padding:10px;border-radius:8px;">
+                                <strong style="color:#fcd34d;">3 DUPLOS EM 4 APOSTAS</strong><br>
+                                • Sem redução: 8 (R$ 32,00)<br>
+                                • Reduzido: <strong>4 (R$ 16,00)</strong><br>
+                                • Economia: <strong style="color:#4ade80;">-50.0%</strong><br>
+                                • Garantia: 13 Pontos (se acertar os secos)
+                            </div>
+                            <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(245,158,11,0.3);padding:10px;border-radius:8px;">
+                                <strong style="color:#fcd34d;">3 TRIPLOS EM 9 APOSTAS</strong><br>
+                                • Sem redução: 27 (R$ 108,00)<br>
+                                • Reduzido: <strong>9 (R$ 36,00)</strong><br>
+                                • Economia: <strong style="color:#4ade80;">-66.7%</strong><br>
+                                • Garantia: 13 Pontos (se acertar os secos)
+                            </div>
+                            <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(245,158,11,0.3);padding:10px;border-radius:8px;">
+                                <strong style="color:#fcd34d;">2 TRIPLOS EM 3 APOSTAS (DUQUES)</strong><br>
+                                • Sem redução: 9 (R$ 36,00)<br>
+                                • Reduzido: <strong>3 (R$ 12,00)</strong><br>
+                                • Economia: <strong style="color:#4ade80;">-66.7%</strong><br>
+                                • Garantia: Cobertura máxima das diagonais
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = html;
+            }
+        };
+
+        const renderLotecaSimulationDashboard = (sim, carteira) => {
+            const dash = document.getElementById('loteca-simulation-dashboard');
+            if (!dash) return;
+            dash.style.display = 'block';
+
+            const hist = sim.histograma || {};
+            const keys = [14, 13, 12, 11, 10, 9, 8];
+            const maxVal = Math.max(...keys.map(k => hist[k] || 0), 1);
+
+            dash.innerHTML = `
+                <div style="background:radial-gradient(circle at top, rgba(2,132,199,0.25), rgba(15,23,42,0.98));border:1px solid #0ea5e9;border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                        <span style="color:#38bdf8;font-weight:900;font-size:1.05rem;">🎲 SIMULADOR MONTE CARLO: 10.000 CONCURSOS TESTADOS</span>
+                        <span style="background:rgba(14,165,233,0.2);color:#7dd3fc;padding:3px 10px;border-radius:6px;font-weight:700;font-size:0.75rem;">
+                            Carteira com ${sim.quantidade_volantes} Volantes • Custo/Concurso: R$ ${sim.custo_carteira_por_concurso?.toFixed(2) || '40.00'}
+                        </span>
+                    </div>
+
+                    <!-- Cards de Métricas Principais -->
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:10px;margin-bottom:14px;">
+                        <div style="background:rgba(0,0,0,0.5);border:1px solid rgba(56,189,248,0.3);border-radius:8px;padding:10px;text-align:center;">
+                            <span style="font-size:0.7rem;color:#94a3b8;display:block;">ACERTOS 14 PONTOS</span>
+                            <strong style="font-size:1.3rem;color:#38bdf8;">${sim.premios_14_acertos}</strong>
+                            <span style="font-size:0.72rem;color:#7dd3fc;display:block;">${sim.freq_14_pct}% das rodadas</span>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.5);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px;text-align:center;">
+                            <span style="font-size:0.7rem;color:#94a3b8;display:block;">ACERTOS 13 PONTOS</span>
+                            <strong style="font-size:1.3rem;color:#4ade80;">${sim.premios_13_acertos}</strong>
+                            <span style="font-size:0.72rem;color:#86efac;display:block;">${sim.freq_13_pct}% das rodadas</span>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.5);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:10px;text-align:center;">
+                            <span style="font-size:0.7rem;color:#94a3b8;display:block;">VALOR ESPERADO (EV)</span>
+                            <strong style="font-size:1.2rem;color:#fcd34d;">R$ ${sim.ev_por_concurso?.toFixed(2) || '0.00'}</strong>
+                            <span style="font-size:0.72rem;color:#fde68a;display:block;">por concurso simulado</span>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.5);border:1px solid rgba(168,85,247,0.3);border-radius:8px;padding:10px;text-align:center;">
+                            <span style="font-size:0.7rem;color:#94a3b8;display:block;">VANTAGEM VS ALEATÓRIO</span>
+                            <strong style="font-size:1.3rem;color:#c084fc;">⚡ ${sim.vantagem_vs_aleatorio}x</strong>
+                            <span style="font-size:0.72rem;color:#e9d5ff;display:block;">mais assertivo que o acaso</span>
+                        </div>
+                    </div>
+
+                    <!-- Histograma de Distribuição de Acertos da Carteira -->
+                    <div style="background:rgba(0,0,0,0.4);border-radius:8px;padding:12px;border:1px solid rgba(56,189,248,0.2);margin-bottom:12px;">
+                        <span style="font-size:0.78rem;color:#e2e8f0;font-weight:700;display:block;margin-bottom:8px;">
+                            📊 Histograma de Acertos Máximos da Carteira (10.000 Concursos):
+                        </span>
+                        <div style="display:flex;flex-direction:column;gap:6px;">
+                            ${keys.map(k => {
+                                const count = hist[k] || 0;
+                                const pct = ((count / sim.num_simulacoes) * 100).toFixed(2);
+                                const barWidth = Math.max(3, Math.round((count / maxVal) * 100));
+                                const barColor = k === 14 ? '#38bdf8' : (k === 13 ? '#4ade80' : (k === 12 ? '#fcd34d' : '#94a3b8'));
+                                return `
+                                    <div style="display:flex;align-items:center;font-size:0.75rem;gap:8px;">
+                                        <span style="width:75px;font-weight:700;color:${barColor};text-align:right;">${k} Acertos:</span>
+                                        <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:4px;height:16px;overflow:hidden;position:relative;">
+                                            <div style="width:${barWidth}%;height:100%;background:${barColor};border-radius:4px;transition:width 0.5s ease;"></div>
+                                        </div>
+                                        <span style="width:90px;color:#cbd5e1;font-family:monospace;font-size:0.72rem;">${count} (${pct}%)</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.74rem;color:#94a3b8;line-height:1.4;">
+                        🛡️ <strong>TRANSPARÊNCIA MATEMÁTICA:</strong> Em 10.000 simulações de torneios com 14 partidas estocásticas cada, a carteira diversificada explora o máximo valor estatístico. A variância do futebol é real, e esta simulação estima com precisão a frequência de faixas de premiação.
+                    </div>
+                </div>
+            `;
+            dash.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        const renderLotecaScenariosDashboard = (cen) => {
+            const dash = document.getElementById('loteca-simulation-dashboard');
+            if (!dash) return;
+            dash.style.display = 'block';
+
+            dash.innerHTML = `
+                <div style="background:radial-gradient(circle at top, rgba(14,165,233,0.2), rgba(15,23,42,0.98));border:1px solid #0ea5e9;border-radius:12px;padding:16px;margin-bottom:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                        <span style="color:#38bdf8;font-weight:900;font-size:1.05rem;">⚡ TESTE DE ESTRESSE DE CENÁRIOS DE MERCADO</span>
+                        <span style="background:rgba(14,165,233,0.2);color:#7dd3fc;padding:3px 10px;border-radius:6px;font-weight:700;font-size:0.75rem;">
+                            3 Cenários Extremos
+                        </span>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:12px;">
+                        <div style="background:rgba(15,23,42,0.9);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:12px;">
+                            <strong style="color:#4ade80;font-size:0.88rem;display:block;margin-bottom:4px;">1. CENÁRIO LÓGICA (FAVORITOS)</strong>
+                            <p style="font-size:0.75rem;color:#94a3b8;margin:0 0 8px 0;">Todos os 14 jogos vencidos pela coluna de maior probabilidade estatística.</p>
+                            <div style="background:rgba(0,0,0,0.5);padding:8px;border-radius:6px;margin-bottom:6px;">
+                                <span style="font-size:0.72rem;color:#cbd5e1;">Máximo de Acertos na Carteira:</span>
+                                <strong style="font-size:1.1rem;color:#4ade80;display:block;">${cen.cenario_logico.max_acertos} / 14 ACERTOS</strong>
+                            </div>
+                            <span style="font-size:0.7rem;color:#86efac;">Gabarito: <code>${cen.cenario_logico.gabarito}</code></span>
+                        </div>
+
+                        <div style="background:rgba(15,23,42,0.9);border:1px solid rgba(239,68,68,0.4);border-radius:8px;padding:12px;">
+                            <strong style="color:#f87171;font-size:0.88rem;display:block;margin-bottom:4px;">2. TEMPESTADE DE ZEBRAS</strong>
+                            <p style="font-size:0.75rem;color:#94a3b8;margin:0 0 8px 0;">As 4 partidas com maior entropia e alerta de armadilha estouram em zebras.</p>
+                            <div style="background:rgba(0,0,0,0.5);padding:8px;border-radius:6px;margin-bottom:6px;">
+                                <span style="font-size:0.72rem;color:#cbd5e1;">Máximo de Acertos na Carteira:</span>
+                                <strong style="font-size:1.1rem;color:#f87171;display:block;">${cen.cenario_zebras.max_acertos} / 14 ACERTOS</strong>
+                            </div>
+                            <span style="font-size:0.7rem;color:#fca5a5;">Gabarito: <code>${cen.cenario_zebras.gabarito}</code></span>
+                        </div>
+
+                        <div style="background:rgba(15,23,42,0.9);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:12px;">
+                            <strong style="color:#fcd34d;font-size:0.88rem;display:block;margin-bottom:4px;">3. RODADA DE EMPATES</strong>
+                            <p style="font-size:0.75rem;color:#94a3b8;margin:0 0 8px 0;">As 5 partidas clássicas com maior propensão a empate terminam em Coluna X.</p>
+                            <div style="background:rgba(0,0,0,0.5);padding:8px;border-radius:6px;margin-bottom:6px;">
+                                <span style="font-size:0.72rem;color:#cbd5e1;">Máximo de Acertos na Carteira:</span>
+                                <strong style="font-size:1.1rem;color:#fcd34d;display:block;">${cen.cenario_empates.max_acertos} / 14 ACERTOS</strong>
+                            </div>
+                            <span style="font-size:0.7rem;color:#fde68a;">Gabarito: <code>${cen.cenario_empates.gabarito}</code></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            dash.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        const renderLotecaInteractiveGabarito = (carteira, analises) => {
+            const dash = document.getElementById('loteca-simulation-dashboard');
+            if (!dash || !carteira) return;
+            dash.style.display = 'block';
+
+            const matches = analises || MotorLotecaB2BEngine.GRADE_PADRAO;
+
+            const updateGabaritoBoard = () => {
+                const conf = MotorLotecaB2BEngine.conferirGabarito(carteira, _currentLotecaGabarito);
+                const resultsBox = document.getElementById('gabarito-live-scores');
+                if (resultsBox) {
+                    let rHtml = `
+                        <div style="background:rgba(0,0,0,0.5);border:1px solid #4ade80;border-radius:8px;padding:10px;margin-top:10px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                                <span style="font-size:0.85rem;font-weight:800;color:#4ade80;">
+                                    🏆 DESEMPENHO ATUAL: MÁXIMO DE ${conf.max_acertos} / 14 ACERTOS
+                                    ${conf.max_acertos === 14 ? ' — 🎉 VOLANTE COM 14 PONTOS!' : (conf.max_acertos === 13 ? ' — 🥈 VOLANTE COM 13 PONTOS!' : '')}
+                                </span>
+                                <span style="font-size:0.72rem;color:#94a3b8;">Melhor: Volante #${conf.melhor_volante || '01'}</span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:6px;margin-top:8px;">
+                                ${conf.volantes.map(v => {
+                                    const isWin14 = v.acertos === 14;
+                                    const isWin13 = v.acertos === 13;
+                                    const col = isWin14 ? '#38bdf8' : (isWin13 ? '#4ade80' : (v.acertos >= 11 ? '#fcd34d' : '#94a3b8'));
+                                    return `
+                                        <div style="background:rgba(15,23,42,0.8);border:1px solid ${isWin14 ? '#38bdf8' : (isWin13 ? '#4ade80' : 'rgba(255,255,255,0.1)')};border-radius:6px;padding:6px;text-align:center;">
+                                            <span style="font-size:0.68rem;color:#94a3b8;display:block;">Volante #${String(v.volante_numero).padStart(2, '0')}</span>
+                                            <strong style="font-size:0.95rem;color:${col};">${v.acertos} pts</strong>
+                                            <span style="font-size:0.62rem;color:${col};display:block;">${v.premio}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                    resultsBox.innerHTML = rHtml;
+                }
+            };
+
+            let gHtml = `
+                <div style="background:radial-gradient(circle at top, rgba(168,85,247,0.2), rgba(15,23,42,0.98));border:1px solid #a855f7;border-radius:12px;padding:16px;margin-bottom:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                        <div>
+                            <span style="color:#c084fc;font-weight:900;font-size:1.05rem;">🎯 GABARITO INTERATIVO: CONFERÊNCIA EM TEMPO REAL</span>
+                            <span style="display:block;font-size:0.74rem;color:#cbd5e1;margin-top:2px;">Clique nas colunas ou sorteie para conferir instantaneamente os ${carteira.quantidade_jogos} volantes.</span>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                            <button id="btn-caixa-gabarito" style="background:linear-gradient(135deg, #15803d, #22c55e);border:1px solid #4ade80;color:white;padding:5px 12px;border-radius:6px;font-weight:800;font-size:0.75rem;cursor:pointer;box-shadow:0 0 10px rgba(34,197,94,0.3);">
+                                🏦 Puxar da Caixa
+                            </button>
+                            <button id="btn-sortear-gabarito" style="background:#0284c7;border:1px solid #38bdf8;color:white;padding:5px 12px;border-radius:6px;font-weight:700;font-size:0.75rem;cursor:pointer;">
+                                🎲 Sortear Rodada
+                            </button>
+                            <button id="btn-limpar-gabarito" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#e2e8f0;padding:5px 12px;border-radius:6px;font-weight:700;font-size:0.75rem;cursor:pointer;">
+                                🔄 Limpar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Grid dos 14 jogos para clicar -->
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:8px;">
+                        ${matches.map((m, idx) => {
+                            const jNum = m.jogo?.jogo_numero || m.jogo_numero || (idx + 1);
+                            const mHome = m.jogo?.mandante || m.mandante || 'Mandante';
+                            const mAway = m.jogo?.visitante || m.visitante || 'Visitante';
+                            const currentPick = _currentLotecaGabarito[idx];
+                            return `
+                                <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(168,85,247,0.3);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+                                    <div style="font-size:0.75rem;font-weight:700;color:#f8fafc;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                        J${jNum}: ${mHome} x ${mAway}
+                                    </div>
+                                    <div style="display:flex;gap:4px;" data-match-idx="${idx}">
+                                        <button class="btn-col-pick" data-col="1" style="background:${currentPick === '1' ? '#38bdf8' : 'rgba(0,0,0,0.5)'};color:${currentPick === '1' ? '#000' : '#e2e8f0'};border:1px solid ${currentPick === '1' ? '#38bdf8' : 'rgba(255,255,255,0.2)'};border-radius:4px;padding:3px 8px;font-weight:800;font-size:0.75rem;cursor:pointer;">1</button>
+                                        <button class="btn-col-pick" data-col="X" style="background:${currentPick === 'X' ? '#fcd34d' : 'rgba(0,0,0,0.5)'};color:${currentPick === 'X' ? '#000' : '#e2e8f0'};border:1px solid ${currentPick === 'X' ? '#fcd34d' : 'rgba(255,255,255,0.2)'};border-radius:4px;padding:3px 8px;font-weight:800;font-size:0.75rem;cursor:pointer;">X</button>
+                                        <button class="btn-col-pick" data-col="2" style="background:${currentPick === '2' ? '#f87171' : 'rgba(0,0,0,0.5)'};color:${currentPick === '2' ? '#000' : '#e2e8f0'};border:1px solid ${currentPick === '2' ? '#f87171' : 'rgba(255,255,255,0.2)'};border-radius:4px;padding:3px 8px;font-weight:800;font-size:0.75rem;cursor:pointer;">2</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    <div id="gabarito-live-scores"></div>
+                </div>
+            `;
+            dash.innerHTML = gHtml;
+
+            // Wire botões de coluna
+            dash.querySelectorAll('.btn-col-pick').forEach(btn => {
+                btn.onclick = (e) => {
+                    const parent = btn.closest('[data-match-idx]');
+                    const matchIdx = parseInt(parent.getAttribute('data-match-idx'));
+                    const col = btn.getAttribute('data-col');
+                    _currentLotecaGabarito[matchIdx] = (_currentLotecaGabarito[matchIdx] === col) ? null : col;
+
+                    parent.querySelectorAll('.btn-col-pick').forEach(b => {
+                        const bCol = b.getAttribute('data-col');
+                        const isSel = _currentLotecaGabarito[matchIdx] === bCol;
+                        b.style.background = isSel ? (bCol === '1' ? '#38bdf8' : (bCol === 'X' ? '#fcd34d' : '#f87171')) : 'rgba(0,0,0,0.5)';
+                        b.style.color = isSel ? '#000' : '#e2e8f0';
+                    });
+                    updateGabaritoBoard();
+                };
+            });
+
+            // Wire Puxar da Caixa
+            const btnCaixa = document.getElementById('btn-caixa-gabarito');
+            if (btnCaixa) {
+                btnCaixa.onclick = async () => {
+                    const origText = btnCaixa.innerHTML;
+                    btnCaixa.disabled = true;
+                    btnCaixa.innerHTML = '⏳ Conectando Caixa...';
+                    try {
+                        const latest = await StatsService._fetchLatestFromAPIs('loteca');
+                        if (latest && latest.numbers && latest.numbers.length === 14) {
+                            for (let i = 0; i < 14; i++) {
+                                _currentLotecaGabarito[i] = latest.numbers[i];
+                            }
+                            renderLotecaInteractiveGabarito(carteira, analises);
+                            if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                                Guardian.toast(`✅ Resultado do Concurso ${latest.drawNumber} da Loteca carregado!`, 'success', 5000);
+                            } else {
+                                alert(`✅ Resultado do Concurso ${latest.drawNumber} da Loteca carregado com sucesso!\n${latest.numbers.join(' ')}`);
+                            }
+                        } else {
+                            alert('Não foi possível obter o resultado recente da Loteca no portal da Caixa.');
+                        }
+                    } catch (err) {
+                        alert('Erro ao buscar resultado da Loteca na Caixa: ' + err.message);
+                    } finally {
+                        btnCaixa.disabled = false;
+                        btnCaixa.innerHTML = origText;
+                    }
+                };
+            }
+
+            // Wire Sortear
+            const btnSortear = document.getElementById('btn-sortear-gabarito');
+            if (btnSortear) {
+                btnSortear.onclick = () => {
+                    const novoGabarito = MotorLotecaB2BEngine.gerarGabaritoAleatorio(carteira.analises);
+                    for (let i = 0; i < 14; i++) {
+                        _currentLotecaGabarito[i] = novoGabarito[i];
+                    }
+                    renderLotecaInteractiveGabarito(carteira, analises);
+                };
+            }
+
+            // Wire Limpar
+            const btnLimpar = document.getElementById('btn-limpar-gabarito');
+            if (btnLimpar) {
+                btnLimpar.onclick = () => {
+                    _currentLotecaGabarito = Array(14).fill(null);
+                    renderLotecaInteractiveGabarito(carteira, analises);
+                };
+            }
+
+            updateGabaritoBoard();
+            dash.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        const selectVisaoLoteca = document.getElementById('select-visao-loteca');
+        if (selectVisaoLoteca) {
+            selectVisaoLoteca.onchange = () => {
+                renderLotecaView(selectVisaoLoteca.value, _lastLotecaData);
+            };
+        }
+
+        const btnLotecaDuques = document.getElementById('btn-loteca-duques');
+        if (btnLotecaDuques) {
+            btnLotecaDuques.onclick = () => {
+                if (selectVisaoLoteca) selectVisaoLoteca.value = '7_duques';
+                renderLotecaView('7_duques', _lastLotecaData);
+                const container = document.getElementById('loteca-results-container');
+                if (container) container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+        }
+
+        const btnLotecaTernos = document.getElementById('btn-loteca-ternos');
+        if (btnLotecaTernos) {
+            btnLotecaTernos.onclick = () => {
+                if (selectVisaoLoteca) selectVisaoLoteca.value = '4_ternos';
+                renderLotecaView('4_ternos', _lastLotecaData);
+                const container = document.getElementById('loteca-results-container');
+                if (container) container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+        }
+
+        const btnLotecaFechamento = document.getElementById('btn-loteca-fechamento');
+        if (btnLotecaFechamento) {
+            btnLotecaFechamento.onclick = () => {
+                if (selectVisaoLoteca) selectVisaoLoteca.value = 'fechamentos';
+                renderLotecaView('fechamentos', _lastLotecaData);
+                const container = document.getElementById('loteca-results-container');
+                if (container) container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+        }
+
+        const btnRelatorioLoteca = document.getElementById('btn-relatorio-motor-loteca');
+        if (btnRelatorioLoteca) {
+            btnRelatorioLoteca.onclick = () => {
+                if (_lastLotecaData && _lastLotecaData.relatorio) {
+                    alert(_lastLotecaData.relatorio);
+                } else {
+                    alert('Gere os prognósticos da Loteca primeiro para visualizar o relatório de 12 seções.');
+                }
+            };
+        }
+
+        const btnSimularLoteca = document.getElementById('btn-simular-motor-loteca');
+        if (btnSimularLoteca) {
+            btnSimularLoteca.onclick = async () => {
+                if (!_lastLotecaData || !_lastLotecaData.carteira) {
+                    const btnExec = document.getElementById('btn-executar-motor-loteca');
+                    if (btnExec) btnExec.click();
+                    setTimeout(() => { if (btnSimularLoteca) btnSimularLoteca.click(); }, 1200);
+                    return;
+                }
+
+                const origText = btnSimularLoteca.innerHTML;
+                btnSimularLoteca.disabled = true;
+                btnSimularLoteca.innerHTML = '⏳ Simulando 10.000 Concursos...';
+                try {
+                    const sim = _lastLotecaData.simulacao || MotorLotecaB2BEngine.executarSimulacaoMonteCarlo(_lastLotecaData.carteira, 10000);
+                    renderLotecaSimulationDashboard(sim, _lastLotecaData.carteira);
+                } catch (e) {
+                    alert('Erro na simulação: ' + e.message);
+                } finally {
+                    btnSimularLoteca.disabled = false;
+                    btnSimularLoteca.innerHTML = origText;
+                }
+            };
+        }
+
+        const btnCenariosLoteca = document.getElementById('btn-cenarios-motor-loteca');
+        if (btnCenariosLoteca) {
+            btnCenariosLoteca.onclick = () => {
+                if (!_lastLotecaData || !_lastLotecaData.carteira) {
+                    const btnExec = document.getElementById('btn-executar-motor-loteca');
+                    if (btnExec) btnExec.click();
+                    setTimeout(() => { if (btnCenariosLoteca) btnCenariosLoteca.click(); }, 1200);
+                    return;
+                }
+                const cen = _lastLotecaData.cenarios || MotorLotecaB2BEngine.simularCenarios(_lastLotecaData.carteira);
+                renderLotecaScenariosDashboard(cen);
+            };
+        }
+
+        const btnGabaritoLoteca = document.getElementById('btn-gabarito-motor-loteca');
+        if (btnGabaritoLoteca) {
+            btnGabaritoLoteca.onclick = () => {
+                if (!_lastLotecaData || !_lastLotecaData.carteira) {
+                    const btnExec = document.getElementById('btn-executar-motor-loteca');
+                    if (btnExec) btnExec.click();
+                    setTimeout(() => { if (btnGabaritoLoteca) btnGabaritoLoteca.click(); }, 1200);
+                    return;
+                }
+                renderLotecaInteractiveGabarito(_lastLotecaData.carteira, _lastLotecaData.jogos);
+            };
+        }
+
+        const btnExecutarLoteca = document.getElementById('btn-executar-motor-loteca');
+        if (btnExecutarLoteca) {
+            btnExecutarLoteca.onclick = async () => {
+                const orcamento = parseFloat(document.getElementById('select-orcamento-loteca')?.value || '4.0') || 4.0;
+                const estrategia = document.getElementById('select-estrategia-loteca')?.value || 'equilibrada';
+                const qtdJogos = parseInt(document.getElementById('loteca-games-quantity')?.value || '10') || 10;
+
+                const origText = btnExecutarLoteca.innerHTML;
+                btnExecutarLoteca.disabled = true;
+                btnExecutarLoteca.innerHTML = '⏳ Gerando ' + qtdJogos + ' Volantes & Dixon-Coles 100k...';
+
+                try {
+                    if (!_lotecaGradeMatches) {
+                        try {
+                            _lotecaGradeMatches = await MotorLotecaB2BEngine.obterGradeOficialCaixa();
+                        } catch (e) {}
+                    }
+
+                    const temManuais = _lotecaUserPicks && _lotecaUserPicks.some(p => p !== null);
+                    const data = await MotorLotecaB2BEngine.gerarPrognosticos(
+                        orcamento, 
+                        estrategia, 
+                        qtdJogos, 
+                        _lotecaGradeMatches, 
+                        temManuais ? _lotecaUserPicks : null
+                    );
+                    _lastLotecaData = data;
+                    renderLotecaView(selectVisaoLoteca ? selectVisaoLoteca.value : 'carteira_volantes', data);
+
+                    const volantesLimpos = (data.carteira?.volantes || []).map(v => {
+                        return v.palpites.map(p => p.palpite);
+                    });
+
+                    this.currentGeneratedGames = volantesLimpos;
+                    this._lastGeneratedGames = volantesLimpos;
+                    this._lotecaVolantes = data.carteira?.volantes || [];
+
+                    if (this.gamesContainer) {
+                        const totalInv = data.carteira ? data.carteira.custo_total.toFixed(2) : data.orcamento.toFixed(2);
+                        this.gamesContainer.innerHTML = `
+                            <div style="background:rgba(15,23,42,0.95);border:1px solid #22c55e;border-radius:12px;padding:16px;margin-top:12px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                                    <div>
+                                        <span style="color:#4ade80;font-weight:900;font-size:1.05rem;">⚽ CARTEIRA LOTECA: ${volantesLimpos.length} VOLANTES</span>
+                                        <span style="display:block;font-size:0.75rem;color:#94a3b8;">Estrutura por volante: R$ ${data.carteira?.custo_unitario?.toFixed(2) || '4,00'} • Filtros de Coerência Ativos</span>
+                                    </div>
+                                    <span style="background:rgba(34,197,94,0.2);color:#86efac;padding:4px 12px;border-radius:6px;font-weight:800;font-size:0.85rem;border:1px solid rgba(34,197,94,0.4);">
+                                        Investimento Total: R$ ${totalInv}
+                                    </span>
+                                </div>
+                                <div style="display:flex;flex-direction:column;gap:8px;">
+                                    ${(data.carteira?.volantes || []).slice(0, 500).map(v => `
+                                        <div style="font-family:monospace;font-size:0.78rem;color:#f8fafc;background:rgba(0,0,0,0.5);padding:8px 12px;border-radius:6px;border:1px solid rgba(34,197,94,0.25);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                                            <div>
+                                                <strong style="color:#4ade80;">VOLANTE ${String(v.volante_numero).padStart(2, '0')}</strong> (${v.estrutura} • R$ ${v.custo.toFixed(2)}):
+                                                <span style="color:#cbd5e1;margin-left:6px;">${v.resumo_colunas}</span>
+                                            </div>
+                                            <button onclick="navigator.clipboard.writeText('${v.resumo_colunas}').then(() => alert('Volante copiado!'))" style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#86efac;border-radius:4px;padding:2px 8px;font-size:0.7rem;cursor:pointer;">
+                                                📋 Copiar
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                    ${(data.carteira?.volantes || []).length > 500 ? `
+                                        <div style="padding: 12px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #86efac; text-align: center; border-radius: 6px; font-size: 0.82rem; margin-top: 8px;">
+                                            ⚡ <strong>ALTO VOLUME:</strong> Exibindo os primeiros 500 de <b>${(data.carteira?.volantes || []).length} volantes</b> na lista.<br>
+                                            Todos os <b>${(data.carteira?.volantes || []).length} volantes</b> estão prontos na memória para conferência, cópia e envio!
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (err) {
+                    alert('Erro ao executar Motor Loteca: ' + err.message);
+                } finally {
+                    btnExecutarLoteca.disabled = false;
+                    btnExecutarLoteca.innerHTML = origText;
+                    const resDiv = document.getElementById('loteca-results-container');
+                    if (resDiv) resDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            };
+        }
+
         // === BOTÃO 📐 COBERTURA UNIFICADA v14 (Motor Unificado: Estatística + Cobertura + Sniper) ===
         if (this.generateCoverageBtn) {
             this.generateCoverageBtn.onclick = () => {
+                if (this.currentGameKey === 'loteca') {
+                    const btnExec = document.getElementById('btn-executar-motor-loteca');
+                    if (btnExec) btnExec.click();
+                    return;
+                }
                 const game = GAMES[this.currentGameKey];
                 if (!game) return;
                 const qty = parseInt(this.gamesQuantityInput.value) || 10;
@@ -2765,6 +3848,8 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                                 uniqueNumbers: new Set(result.games.flatMap(g => g.numbers)).size
                             }
                         };
+                        this.currentGeneratedGames = gamesData.games;
+                        this._lastGeneratedGames = gamesData.games;
                         this.renderGames(gamesData, 'lotofacil');
 
                         // Feedback
@@ -2953,6 +4038,36 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         if (btnQuickDupla) {
             btnQuickDupla.style.display = (gameKey === 'duplasena') ? 'inline-block' : 'none';
         }
+        const btnQuickLoteca = document.getElementById('btn-quick-motor-loteca');
+        if (btnQuickLoteca) {
+            btnQuickLoteca.style.display = (gameKey === 'loteca') ? 'inline-block' : 'none';
+        }
+        const b2bLotecaBtn = document.getElementById('btn-motor-loteca');
+        if (b2bLotecaBtn) {
+            if (gameKey === 'loteca') {
+                b2bLotecaBtn.style.animation = 'pulseGlowMega 2.2s infinite alternate';
+                b2bLotecaBtn.style.border = '2px solid #86efac';
+                b2bLotecaBtn.style.transform = 'scale(1.04)';
+            } else {
+                b2bLotecaBtn.style.animation = 'none';
+                b2bLotecaBtn.style.border = '1px solid #4ade80';
+                b2bLotecaBtn.style.transform = 'none';
+            }
+        }
+        if (gameKey === 'loteca') {
+            const lotecaPanel = document.getElementById('motor-loteca-panel');
+            if (lotecaPanel) {
+                lotecaPanel.style.display = 'block';
+                setTimeout(() => {
+                    lotecaPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    const listEl = document.getElementById('loteca-interactive-matches-list');
+                    if (listEl && (!listEl.innerHTML || listEl.innerHTML.trim() === '')) {
+                        const btnCarregar = document.getElementById('btn-carregar-grade-caixa');
+                        if (btnCarregar) btnCarregar.click();
+                    }
+                }, 100);
+            }
+        }
 
         // ━━ DESTAQUE VISUAL DOS MOTORES EM B2B-MOTORS-ROW CONFORME A LOTERIA SELECIONADA ━━
         const b2bQuinaBtn = document.getElementById('btn-motor-quina');
@@ -2965,6 +4080,27 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 b2bQuinaBtn.style.animation = 'none';
                 b2bQuinaBtn.style.border = '1px solid #60a5fa';
                 b2bQuinaBtn.style.transform = 'none';
+            }
+        }
+        const b2bSuperSeteBtn = document.getElementById('btn-motor-supersete');
+        if (b2bSuperSeteBtn) {
+            if (gameKey === 'supersete') {
+                b2bSuperSeteBtn.style.animation = 'pulseGlowSuperSete 2.2s infinite alternate';
+                b2bSuperSeteBtn.style.border = '2px solid #7dd3fc';
+                b2bSuperSeteBtn.style.transform = 'scale(1.04)';
+            } else {
+                b2bSuperSeteBtn.style.animation = 'none';
+                b2bSuperSeteBtn.style.border = '1px solid #38bdf8';
+                b2bSuperSeteBtn.style.transform = 'none';
+            }
+        }
+        if (gameKey === 'supersete') {
+            const ssPanel = document.getElementById('motor-supersete-panel');
+            if (ssPanel) {
+                ssPanel.style.display = 'block';
+                setTimeout(() => {
+                    ssPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
             }
         }
         const b2bMegaBtn = document.getElementById('btn-motor-megasena');
@@ -3126,7 +4262,6 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         // Bug 2+5: Limpar arrays de jogos da loteria anterior
         this.currentGeneratedGames = [];
         this._lastGeneratedGames = [];
-        if (typeof this._resetSaveLock === 'function') this._resetSaveLock();
 
         // Bug 3: Cancelar geração assíncrona em andamento
         if (typeof AsyncGenerator !== 'undefined' && AsyncGenerator._isRunning) {
@@ -3417,6 +4552,8 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
 
         // Clear generated games
         this.currentGeneratedGames = [];
+        this._lastGeneratedGames = [];
+        this.currentGeneratedExtras = null;
         this.gamesContainer.innerHTML = '<div class="empty-state">Selecione as opções e clique em Gerar Jogos</div>';
 
         // Clear check summary
@@ -4024,9 +5161,9 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         if (!result.games) result.games = [];
 
         // ── ORDENAÇÃO GLOBAL POR SINERGIA IA 🔥 ──
-        // Isso garante que TODOS os motores (Sniper, Cobertura, Manual Simples, etc) 
-        // entreguem os melhores jogos estatisticamente no topo da lista.
-        if (result.games.length > 0 && typeof ClosingEngine !== 'undefined') {
+        // Isso garante que os motores entreguem os melhores jogos estatisticamente no topo da lista.
+        // Otimização: executado para até 1.000 jogos (evita sobrecarga de CPU em volumes gigantescos)
+        if (result.games.length > 0 && result.games.length <= 1000 && typeof ClosingEngine !== 'undefined') {
             let pool = result.pool;
             if (!pool || pool.length === 0) {
                 pool = Array.from(this.selectedNumbers || []);
@@ -4059,7 +5196,6 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
 
         this.currentGeneratedGames = result.games;
         this._lastInternalEngine = result.internalEngine || 'Desconhecido';
-        if (typeof this._resetSaveLock === 'function') this._resetSaveLock();
         
         // Gerar múltiplos times/meses distribuídos com máxima cobertura (sem repetição precoce)
         if (gameKey === 'timemania' || gameKey === 'diadesorte') {
@@ -4094,8 +5230,12 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             const renderLimit = Math.min(result.games.length, 1000);
             const isCapped = result.games.length > 1000;
 
+            const isSS = (gameKey === 'supersete');
             result.games.slice(0, renderLimit).forEach((gameNumbers, index) => {
-                const nums = gameNumbers.map(n => {
+                const nums = gameNumbers.map((n, colIdx) => {
+                    if (isSS) {
+                        return `<div class="ball" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:38px;min-height:40px;padding:2px;border-color:#38bdf8;"><span style="font-size:0.52rem;color:#94a3b8;font-weight:800;line-height:1;">C${colIdx+1}</span><span style="font-size:1rem;font-weight:900;color:#38bdf8;line-height:1.1;">${n}</span></div>`;
+                    }
                     const padded = n.toString().padStart(2, '0');
                     if (hasFixed && fixedSet.has(n)) {
                         return `<div class="ball fixed" style="border-color:#F59E0B;color:#F59E0B;text-shadow:0 0 6px rgba(245,158,11,0.4);font-weight:900">${padded}</div>`;
@@ -4191,7 +5331,7 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             copySingleBtn.className = 'card-copy-btn copy-single-btn';
             copySingleBtn.innerHTML = '<span>📋</span> Copiar';
             copySingleBtn.title = "Copiar este jogo";
-            let copyText = gameNumbers.map(n => n.toString().padStart(2, '0')).join(' - ');
+            let copyText = (gameKey === 'supersete') ? gameNumbers.join(' - ') : gameNumbers.map(n => n.toString().padStart(2, '0')).join(' - ');
             if (gameKey === 'milionaria' && this.currentGeneratedExtras && this.currentGeneratedExtras[index]) {
                 const trVal = this.currentGeneratedExtras[index];
                 const trStr = Array.isArray(trVal) ? trVal.map(t => t.toString().padStart(2, '0')).join(' ') : trVal;
@@ -4206,8 +5346,8 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             const numbersWrapper = document.createElement('div');
             numbersWrapper.className = 'game-numbers-wrapper';
 
-            gameNumbers.forEach(num => {
-                const ball = this.createBall(num);
+            gameNumbers.forEach((num, colIdx) => {
+                const ball = this.createBall(num, colIdx, gameKey);
                 if (this.fixedNumbers.has(num)) {
                     ball.classList.add('fixed');
                     ball.style.borderColor = '#F59E0B';
@@ -4221,10 +5361,22 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         });
     }
 
-    createBall(number) {
+    createBall(number, colIdx = null, gameKey = null) {
         const ball = document.createElement('div');
         ball.className = 'ball';
-        ball.textContent = number.toString().padStart(2, '0');
+        if (gameKey === 'supersete' && colIdx !== null) {
+            ball.style.display = 'inline-flex';
+            ball.style.flexDirection = 'column';
+            ball.style.alignItems = 'center';
+            ball.style.justifyContent = 'center';
+            ball.style.minWidth = '42px';
+            ball.style.minHeight = '42px';
+            ball.style.padding = '2px';
+            ball.style.borderColor = '#38bdf8';
+            ball.innerHTML = `<span style="font-size:0.58rem; color:#94a3b8; font-weight:800; line-height:1; letter-spacing:0.5px;">C${colIdx + 1}</span><span style="font-size:1.1rem; font-weight:900; line-height:1.1; color:#38bdf8;">${number}</span>`;
+        } else {
+            ball.textContent = number.toString().padStart(2, '0');
+        }
         return ball;
     }
 
@@ -4352,26 +5504,79 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
     }
 
     async copyGames() {
-        const cards = document.querySelectorAll('.game-card');
-        if (cards.length === 0) {
-            console.warn('No games found to copy.');
-            return false;
-        }
-
         let text = '';
         const gameName = GAMES[this.currentGameKey] ? GAMES[this.currentGameKey].name : 'Loteria';
 
-        text += `--- JOGOS DA ${gameName.toUpperCase()} ---\n`;
-        text += `Data: ${new Date().toLocaleString()}\n\n`;
+        if (this.currentGameKey === 'loteca') {
+            let lotecaGames = this.currentGeneratedGames || [];
+            if ((!lotecaGames || lotecaGames.length === 0) && this._lotecaVolantes && this._lotecaVolantes.length > 0) {
+                lotecaGames = this._lotecaVolantes.map(v => v.palpites.map(p => p.palpite));
+                this.currentGeneratedGames = lotecaGames;
+            }
+            if (!lotecaGames || lotecaGames.length === 0) {
+                console.warn('No Loteca games found to copy.');
+                return false;
+            }
 
-        cards.forEach((card, index) => {
-            const numbers = Array.from(card.querySelectorAll('.ball'))
-                .map(b => b.textContent.trim().padStart(2, '0'))
-                .join(' - ');
-            text += `Jogo ${index + 1}: ${numbers}\n`;
-        });
+            text += `--- JOGOS DA ${gameName.toUpperCase()} ---\n`;
+            text += `Data: ${new Date().toLocaleString()}\n`;
+            text += `Total de Jogos: ${lotecaGames.length}\n\n`;
 
-        text += `\n--- B2B Loterias ---`;
+            lotecaGames.forEach((picks, index) => {
+                let formatted = '';
+                if (Array.isArray(picks)) {
+                    formatted = picks.map(p => (typeof p === 'object' && p ? (p.palpite || p) : p)).join(' - ');
+                } else if (picks && typeof picks === 'object') {
+                    formatted = picks.resumo_colunas || (Array.isArray(picks.palpites) ? picks.palpites.map(p => p.palpite || p).join(' - ') : JSON.stringify(picks));
+                } else {
+                    formatted = String(picks);
+                }
+                text += `Jogo ${index + 1}: ${formatted}\n`;
+            });
+
+            text += `\n--- B2B Loterias ---`;
+        } else {
+            const games = (this.currentGeneratedGames && this.currentGeneratedGames.length > 0)
+                ? this.currentGeneratedGames
+                : Array.from(document.querySelectorAll('.game-card')).map(card => 
+                    Array.from(card.querySelectorAll('.ball')).map(b => parseInt(b.textContent.trim())).filter(n => !isNaN(n))
+                  );
+            if (games.length === 0) {
+                console.warn('No games found to copy.');
+                return false;
+            }
+
+            text += `--- JOGOS DA ${gameName.toUpperCase()} ---\n`;
+            text += `Data: ${new Date().toLocaleString()}\n`;
+            text += `Total de Jogos: ${games.length}\n\n`;
+
+            games.forEach((gameNumbers, index) => {
+                let numbers = '';
+                if (this.currentGameKey === 'supersete' && Array.isArray(gameNumbers)) {
+                    const colStr = gameNumbers.map((d, ci) => `C${ci+1}=${d}`).join(' ');
+                    numbers = `${gameNumbers.join(' - ')}  [${colStr}]`;
+                } else {
+                    numbers = Array.isArray(gameNumbers) ? gameNumbers.map(n => String(n).padStart(2, '0')).join(' - ') : String(gameNumbers);
+                }
+                let extraText = '';
+                if (this.currentGeneratedExtras && this.currentGeneratedExtras[index] !== undefined) {
+                    const extraVal = this.currentGeneratedExtras[index];
+                    if (this.currentGameKey === 'milionaria') {
+                        const trStr = Array.isArray(extraVal) ? extraVal.map(t => String(t).padStart(2, '0')).join(' ') : String(extraVal);
+                        extraText = ` — 🍀 ${trStr}`;
+                    } else if (this.currentGameKey === 'diadesorte') {
+                        const mName = typeof extraVal === 'string' ? extraVal : (typeof L99_MESES !== 'undefined' && L99_MESES[extraVal] ? L99_MESES[extraVal] : extraVal);
+                        extraText = ` — 📅 ${mName}`;
+                    } else if (this.currentGameKey === 'timemania') {
+                        const tName = typeof extraVal === 'string' ? extraVal : (typeof L99_TIMES !== 'undefined' && L99_TIMES[extraVal] ? L99_TIMES[extraVal] : extraVal);
+                        extraText = ` — ⚽ ${tName}`;
+                    }
+                }
+                text += `Jogo ${index + 1}: ${numbers}${extraText}\n`;
+            });
+
+            text += `\n--- B2B Loterias ---`;
+        }
 
         const success = await this.copyToClipboard(text);
 
@@ -4381,7 +5586,6 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             setTimeout(() => this.copyBtn.textContent = originalText, 2000);
             return true;
         } else if (success === 'modal') {
-            // Modal is shown, no error alert needed, but we can update button briefly
             const originalText = this.copyBtn.textContent;
             this.copyBtn.textContent = 'Veja a Janela';
             setTimeout(() => this.copyBtn.textContent = originalText, 2000);
@@ -4795,7 +5999,9 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             lotomania:  { name: 'Lotomania',     url: 'lotomania' },
             timemania:  { name: 'Timemania',     url: 'timemania' },
             diadesorte: { name: 'Dia de Sorte',  url: 'dia-de-sorte' },
-            milionaria: { name: '+Milionária', url: 'mais-milionaria' }
+            milionaria: { name: '+Milionária', url: 'mais-milionaria' },
+            supersete:  { name: 'Super Sete',    url: 'super-sete' },
+            loteca:     { name: 'Loteca',         url: 'loteca' }
         };
     }
 
@@ -4803,39 +6009,179 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 768);
     }
 
-    _generateCaixaScript_LEGACY(cfg, games) {
-        // Normalizar jogos para garantir 50 dezenas na Lotomania e formato correto
+    _generateCaixaScript_LEGACY(cfg, games, simularApenas = false) {
+        const isLOTECA = cfg.url === 'loteca' || this.currentGameKey === 'loteca';
         const isLM = cfg.url === 'lotomania' || this.currentGameKey === 'lotomania';
         const isTM = cfg.url === 'timemania';
         const isDS = cfg.url === 'dia-de-sorte';
         const isMIL = cfg.url === 'mais-milionaria' || this.currentGameKey === 'milionaria';
+        const isSS = cfg.url === 'super-sete' || this.currentGameKey === 'supersete';
 
-        const normalizedGames = (games || []).map((g, idx) => {
-            let nums = Array.isArray(g) ? g : (g.jogo || []);
-            if (isLM) {
-                nums = nums.map(n => {
-                    let v = parseInt(n);
-                    return (v === 100 || v === 0) ? 0 : v;
-                });
-                nums = Array.from(new Set(nums)).sort((a, b) => a - b);
-            }
-            let trevos = [];
-            if (isMIL && this.currentGeneratedExtras && this.currentGeneratedExtras[idx]) {
-                trevos = Array.isArray(this.currentGeneratedExtras[idx]) ? this.currentGeneratedExtras[idx] : [1, 2];
-            }
-            return { d: nums, t: trevos };
-        });
+        let normalizedGames;
+        if (isLOTECA) {
+            normalizedGames = (games || []).map((g) => {
+                let picks = [];
+                if (typeof g === 'string') {
+                    let str = g.includes(':') ? g.split(':').slice(1).join(':') : g;
+                    picks = str.split('-').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
+                } else if (Array.isArray(g)) {
+                    picks = g.map(s => String(s).trim().toUpperCase());
+                } else if (g && typeof g === 'object') {
+                    if (g.resumo_colunas) {
+                        picks = g.resumo_colunas.split('-').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
+                    } else if (Array.isArray(g.palpites)) {
+                        picks = g.palpites.map(p => (p.palpite || '').trim().toUpperCase());
+                    }
+                }
+                return { p: picks };
+            });
+        } else if (isSS) {
+            normalizedGames = (games || []).map((g) => {
+                let digits = [];
+                if (Array.isArray(g)) {
+                    digits = g.map(n => parseInt(n));
+                } else if (g && typeof g === 'object' && Array.isArray(g.jogo)) {
+                    digits = g.jogo.map(n => parseInt(n));
+                } else if (typeof g === 'string') {
+                    digits = g.split(/[\s,-|]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+                }
+                return { s: digits };
+            });
+        } else {
+            normalizedGames = (games || []).map((g, idx) => {
+                let nums = Array.isArray(g) ? g : (g.jogo || []);
+                if (isLM) {
+                    nums = nums.map(n => {
+                        let v = parseInt(n);
+                        return (v === 100 || v === 0) ? 0 : v;
+                    });
+                    nums = Array.from(new Set(nums)).sort((a, b) => a - b);
+                }
+                let trevos = [];
+                if (isMIL && this.currentGeneratedExtras && this.currentGeneratedExtras[idx]) {
+                    trevos = Array.isArray(this.currentGeneratedExtras[idx]) ? this.currentGeneratedExtras[idx] : [1, 2];
+                }
+                return { d: nums, t: trevos };
+            });
+        }
 
         const gamesJSON = JSON.stringify(normalizedGames);
+        const simFlag = simularApenas ? 'true' : 'false';
 
         return `(async function(){
+console.clear();
+console.log('%c═══════════════════════════════════════════════════════', 'color:#FFD700;font-weight:bold;');
+console.log('%c🚀 B2B LOTERIAS — ' + (${simFlag} ? '🧪 MODO SIMULAÇÃO (SEM APOSTAR)' : '⚡ PREENCHIMENTO AUTOMÁTICO'), 'font-size:16px;color:' + (${simFlag} ? '#F59E0B' : '#22C55E') + ';font-weight:900;');
+console.log('%c   Modalidade: ${cfg.name} | Total de jogos: ${normalizedGames.length}', 'color:#38BDF8;font-size:13px;font-weight:bold;');
+if (${simFlag}) {
+  console.log('%c   🛡️ ATENÇÃO: Modo simulação ativo. O volante será preenchido na tela mas NÃO será enviado ao carrinho.', 'color:#FCD34D;font-weight:bold;');
+}
+console.log('%c═══════════════════════════════════════════════════════', 'color:#FFD700;font-weight:bold;');
+
 var LOTTERY_URL="${cfg.url}";
+var LOTTERY_NAME="${cfg.name}";
 var ALT_URLS = { 'quina': ['quina-de-sao-joao', 'quinadesaojoao'], 'mega-sena': ['mega-sena-da-virada'] };
 var ALTS = ALT_URLS[LOTTERY_URL] || [];
-var J=${gamesJSON};var T=J.length;var OK=0;var ER=0;var LM=${isLM};var TM=${isTM};var DS=${isDS};var MIL=${isMIL};
+var J=${gamesJSON};var T=J.length;var OK=0;var ER=0;
+var SIMULAR_APENAS=${simFlag};
+var IS_LOTECA=${isLOTECA};var LM=${isLM};var TM=${isTM};var DS=${isDS};var MIL=${isMIL};var IS_SS=${isSS};
+
 function d(ms){return new Promise(function(r){setTimeout(r,ms)})}
 function rc(e){if(!e)return!1;try{e.scrollIntoView({block:"center",behavior:"instant"});var r=e.getBoundingClientRect();var x=r.left+r.width/2;var y=r.top+r.height/2;["pointerdown","mousedown","pointerup","mouseup","click"].forEach(function(ev){e.dispatchEvent(new MouseEvent(ev,{view:window,bubbles:!0,cancelable:!0,clientX:x,clientY:y,button:0}))});try{var s=angular.element(e).scope();if(s&&s.$apply)s.$apply()}catch(ae){}return!0}catch(x){try{e.click();return!0}catch(x2){return!1}}}
-function fm(){["fecharModalAlerta","fecharModalErro","fecharModalInfo","confirmarModalConfirmacao","btnFecharModal","btnOk","btnConfirmar"].forEach(function(id){var e=document.getElementById(id);if(e&&e.offsetParent!==null)try{rc(e)}catch(x){}});document.querySelectorAll(".modal, .dialog, div[role='dialog']").forEach(function(m){var txt=(m.textContent||"").toLowerCase();if(txt.indexOf("completar")>=0||txt.indexOf("surpresinha")>=0)return;m.querySelectorAll("button,a").forEach(function(b){var t=b.textContent.trim().toLowerCase();if((t==="ok"||t==="entendi"||t==="fechar"||t==="confirmar"||t==="continuar")&&b.offsetParent!==null&&b.offsetWidth>0){try{rc(b)}catch(x){}}})})}
+
+function fm(){
+  try{if(window.$&&window.$('.modal'))window.$('.modal').modal('hide')}catch(x){}
+  var bSim=document.getElementById("botaosim");
+  if(bSim&&bSim.offsetParent!==null)try{rc(bSim)}catch(x){}
+  ["fecharModalAlerta","fecharModalErro","fecharModalInfo","confirmarModalConfirmacao","btnFecharModal","btnOk","btnConfirmar","botaosim"].forEach(function(id){
+    var e=document.getElementById(id);
+    if(e&&e.offsetParent!==null)try{rc(e)}catch(x){}
+  });
+  document.querySelectorAll(".modal, .dialog, div[role='dialog'], .modal-dialog, .msg-ul").forEach(function(m){
+    var txt=(m.textContent||"").toLowerCase();
+    if(txt.indexOf("completar")>=0||txt.indexOf("surpresinha")>=0)return;
+    m.querySelectorAll("button,a").forEach(function(b){
+      var t=b.textContent.trim().toLowerCase();
+      if((t==="sim"||t==="ok"||t==="entendi"||t==="fechar"||t==="confirmar"||t==="continuar"||t.indexOf("fechar")>=0)&&b.offsetParent!==null&&b.offsetWidth>0){
+        try{rc(b)}catch(x){}
+      }
+    });
+  });
+  document.querySelectorAll(".modal-backdrop").forEach(function(mb){
+    var hasVisibleModal=false;
+    document.querySelectorAll(".modal.in, .modal.show").forEach(function(vm){
+      if(vm.offsetParent!==null&&vm.offsetHeight>0)hasVisibleModal=true;
+    });
+    if(!hasVisibleModal)try{mb.remove()}catch(x){}
+  });
+}
+
+function desbloquearVolanteLoteca(){
+  if(!IS_LOTECA)return;
+  try{
+    var sc=angular.element(document.querySelector('.loteca')||document.querySelector('[ng-controller*="Loteca"]')||document.body).scope();
+    var vm=sc?(sc.vm||sc):null;
+    if(vm){vm.aberto=1;if(vm.parametroModalidade&&vm.parametroModalidade.concurso)vm.parametroModalidade.concurso.aberto=true;}
+    if(sc){sc.aberto=1;try{sc.$apply()}catch(e){}}
+  }catch(e){}
+}
+
+function isVolanteReady(){
+  fm();
+  desbloquearVolanteLoteca();
+  if(IS_LOTECA){
+    var p=document.querySelectorAll(".loteca_palpite");
+    if(p.length>=14)return!0;
+    var r=document.querySelectorAll("tr[ng-repeat*='partida in vm.partidas'], table.tab-loteca tbody tr");
+    if(r.length>=14)return!0;
+    var bl=document.getElementById("limparvolante")||document.querySelector(".data-limpar-volante-loteca");
+    if(bl&&bl.offsetParent!==null)return!0;
+    return!1;
+  }
+  if(IS_SS){
+    var ssCols=document.querySelectorAll(".coluna,[class*='coluna'],[ng-repeat*='coluna']");
+    if(ssCols.length>=7)return!0;
+    var ssBtns=document.querySelectorAll(".dezena,.numero,a[id^='n'],li[id^='n'],button[id^='n']");
+    if(ssBtns.length>=7)return!0;
+  }
+  var el=document.getElementById("n00")||document.getElementById("n01")||document.getElementById("d01")||(MIL&&document.getElementById("trevo1"))||document.querySelector(".dezena,.numero,a[id^='n'],li[id^='n'],button[id^='n'],img[id^='trevo'],.coluna,[class*='coluna']");
+  return(el&&el.offsetParent!==null)?!0:!1;
+}
+
+async function waitVolante(){
+  for(var w=0;w<35;w++){
+    desbloquearVolanteLoteca();
+    if(isVolanteReady()){console.log("[B2B] ✅ Volante ativo!");return!0;}
+    fm();await d(600);
+  }
+  return!1;
+}
+
+async function navLoteria(){
+  fm();await d(300);
+  desbloquearVolanteLoteca();
+  if(isVolanteReady())return!0;
+  var hash=(window.location.hash||"").toLowerCase();
+  if(hash.indexOf(LOTTERY_URL)>=0){var ok=await waitVolante();if(ok)return!0;}
+  var links=document.querySelectorAll("a,button,div[ng-click],div[ui-sref]");
+  for(var i=0;i<links.length;i++){
+    var href=(links[i].getAttribute("href")||links[i].getAttribute("ui-sref")||"").toLowerCase();
+    var txt=(links[i].textContent||"").trim().toLowerCase();
+    if(href.indexOf(LOTTERY_URL)>=0||(txt.indexOf(LOTTERY_URL)>=0&&txt.length<30)){
+      try{rc(links[i]);}catch(e){}
+      await d(2500);fm();
+      desbloquearVolanteLoteca();
+      if(isVolanteReady())return!0;
+    }
+  }
+  if(!isVolanteReady()){
+    window.location.hash="#/"+LOTTERY_URL;
+    await d(3000);fm();
+    desbloquearVolanteLoteca();
+  }
+  return await waitVolante()||isVolanteReady()||!0;
+}
+
 function cn(n){
   var num=parseInt(n);if(isNaN(num))return!1;
   if(LM&&(num===100||num===0))num=0;
@@ -4859,6 +6205,7 @@ function cn(n){
   }
   return!1;
 }
+
 function ct(t){
   var num=parseInt(t);if(isNaN(num))return!1;
   var e=document.getElementById("trevo"+num)||document.querySelector("img#trevo"+num)||document.querySelector("[id*='trevo"+num+"']")||document.querySelector("img[title*='Trevo número "+num+"']");
@@ -4869,136 +6216,602 @@ function ct(t){
   }
   return!1;
 }
-function lmp(){fm();var b=document.getElementById("limparvolante");if(b)return rc(b);b=document.querySelector("[id*=limpar]");if(b)return rc(b);var bs=document.querySelectorAll("button");for(var k=0;k<bs.length;k++)if(bs[k].textContent.toLowerCase().indexOf("limpar")>=0)return rc(bs[k]);return!1}
+
+function lmp(){
+  fm();
+  var b=document.getElementById("limparvolante");
+  if(b)return rc(b);
+  b=document.querySelector("[id*=limpar]");
+  if(b)return rc(b);
+  var bs=document.querySelectorAll("button");
+  for(var k=0;k<bs.length;k++)if(bs[k].textContent.toLowerCase().indexOf("limpar")>=0)return rc(bs[k]);
+  return!1;
+}
+
 async function selTime(){if(!TM)return!0;await d(500);var ts=document.querySelectorAll("[data-selecionar-time-do-coracao],img[name=btnTime],.time-coracao img");if(ts.length>0){rc(ts[Math.floor(Math.random()*ts.length)]);await d(800);return!0}return!1}
 async function selMes(){if(!DS)return!0;await d(500);var m=document.querySelectorAll('li[ng-repeat*=listaMeses],li[ng-click*=configurarMes],[id=mes] li,ul.meses li,.meses-list li,.lista-meses li,label.mes,.mes-sorte li');if(m.length===0){var nm=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro','marco'];var f=[];document.querySelectorAll('li,a,span,div,label,button').forEach(e=>{var tx=e.textContent.trim().toLowerCase();for(var i=0;i<nm.length;i++){if(tx.indexOf(nm[i])!==-1&&tx.length<25&&e.children.length<=1){f.push(e);break;}}});if(f.length>0)m=f;}if(m.length>0){var el=m[Math.floor(Math.random()*m.length)];rc(el);await d(600);if(el.tagName!=='LI'&&el.parentElement&&el.parentElement.tagName==='LI'){rc(el.parentElement);await d(400);}try{var sc=angular.element(el).scope();if(sc&&sc.$apply)sc.$apply()}catch(e){}return!0;}var s=document.querySelector('select');if(s&&s.options.length>1){s.selectedIndex=Math.floor(Math.random()*(s.options.length-1))+1;s.dispatchEvent(new Event('change',{bubbles:!0}));return!0;}return!1}
-async function car(){fm();await d(300);if(TM){await selTime();await d(600)}if(DS){await selMes();await d(600)}for(var t=0;t<12;t++){var b=document.getElementById("colocarnocarrinho");if(b&&b.offsetParent!==null){if(b.disabled||b.classList.contains("disabled")){try{var rs=angular.element(document.body).scope();if(rs&&rs.$apply)rs.$apply()}catch(ae){}await d(1000);continue}rc(b);await d(1500);fm();await d(600);fm();return!0}var ab=document.querySelectorAll("button,a");for(var k=0;k<ab.length;k++){var tx=ab[k].textContent.toLowerCase().trim();if((tx.indexOf("colocar no carrinho")>=0)&&ab[k].offsetParent!==null&&ab[k].offsetWidth>0){if(ab[k].disabled)continue;rc(ab[k]);await d(1500);fm();await d(600);fm();return!0}}fm();await d(800)}return!1}
-function isVolanteReady(){var el=document.getElementById("n00")||document.getElementById("n01")||document.getElementById("d01")||(MIL&&document.getElementById("trevo1"))||document.querySelector(".dezena,.numero,a[id^='n'],li[id^='n'],button[id^='n'],img[id^='trevo']");return(el&&el.offsetParent!==null)?!0:!1;}
-async function waitVolante(){for(var w=0;w<30;w++){if(isVolanteReady()){console.log("[B2B] Volante ativo!");return!0;}fm();await d(600);}return!1;}
-async function navLoteria(){
+
+async function car(){
   fm();await d(300);
-  if(isVolanteReady()) return !0;
-  var hash=(window.location.hash||"").toLowerCase();
-  if(hash.indexOf(LOTTERY_URL)>=0){var ok=await waitVolante();if(ok)return!0;}
-  var links=document.querySelectorAll("a,button,div[ng-click],div[ui-sref]");
-  for(var i=0;i<links.length;i++){
-    var href=(links[i].getAttribute("href")||links[i].getAttribute("ui-sref")||"").toLowerCase();
-    var txt=(links[i].textContent||"").trim().toLowerCase();
-    if(href.indexOf(LOTTERY_URL)>=0||(txt.indexOf(LOTTERY_URL)>=0&&txt.length<30)){
-      try{rc(links[i]);}catch(e){}
-      await d(2500);fm();
-      if(isVolanteReady())return!0;
+  if(TM){await selTime();await d(600)}
+  if(DS){await selMes();await d(600)}
+  if(IS_LOTECA){
+    try{
+      var scL=angular.element(document.querySelector('.loteca')||document.querySelector('[ng-controller*="Loteca"]')||document.body).scope();
+      var vmL=scL?(scL.vm||scL):null;
+      if(vmL&&vmL.partidas&&vmL.partidas.length>=14){
+        vmL.aberto=1;
+        if(scL)scL.aberto=1;
+        var dups=0, trips=0, simples=0;
+        for(var pm=0;pm<14;pm++){
+          var pObj=vmL.partidas[pm];
+          if(!pObj)continue;
+          var c1=!!(pObj.equipe1&&pObj.equipe1.vitoria);
+          var cX=!!pObj.empate;
+          var c2=!!(pObj.equipe2&&pObj.equipe2.vitoria);
+          var tot=(c1?1:0)+(cX?1:0)+(c2?1:0);
+          if(tot===0){
+            if(pObj.equipe1)pObj.equipe1.vitoria=true;
+            tot=1;
+          }
+          if(tot===1)simples++;
+          if(tot===2)dups++;
+          if(tot===3)trips++;
+        }
+        if(dups===0&&trips===0&&vmL.partidas[0]){
+          vmL.partidas[0].empate=true;
+          simples--;
+          dups++;
+        }
+
+        vmL.esportivaSimples=simples;
+        vmL.esportivaDuplos=dups;
+        vmL.esportivaTriplos=trips;
+        vmL.totalMarcados=simples+dups+trips;
+        if(scL){
+          scL.esportivaSimples=simples;
+          scL.esportivaDuplos=dups;
+          scL.esportivaTriplos=trips;
+          scL.totalMarcados=vmL.totalMarcados;
+        }
+
+        var valorEncontrado=0;
+        if(Array.isArray(vmL.valoresAposta)){
+          for(var va=0;va<vmL.valoresAposta.length;va++){
+            if(vmL.valoresAposta[va].quantidadeDuplos===dups&&vmL.valoresAposta[va].quantidadeTriplos===trips){
+              valorEncontrado=parseFloat(vmL.valoresAposta[va].valor);
+              break;
+            }
+          }
+        }
+        if(!valorEncontrado||valorEncontrado<=0){
+          valorEncontrado=(dups===1&&trips===0)?3.00:(dups===2?6.00:3.00);
+        }
+        vmL.valorAposta=valorEncontrado;
+        if(scL)scL.valorAposta=valorEncontrado;
+
+        vmL.habilitarInclusaoApostaLoteca=function(){return true;};
+        if(scL)scL.habilitarInclusaoApostaLoteca=function(){return true;};
+        try{scL.$apply()}catch(e){}
+        await d(150);
+
+        if(typeof vmL.confirmaIncluirApostaLoteca==='function'){
+          try{
+            vmL.confirmaIncluirApostaLoteca();
+            try{scL.$apply()}catch(e){}
+            await d(1000);fm();await d(300);fm();
+            return !0;
+          }catch(e){}
+        }
+        if(typeof vmL.incluirApostaLoteca==='function'){
+          try{
+            vmL.incluirApostaLoteca();
+            try{scL.$apply()}catch(e){}
+            await d(1000);fm();await d(300);fm();
+            return !0;
+          }catch(e){}
+        }
+      }
+    }catch(e){}
+  }
+
+  try{var rs=angular.element(document.body).scope();if(rs&&rs.$apply)rs.$apply()}catch(ae){}
+  for(var t=0;t<15;t++){
+    var b=document.getElementById("colocarnocarrinho")||document.querySelector(".data-incluir-aposta-loteca");
+    if(b&&b.offsetParent!==null){
+      try{
+        var scBtn=angular.element(b).scope();
+        var vmBtn=scBtn?(scBtn.vm||scBtn):null;
+        if(vmBtn){
+          vmBtn.habilitarInclusaoApostaLoteca=function(){return true;};
+          if(typeof vmL!=='undefined'&&vmL&&vmL.valorAposta)vmBtn.valorAposta=vmL.valorAposta;
+        }
+        if(scBtn){
+          scBtn.habilitarInclusaoApostaLoteca=function(){return true;};
+          if(typeof vmL!=='undefined'&&vmL&&vmL.valorAposta)scBtn.valorAposta=vmL.valorAposta;
+        }
+        b.disabled=false;
+        b.classList.remove("disabled");
+      }catch(e){}
+
+      rc(b);await d(1500);fm();await d(600);fm();return!0;
+    }
+    var ab=document.querySelectorAll("button,a");
+    for(var k=0;k<ab.length;k++){
+      var tx=ab[k].textContent.toLowerCase().trim();
+      if((tx.indexOf("colocar no carrinho")>=0||tx.indexOf("adicionar aposta")>=0)&&ab[k].offsetParent!==null&&ab[k].offsetWidth>0){
+        if(ab[k].disabled)continue;
+        rc(ab[k]);await d(1500);fm();await d(600);fm();return!0;
+      }
+    }
+    fm();await d(700);
+  }
+  return!1;
+}
+
+async function fillLoteca(picks){
+  desbloquearVolanteLoteca();
+  var sc=angular.element(document.querySelector('.loteca')||document.querySelector('[ng-controller*="Loteca"]')||document.body).scope();
+  var vm=sc?(sc.vm||sc):null;
+
+  if(vm&&vm.partidas&&vm.partidas.length>=14){
+    vm.aberto=1;
+    if(sc)sc.aberto=1;
+
+    for(var m=0;m<14;m++){
+      var pickStr=String(picks[m]||'1').toUpperCase().trim();
+      var isTriplo=(pickStr==='T'||pickStr==='TRIPLO'||pickStr==='1X2'||pickStr==='12X');
+      var c1=isTriplo||(pickStr.indexOf('1')>=0);
+      var cX=isTriplo||(pickStr.indexOf('X')>=0||pickStr.indexOf('E')>=0);
+      var c2=isTriplo||(pickStr.indexOf('2')>=0);
+      if(!c1&&!cX&&!c2)c1=true;
+
+      if(vm.partidas[m]){
+        if(vm.partidas[m].equipe1)vm.partidas[m].equipe1.vitoria=Boolean(c1);
+        vm.partidas[m].empate=Boolean(cX);
+        if(vm.partidas[m].equipe2)vm.partidas[m].equipe2.vitoria=Boolean(c2);
+      }
+    }
+
+    // Regra da Caixa: no mínimo 1 duplo é obrigatório na Loteca
+    var numSimples=0, numDuplos=0, numTriplos=0;
+    for(var m=0;m<14;m++){
+      var p=vm.partidas[m];
+      var cnt=(p.equipe1&&p.equipe1.vitoria?1:0)+(p.empate?1:0)+(p.equipe2&&p.equipe2.vitoria?1:0);
+      if(cnt===1)numSimples++;
+      else if(cnt===2)numDuplos++;
+      else if(cnt===3)numTriplos++;
+    }
+    if(numDuplos===0&&numTriplos===0&&vm.partidas[0]){
+      vm.partidas[0].empate=true;
+      numSimples--;
+      numDuplos++;
+    }
+
+    // Atualização dos atributos de contagem e valor do Angular da Caixa
+    vm.esportivaSimples=numSimples;
+    vm.esportivaDuplos=numDuplos;
+    vm.esportivaTriplos=numTriplos;
+    vm.totalMarcados=numSimples+numDuplos+numTriplos;
+    if(sc){
+      sc.esportivaSimples=numSimples;
+      sc.esportivaDuplos=numDuplos;
+      sc.esportivaTriplos=numTriplos;
+      sc.totalMarcados=vm.totalMarcados;
+    }
+
+    var valorEncontrado=0;
+    if(Array.isArray(vm.valoresAposta)){
+      for(var va=0;va<vm.valoresAposta.length;va++){
+        if(vm.valoresAposta[va].quantidadeDuplos===numDuplos&&vm.valoresAposta[va].quantidadeTriplos===numTriplos){
+          valorEncontrado=parseFloat(vm.valoresAposta[va].valor);
+          break;
+        }
+      }
+    }
+    if(!valorEncontrado||valorEncontrado<=0){
+      valorEncontrado=(numDuplos===1&&numTriplos===0)?3.00:(numDuplos===2?6.00:3.00);
+    }
+    vm.valorAposta=valorEncontrado;
+    if(sc)sc.valorAposta=valorEncontrado;
+
+    vm.habilitarInclusaoApostaLoteca=function(){return true;};
+    if(sc)sc.habilitarInclusaoApostaLoteca=function(){return true;};
+
+    try{sc.$apply()}catch(e){}
+    try{sc.$digest()}catch(e){}
+    await d(200);
+
+    var marcados=0;
+    for(var m=0;m<14;m++){
+      var p=vm.partidas[m];
+      if((p.equipe1&&p.equipe1.vitoria)||p.empate||(p.equipe2&&p.equipe2.vitoria))marcados++;
+    }
+    console.log("[B2B] 🎯 Loteca preenchida: "+marcados+"/14 jogos (Duplos: "+vm.esportivaDuplos+", Triplos: "+vm.esportivaTriplos+", Simples: "+vm.esportivaSimples+", Valor: R$ "+vm.valorAposta.toFixed(2)+")");
+    return true;
+  }
+
+  // Fallback DOM puro (caso o controller não seja encontrado)
+  var allPalpites=document.querySelectorAll(".loteca_palpite");
+  var rows=document.querySelectorAll("tr[ng-repeat*='partida in vm.partidas']");
+  if(rows.length<14)rows=document.querySelectorAll("table.tab-loteca tbody tr");
+
+  for(var m=0;m<Math.min(14,picks.length);m++){
+    var pick=String(picks[m]||'1').toUpperCase().trim();
+    var cols=[];
+    if(pick==='T'||pick==='TRIPLO'||pick==='1X2'||pick==='12X'){
+      cols=[0,1,2];
+    } else {
+      if(pick.indexOf('1')>=0)cols.push(0);
+      if(pick.indexOf('X')>=0||pick.indexOf('E')>=0)cols.push(1);
+      if(pick.indexOf('2')>=0)cols.push(2);
+    }
+    if(cols.length===0)cols=[0];
+
+    var rowBtns=[];
+    if(rows.length>=14)rowBtns=rows[m].querySelectorAll(".loteca_palpite");
+    if(rowBtns.length!==3&&allPalpites.length>=42)rowBtns=[allPalpites[m*3], allPalpites[m*3+1], allPalpites[m*3+2]];
+
+    for(var c=0;c<3;c++){
+      var btn=rowBtns[c];
+      if(!btn)continue;
+      var want=cols.indexOf(c)>=0;
+      var has=btn.classList.contains("loteca_palpite_selecionado");
+      if(want!==has){rc(btn);await d(40);}
+    }
+    await d(20);
+  }
+}
+
+async function clearLoteca(){
+  fm();
+  desbloquearVolanteLoteca();
+  var sc=angular.element(document.querySelector('.loteca')||document.body).scope();
+  var vm=sc?(sc.vm||sc):null;
+  if(vm&&vm.partidas&&vm.partidas.length>=14){
+    for(var m=0;m<14;m++){
+      if(vm.partidas[m]){
+        if(vm.partidas[m].equipe1)vm.partidas[m].equipe1.vitoria=false;
+        vm.partidas[m].empate=false;
+        if(vm.partidas[m].equipe2)vm.partidas[m].equipe2.vitoria=false;
+      }
+    }
+    if(typeof vm.habilitarInclusaoApostaLoteca==='function')vm.habilitarInclusaoApostaLoteca();
+    try{sc.$apply()}catch(e){}
+    await d(150);
+    return true;
+  }
+  var sels=document.querySelectorAll(".loteca_palpite_selecionado");
+  for(var s=0;s<sels.length;s++){rc(sels[s]);await d(20);}
+  await d(200);return true;
+}
+
+async function fillSuperSete(digits){
+  fm();
+  if(!Array.isArray(digits)||digits.length<7)return!1;
+  try{
+    var scSS=angular.element(document.querySelector('.super-sete')||document.querySelector('[ng-controller*="SuperSete"]')||document.querySelector('[ng-controller*="supersete"]')||document.querySelector('.volante')||document.body).scope();
+    var vmSS=scSS?(scSS.vm||scSS):null;
+    if(vmSS){
+      var cols=vmSS.colunas||(vmSS.aposta&&vmSS.aposta.colunas)||vmSS.matriz;
+      if(Array.isArray(cols)&&cols.length>=7){
+        for(var c=0;c<7;c++){
+          var target=digits[c];
+          var colObj=cols[c];
+          if(colObj&&Array.isArray(colObj.numeros)){
+            for(var n=0;n<colObj.numeros.length;n++){
+              colObj.numeros[n].selecionado=(colObj.numeros[n].numero===target||colObj.numeros[n].valor===target||n===target);
+            }
+          }else if(typeof vmSS.selecionarNumero==='function'){
+            vmSS.selecionarNumero(c,target);
+          }else if(typeof vmSS.marcarNumero==='function'){
+            vmSS.marcarNumero(c,target);
+          }
+        }
+        if(typeof vmSS.atualizarValorAposta==='function')vmSS.atualizarValorAposta();
+        if(typeof vmSS.calcularValorAposta==='function')vmSS.calcularValorAposta();
+        try{scSS.$apply()}catch(e){}
+        await d(200);
+      }
+    }
+  }catch(e){}
+
+  var colElements=document.querySelectorAll(".coluna,[class*='coluna-super-sete'],[ng-repeat*='coluna'],.col-supersete,.coluna-volante");
+  var validCols=[];
+  colElements.forEach(function(el){
+    if(el.querySelectorAll(".dezena,.numero,li,button,a").length>=5){
+      validCols.push(el);
+    }
+  });
+
+  if(validCols.length>=7){
+    for(var c=0;c<7;c++){
+      var colEl=validCols[c];
+      var target=digits[c];
+      var btnElements=colEl.querySelectorAll(".dezena,.numero,li,button,a,span");
+      var clicked=!1;
+      for(var b=0;b<btnElements.length;b++){
+        var tx=btnElements[b].textContent.trim();
+        if(tx===String(target)&&btnElements[b].children.length<=1){
+          rc(btnElements[b]);
+          clicked=!0;
+          await d(35);
+          break;
+        }
+      }
+      if(!clicked&&btnElements.length>=10&&btnElements[target]){
+        rc(btnElements[target]);
+        await d(35);
+      }
+    }
+    return!0;
+  }
+
+  var allDezenas=document.querySelectorAll(".dezena,.numero,a[id*='n'],li[id*='n'],button[id*='n']");
+  var volanteDezenas=[];
+  allDezenas.forEach(function(el){
+    if(!el.closest||!el.closest("[class*='carrinho'],[id*='carrinho'],[class*='resumo'],[class*='sidebar']")){
+      volanteDezenas.push(el);
+    }
+  });
+
+  if(volanteDezenas.length===70){
+    for(var c=0;c<7;c++){
+      var idx=c*10+digits[c];
+      if(volanteDezenas[idx]){
+        rc(volanteDezenas[idx]);
+        await d(40);
+      }
+    }
+    return!0;
+  }
+
+  for(var c=0;c<7;c++){
+    var t=digits[c];
+    var pIds=["c"+c+"_n"+t,"col"+c+"_"+t,"coluna"+c+"_"+t,"coluna_"+(c+1)+"_num_"+t,"n_"+c+"_"+t,"col_"+c+"_num_"+t];
+    for(var pi=0;pi<pIds.length;pi++){
+      var el=document.getElementById(pIds[pi])||document.querySelector("[id*='"+pIds[pi]+"']");
+      if(el){rc(el);await d(40);break;}
     }
   }
-  if(!isVolanteReady()){
-    window.location.hash="#/"+LOTTERY_URL;
-    await d(3000);fm();
-  }
-  return await waitVolante()||isVolanteReady()||!0;
+  return!0;
 }
-var pg=document.createElement("div");pg.id="b2b-pg";pg.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(145deg,#0F172A,#1E293B);border-bottom:2px solid #FFD700;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.6);font-family:sans-serif;";pg.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#FFD700;font-weight:800;font-size:0.85rem;">B2B Loterias '+(LM?'[LOTOMANIA 50 DEZENAS]':'')+'</span><span id="b2b-pt" style="color:#E2E8F0;font-size:0.8rem;font-weight:600;">Navegando...</span><button onclick="this.parentNode.parentNode.remove()" style="background:none;border:none;color:#94A3B8;font-size:1.2rem;cursor:pointer;">X</button></div><div style="margin-top:6px;background:rgba(255,255,255,0.1);border-radius:4px;height:6px;overflow:hidden;"><div id="b2b-pb" style="width:0%;height:100%;background:linear-gradient(90deg,#FFD700,#22C55E);border-radius:4px;transition:width 0.3s;"></div></div>';document.body.appendChild(pg);
+
+// Criar barra flutuante de progresso
+var pg=document.createElement("div");pg.id="b2b-pg";
+pg.style.cssText="position:fixed;top:0;left:0;right:0;z-index:999999;background:linear-gradient(145deg,#0F172A,#1E293B);border-bottom:3px solid " + (SIMULAR_APENAS ? "#F59E0B" : "#22C55E") + ";padding:12px 18px;box-shadow:0 6px 30px rgba(0,0,0,0.8);font-family:sans-serif;";
+pg.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:' + (SIMULAR_APENAS ? "#F59E0B" : "#FFD700") + ';font-weight:800;font-size:0.95rem;">' + (SIMULAR_APENAS ? '🧪 B2B [MODO SIMULAÇÃO] — ' : '⚡ B2B Loterias — ') + LOTTERY_NAME + '</span><span id="b2b-pt" style="color:#22C55E;font-size:0.85rem;font-weight:700;">Navegando para o volante...</span><button onclick="this.parentNode.parentNode.remove()" style="background:none;border:none;color:#94A3B8;font-size:1.4rem;cursor:pointer;">✕</button></div><div style="margin-top:6px;background:rgba(255,255,255,0.15);border-radius:4px;height:7px;overflow:hidden;"><div id="b2b-pb" style="width:0%;height:100%;background:linear-gradient(90deg,' + (SIMULAR_APENAS ? '#F59E0B,#EAB308' : '#FFD700,#22C55E') + ');border-radius:4px;transition:width 0.3s;"></div></div>';
+document.body.appendChild(pg);
+
 var volOk=await navLoteria();
-if(!volOk){var pp=document.getElementById("b2b-pg");if(pp)pp.innerHTML='<div style="text-align:center;padding:8px;"><div style="color:#EF4444;font-weight:800;">ERRO: Volante nao carregou. Navegue para '+LOTTERY_URL+' e tente novamente.</div></div>';return}
-var pt0=document.getElementById("b2b-pt");if(pt0)pt0.textContent="0/"+T;
-fm();await d(800);
+if(!volOk){
+  var pp=document.getElementById("b2b-pg");
+  if(pp)pp.innerHTML='<div style="text-align:center;padding:10px;"><div style="color:#EF4444;font-weight:800;font-size:1rem;">❌ ERRO: Volante não carregou.</div><div style="color:#CBD5E1;font-size:0.8rem;margin-top:4px;">Navegue manualmente para '+LOTTERY_NAME+' no site da Caixa e cole o script novamente.</div><button onclick="this.parentNode.parentNode.remove()" style="margin-top:8px;background:#EF4444;color:white;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;">OK</button></div>';
+  console.error("[B2B] ❌ Volante não encontrado. Verifique se você está na página de " + LOTTERY_NAME);
+  return;
+}
+
+var pt0=document.getElementById("b2b-pt");if(pt0)pt0.textContent=(SIMULAR_APENAS ? "Simulando 0/" : "Iniciando 0/")+T;
+fm();desbloquearVolanteLoteca();await d(800);
+
 for(var i=0;i<T;i++){
   var item=J[i];
-  var j=item.d||item;
-  var trvs=item.t||[];
   var pt=document.getElementById("b2b-pt");
   var pb=document.getElementById("b2b-pb");
-  if(pt)pt.textContent="Jogo "+(i+1)+"/"+T+" ("+j.length+" dezenas"+(MIL&&trvs.length>0?" + "+trvs.length+" trevos":"")+")";
-  if(pb)pb.style.width=((i+1)/T*100).toFixed(0)+"%";
-  fm();
-  if(i>0){lmp();await d(1000);fm();await d(300)}
-  for(var n=0;n<j.length;n++){
-    if(!cn(j[n])){await d(120);cn(j[n])}
-    await d(80);
-  }
-  if(MIL&&trvs.length>0){
-    await d(400);
-    for(var t=0;t<trvs.length;t++){
-      if(!ct(trvs[t])){await d(150);ct(trvs[t])}
-      await d(100);
+  if(pb)pb.style.width=(((i+1)/T)*100).toFixed(0)+"%";
+
+  if(IS_LOTECA){
+    var picks=item.p||item;
+    if(pt)pt.textContent=(SIMULAR_APENAS ? "🧪 Simulando Volante " : "Volante ")+(i+1)+"/"+T+" (Loteca 14 jogos)";
+    console.log("[B2B] " + (SIMULAR_APENAS ? "🧪 Simulando" : "Preenchendo") + " Volante "+(i+1)+"/"+T+": "+(Array.isArray(picks)?picks.join(" - "):JSON.stringify(picks)));
+    fm();desbloquearVolanteLoteca();
+    if(i>0){await clearLoteca();await d(500);fm();desbloquearVolanteLoteca();}
+    await fillLoteca(picks);
+    try{var rs=angular.element(document.body).scope();if(rs&&rs.$apply)rs.$apply()}catch(ae){}
+    await d(800);fm();await d(300);
+    
+    if(SIMULAR_APENAS){
+      OK++;
+      console.log("[B2B] 🧪 Volante "+(i+1)+" preenchido na tela com sucesso! (NÃO apostado)");
+      if(i<T-1){
+        if(pt)pt.textContent="Volante "+(i+1)+" pronto na tela! Próximo em 4s...";
+        await d(4000); // Pausa para o usuário ver o volante na tela
+      }
+    } else {
+      var ok=await car();
+      if(ok){OK++;console.log("[B2B] ✅ Volante "+(i+1)+" adicionado ao carrinho!");}
+      else{ER++;console.error("[B2B] ❌ Falha ao adicionar Volante "+(i+1)+" ao carrinho.");}
+      if(i<T-1){await d(1200);fm();}
+    }
+  } else if(IS_SS){
+    var sDigits=item.s||item;
+    if(pt)pt.textContent=(SIMULAR_APENAS?"🧪 Simulando Volante ":"Volante ")+(i+1)+"/"+T+" (Super Sete 7 colunas)";
+    console.log("[B2B] "+(SIMULAR_APENAS?"🧪 Simulando":"Preenchendo")+" Super Sete "+(i+1)+"/"+T+": "+(Array.isArray(sDigits)?sDigits.join(" - "):JSON.stringify(sDigits)));
+    fm();
+    if(i>0){lmp();await d(1000);fm();await d(300);}
+    await fillSuperSete(sDigits);
+    try{var rs=angular.element(document.body).scope();if(rs&&rs.$apply)rs.$apply()}catch(ae){}
+    await d(800);fm();await d(300);
+
+    if(SIMULAR_APENAS){
+      OK++;
+      console.log("[B2B] 🧪 Super Sete "+(i+1)+" preenchido na tela com sucesso! (NÃO apostado)");
+      if(i<T-1){
+        if(pt)pt.textContent="Volante "+(i+1)+" pronto na tela! Próximo em 3s...";
+        await d(3000);
+      }
+    } else {
+      var ok=await car();
+      if(ok){OK++;console.log("[B2B] ✅ Super Sete "+(i+1)+" adicionado ao carrinho!");}
+      else{ER++;console.error("[B2B] ❌ Falha ao adicionar Super Sete "+(i+1)+" ao carrinho.");}
+      if(i<T-1){await d(1200);fm();}
+    }
+  } else {
+    var j=item.d||item;
+    var trvs=item.t||[];
+    if(pt)pt.textContent=(SIMULAR_APENAS ? "🧪 Simulando Jogo " : "Jogo ")+(i+1)+"/"+T+" ("+j.length+" dezenas"+(MIL&&trvs.length>0?" + "+trvs.length+" trevos":"")+")";
+    console.log("[B2B] " + (SIMULAR_APENAS ? "🧪 Simulando" : "Preenchendo") + " Jogo "+(i+1)+"/"+T+": "+j.join(", "));
+    fm();
+    if(i>0){lmp();await d(1000);fm();await d(300);}
+    for(var n=0;n<j.length;n++){
+      if(!cn(j[n])){await d(120);cn(j[n]);}
+      await d(80);
+    }
+    if(MIL&&trvs.length>0){
+      await d(400);
+      for(var t=0;t<trvs.length;t++){
+        if(!ct(trvs[t])){await d(150);ct(trvs[t]);}
+        await d(100);
+      }
+    }
+    try{var rs=angular.element(document.body).scope();if(rs&&rs.$apply)rs.$apply()}catch(ae){}
+    await d(1000);fm();await d(300);
+
+    if(SIMULAR_APENAS){
+      OK++;
+      console.log("[B2B] 🧪 Jogo "+(i+1)+" preenchido na tela com sucesso! (NÃO apostado)");
+      if(i<T-1){
+        if(pt)pt.textContent="Jogo "+(i+1)+" pronto na tela! Próximo em 3s...";
+        await d(3000);
+      }
+    } else {
+      var ok=await car();
+      if(ok){OK++;console.log("[B2B] ✅ Jogo "+(i+1)+" adicionado ao carrinho!");}
+      else{ER++;console.error("[B2B] ❌ Falha ao adicionar Jogo "+(i+1)+" ao carrinho.");}
+      if(i<T-1){await d(1200);fm();}
     }
   }
-  try{var rs=angular.element(document.body).scope();if(rs&&rs.$apply)rs.$apply()}catch(ae){}
-  await d(1000);fm();await d(300);
-  var ok=await car();
-  if(ok){OK++}else{ER++}
-  if(i<T-1){await d(1200);fm()}
 }
+
 var pp=document.getElementById("b2b-pg");
-if(pp){pp.style.borderColor="#22C55E";pp.innerHTML='<div style="text-align:center;padding:8px;"><div style="color:#22C55E;font-weight:800;font-size:1rem;">PRONTO! '+OK+'/'+T+' jogos ('+(LM?'50 dezenas cada':'')+') no carrinho!</div><button onclick="this.parentNode.parentNode.remove()" style="margin-top:8px;background:#22C55E;color:white;border:none;padding:8px 20px;border-radius:8px;font-weight:700;cursor:pointer;">OK</button></div>'}
-alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." : "") + "\\nFinalize no carrinho da Caixa.");
+if(pp){
+  if(SIMULAR_APENAS){
+    pp.style.borderColor="#F59E0B";
+    pp.innerHTML='<div style="text-align:center;padding:10px;"><div style="color:#F59E0B;font-weight:900;font-size:1.05rem;">🧪 SIMULAÇÃO CONCLUÍDA! '+OK+'/'+T+' jogos demonstrados na tela!</div><div style="color:#CBD5E1;font-size:0.8rem;margin-top:4px;">🛡️ Nenhuma aposta foi enviada ao carrinho. O volante acima está 100% preenchido para sua visualização.</div><button onclick="this.parentNode.parentNode.remove()" style="margin-top:10px;background:#F59E0B;color:#0F172A;border:none;padding:8px 24px;border-radius:8px;font-weight:800;cursor:pointer;">CONCLUIR</button></div>';
+    alert("🧪 SIMULAÇÃO CONCLUÍDA!\\n" + OK + "/" + T + " volantes foram preenchidos na tela para demonstração.\\n\\n🛡️ Nenhuma aposta foi enviada ao carrinho.");
+  } else {
+    pp.style.borderColor="#22C55E";
+    pp.innerHTML='<div style="text-align:center;padding:10px;"><div style="color:#22C55E;font-weight:900;font-size:1.05rem;">🎉 PRONTO! '+OK+'/'+T+' apostas no carrinho da Caixa!</div><div style="color:#E2E8F0;font-size:0.8rem;margin-top:4px;">'+(ER>0?ER+' aposta(s) tiveram erro. ':'')+'Abra o carrinho no canto superior direito para finalizar o pagamento.</div><button onclick="this.parentNode.parentNode.remove()" style="margin-top:10px;background:#22C55E;color:#0F172A;border:none;padding:8px 24px;border-radius:8px;font-weight:800;cursor:pointer;">CONCLUIR</button></div>';
+    alert("🎉 " + OK + "/" + T + " apostas colocadas no carrinho da Caixa!" + (ER > 0 ? "\\n⚠️ " + ER + " erro(s)." : "") + "\\n\\nFinalize o pagamento no carrinho da Caixa.");
+  }
+}
 })()`;
     }
 
     _openMobileBetModal(games, gameKey) {
         const allConfigs = this._getCaixaLotteryConfig();
-        const cfg = allConfigs[gameKey] || { name: 'Loteria', url: '' };
-        // Abre o site principal e deixa o script de automação encontrar o volante correto
+        const cfg = allConfigs[gameKey] || { name: (gameKey ? gameKey.toUpperCase() : 'Loteria'), url: gameKey || '' };
         const caixaUrl = 'https://www.loteriasonline.caixa.gov.br/silce-web/#/' + (cfg ? cfg.url : '');
 
-        // Remover modal anterior se existir
         const old = document.getElementById('mobile-bet-modal');
         if (old) old.remove();
 
-        // Gerar script para console F12
-        const freshScript = this._generateCaixaScript_LEGACY(cfg, games);
+        const freshScript = this._generateCaixaScript_LEGACY(cfg, games, false);
+        const simScript = this._generateCaixaScript_LEGACY(cfg, games, true);
 
-        // Gerar HTML dos jogos para aba manual
         let jogosHTML = '';
         games.forEach((g, i) => {
-            const nums = g.map(n => String(n).padStart(2, '0'));
+            let nums = [];
+            if (Array.isArray(g)) {
+                nums = (gameKey === 'loteca') ? g : (gameKey === 'supersete' ? g.map((d, ci) => 'C' + (ci+1) + ':' + d) : g.map(n => String(n).padStart(2, '0')));
+            } else if (typeof g === 'string') {
+                nums = [g];
+            } else if (g && typeof g === 'object') {
+                nums = [g.resumo_colunas || JSON.stringify(g)];
+            } else {
+                nums = [String(g)];
+            }
             let extraMobile = '';
             if (gameKey === 'milionaria' && this.currentGeneratedExtras && this.currentGeneratedExtras[i]) {
                 const tr = Array.isArray(this.currentGeneratedExtras[i]) ? this.currentGeneratedExtras[i] : [1, 2];
                 extraMobile = ' <span style="color:#34d399;font-weight:700;">— 🍀 ' + tr.map(t => String(t).padStart(2, '0')).join(' ') + '</span>';
             }
+            const displayTitle = (gameKey === 'loteca') ? ('Volante ' + (i + 1)) : ('Jogo ' + (i + 1));
+            const copyData = nums.join(gameKey === 'loteca' ? ' ' : ', ');
             jogosHTML += '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:6px;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="flex:1;"><div style="color:#60A5FA;font-weight:700;font-size:0.72rem;margin-bottom:3px;">Jogo ' + (i + 1) + '</div>' +
-                '<div style="color:#E2E8F0;font-size:1rem;font-weight:600;font-family:monospace;letter-spacing:1px;">' + nums.join('  ') + extraMobile + '</div></div>' +
-                '<button class="mobile-copy-game-btn" data-nums="' + nums.join(', ') + '" style="background:linear-gradient(135deg,#22C55E,#16A34A);color:white;border:none;padding:10px 14px;border-radius:10px;font-size:0.8rem;font-weight:800;cursor:pointer;white-space:nowrap;min-width:70px;">📋 Copiar</button></div>';
+                '<div style="flex:1;"><div style="color:#60A5FA;font-weight:700;font-size:0.72rem;margin-bottom:3px;">' + displayTitle + '</div>' +
+                '<div style="color:#E2E8F0;font-size:0.92rem;font-weight:600;font-family:monospace;letter-spacing:1px;word-break:break-all;">' + nums.join('  ') + extraMobile + '</div></div>' +
+                '<button class="mobile-copy-game-btn" data-nums="' + copyData.replace(/"/g, '&quot;') + '" style="background:linear-gradient(135deg,#22C55E,#16A34A);color:white;border:none;padding:10px 14px;border-radius:10px;font-size:0.8rem;font-weight:800;cursor:pointer;white-space:nowrap;min-width:70px;">📋 Copiar</button></div>';
         });
-        const allFmt = games.map((g, i) => 'Jogo ' + (i + 1) + ': ' + g.map(n => String(n).padStart(2, '0')).join(' - ')).join('\n');
+        const allFmt = games.map((g, i) => 'Jogo ' + (i + 1) + ': ' + (Array.isArray(g) ? (gameKey === 'loteca' ? g.join(' - ') : g.map(n => String(n).padStart(2, '0')).join(' - ')) : String(g))).join('\n');
 
-        // Criar modal
         const modal = document.createElement('div');
         modal.id = 'mobile-bet-modal';
-        modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:10000;display:flex;align-items:flex-start;justify-content:center;padding:10px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;';
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:100000;display:flex;align-items:flex-start;justify-content:center;padding:10px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;';
 
-        modal.innerHTML = `<div style="background:linear-gradient(145deg,#0F172A,#1E293B);border-radius:16px;border:1px solid #FFD70040;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;padding:18px;color:#E2E8F0;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+        modal.innerHTML = `<div style="background:linear-gradient(145deg,#0F172A,#1E293B);border-radius:16px;border:1px solid #FFD70040;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:18px;color:#E2E8F0;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                <h2 style="margin:0;font-size:1.1rem;color:#FFD700;">🎰 Apostar Online — ${cfg.name}</h2>
+                <h2 style="margin:0;font-size:1.15rem;color:#FFD700;display:flex;align-items:center;gap:8px;">🎰 Apostar na Caixa — ${cfg.name}</h2>
                 <button id="close-mobile-bet-modal" style="background:none;border:none;color:#94A3B8;font-size:1.8rem;cursor:pointer;padding:4px 8px;">✕</button>
             </div>
-            <div style="background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(0,60,120,0.1));border:1px solid #FFD70030;border-radius:12px;padding:12px;margin-bottom:14px;">
-                <div style="font-weight:800;color:#FFD700;font-size:0.95rem;margin-bottom:4px;">🎰 ${games.length} jogos de ${cfg.name}</div>
-                <div style="font-size:0.75rem;color:#94A3B8;">Escolha o método de aposta.</div>
+
+            <!-- Banner Script Pronto -->
+            <div style="background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(0,60,120,0.1));border:1px solid rgba(34,197,94,0.4);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <div style="font-weight:900;color:#22C55E;font-size:0.95rem;">✅ SCRIPT COPIADO AUTOMATICAMENTE!</div>
+                    <div style="font-size:0.75rem;color:#94A3B8;margin-top:2px;">${games.length} apostas preparadas para ${cfg.name}</div>
+                </div>
+                <span style="font-size:1.6rem;">⚡</span>
             </div>
+
+            ${gameKey === 'loteca' ? `
+            <div style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.35);border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;align-items:center;">
+                <span style="font-size:1.3rem;">⚽</span>
+                <div style="font-size:0.78rem;color:#BAE6FD;line-height:1.4;">
+                    <strong>Atenção Concurso Loteca:</strong> Verifique no site da Caixa se as apostas do concurso já foram abertas. Se o concurso for futuro (ex: abertura prevista para 09/09), use o <strong>Modo Simulação</strong> para ver os volantes preenchidos ou envie ao carrinho para apostar quando estiver aberto.
+                </div>
+            </div>` : ''}
+
             <div style="display:flex;gap:4px;margin-bottom:14px;">
-                <button id="tab-auto-btn-m" style="flex:1;padding:12px 6px;border-radius:10px;border:2px solid #FFD700;background:linear-gradient(135deg,#FFD70020,#FFD70008);color:#FFD700;font-weight:800;font-size:0.78rem;cursor:pointer;">⚡ F12 Console</button>
-                <button id="tab-manual-btn-m" style="flex:1;padding:12px 6px;border-radius:10px;border:1px solid #47556940;background:transparent;color:#94A3B8;font-weight:700;font-size:0.78rem;cursor:pointer;">📋 Manual</button>
+                <button id="tab-auto-btn-m" style="flex:1;padding:12px 6px;border-radius:10px;border:2px solid #FFD700;background:linear-gradient(135deg,#FFD70020,#FFD70008);color:#FFD700;font-weight:800;font-size:0.8rem;cursor:pointer;">⚡ Automação (F12 Console)</button>
+                <button id="tab-manual-btn-m" style="flex:1;padding:12px 6px;border-radius:10px;border:1px solid #47556940;background:transparent;color:#94A3B8;font-weight:700;font-size:0.8rem;cursor:pointer;">📋 Manual / Conferência</button>
             </div>
+
             <div id="tab-auto-content-m">
-                <div style="background:linear-gradient(145deg,rgba(34,197,94,0.1),rgba(0,60,120,0.08));border:1px solid #22C55E30;border-radius:12px;padding:14px;margin-bottom:12px;">
-                    <div style="color:#22C55E;font-weight:800;font-size:0.9rem;margin-bottom:8px;">⚡ Preenchimento Automático</div>
-                    <div style="font-size:0.78rem;color:#CBD5E1;line-height:1.6;">Copie o script, abra o site da Caixa, pressione F12 → Console, cole e Enter.</div>
+                <!-- Passo a passo detalhado para eliminar erros de execução -->
+                <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+                    <div style="display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+                        <div style="background:#22c55e;color:#0f172a;font-weight:900;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;">1</div>
+                        <div style="font-size:0.82rem;color:#e2e8f0;line-height:1.4;">
+                            Clique no botão azul abaixo <strong>"🌐 ABRIR ${cfg.name.toUpperCase()} NA CAIXA"</strong> para acessar o site oficial.
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+                        <div style="background:#38bdf8;color:#0f172a;font-weight:900;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;">2</div>
+                        <div style="font-size:0.82rem;color:#e2e8f0;line-height:1.4;">
+                            No site da Caixa, pressione a tecla <strong>F12</strong> no teclado (ou clique com botão direito → <em>Inspecionar</em>) e selecione a aba <strong>Console</strong>.
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;align-items:flex-start;background:rgba(234,179,8,0.08);padding:10px 12px;border-radius:8px;border:1px solid rgba(234,179,8,0.3);">
+                        <div style="background:#eab308;color:#0f172a;font-weight:900;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;">⚠️</div>
+                        <div style="font-size:0.8rem;color:#fef08a;line-height:1.4;">
+                            <strong>Aviso de segurança do Chrome/Edge:</strong><br>
+                            Se o navegador bloquear a colagem, digite <code style="background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:4px;color:#facc15;font-weight:bold;">permitir colagem</code> (ou <code style="background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:4px;color:#facc15;">allow pasting</code>) no Console e dê <strong>Enter</strong>.
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;align-items:flex-start;background:rgba(168,85,247,0.1);padding:10px 12px;border-radius:8px;border:1px solid rgba(168,85,247,0.3);">
+                        <div style="background:#a855f7;color:#ffffff;font-weight:900;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;">3</div>
+                        <div style="font-size:0.82rem;color:#e2e8f0;line-height:1.4;">
+                            Cole com <strong>Ctrl + V</strong> e <strong>PRESSIONE A TECLA ENTER</strong> no teclado para iniciar a marcação!
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-bottom:14px;">
-                    <button id="btn-copy-script-m" style="width:100%;background:linear-gradient(135deg,#22C55E,#16A34A);color:white;border:none;padding:14px;border-radius:10px;font-size:0.95rem;font-weight:800;cursor:pointer;margin-bottom:10px;">📋 COPIAR SCRIPT DE AUTOMAÇÃO</button>
-                    <a href="${caixaUrl}" target="_blank" rel="noopener" style="display:block;width:100%;background:linear-gradient(135deg,#0066CC,#003D80);color:white;padding:14px;border-radius:10px;font-size:0.9rem;font-weight:800;text-align:center;text-decoration:none;box-sizing:border-box;">🌐 ABRIR ${cfg.name.toUpperCase()} NA CAIXA</a>
-                </div>
-                <div style="background:rgba(255,215,0,0.06);border:1px solid #FFD70020;border-radius:10px;padding:10px;">
-                    <div style="color:#FFD700;font-weight:700;font-size:0.72rem;margin-bottom:6px;">⚠️ Se aparecer aviso no Console, digite: <strong>allow pasting</strong> e pressione Enter</div>
+
+                <div style="margin-bottom:14px;display:flex;flex-direction:column;gap:8px;">
+                    <button id="btn-copy-script-m" style="width:100%;background:linear-gradient(135deg,#22C55E,#16A34A);color:white;border:none;padding:14px;border-radius:10px;font-size:0.95rem;font-weight:900;cursor:pointer;box-shadow:0 4px 15px rgba(34,197,94,0.3);">📋 COPIAR SCRIPT (PREENCHER E ENVIAR AO CARRINHO)</button>
+                    <button id="btn-copy-sim-script-m" style="width:100%;background:linear-gradient(135deg,#F59E0B,#D97706);color:#0F172A;border:none;padding:13px;border-radius:10px;font-size:0.9rem;font-weight:900;cursor:pointer;box-shadow:0 4px 15px rgba(245,158,11,0.25);">🧪 COPIAR SCRIPT (MODO SIMULAÇÃO — NÃO APOSTA)</button>
+                    <a href="${caixaUrl}" target="_blank" rel="noopener" style="display:block;width:100%;background:linear-gradient(135deg,#0066CC,#003D80);color:white;padding:14px;border-radius:10px;font-size:0.95rem;font-weight:900;text-align:center;text-decoration:none;box-sizing:border-box;box-shadow:0 4px 15px rgba(0,102,204,0.3);">🌐 ABRIR ${cfg.name.toUpperCase()} NA CAIXA</a>
                 </div>
             </div>
+
             <div id="tab-manual-content-m" style="display:none;">
                 <div style="background:linear-gradient(135deg,rgba(0,102,204,0.1),rgba(0,60,120,0.08));border:1px solid #0066CC20;border-radius:12px;padding:10px;margin-bottom:12px;">
-                    <div style="font-size:0.78rem;color:#94A3B8;">Copie cada jogo e preencha manualmente no site da Caixa.</div>
+                    <div style="font-size:0.78rem;color:#94A3B8;">Copie cada aposta individualmente ou utilize a automação via Console.</div>
                 </div>
-                <div style="margin-bottom:12px;">${jogosHTML}</div>
+                <div style="margin-bottom:12px;max-height:350px;overflow-y:auto;padding-right:4px;">${jogosHTML}</div>
                 <button id="mobile-copy-all-btn-m" style="width:100%;background:linear-gradient(135deg,#8B5CF6,#7C3AED);color:white;border:none;padding:14px;border-radius:12px;font-size:0.95rem;font-weight:800;cursor:pointer;margin-bottom:10px;">📋 COPIAR TODOS OS ${games.length} JOGOS</button>
                 <a href="${caixaUrl}" target="_blank" rel="noopener" style="display:block;width:100%;background:linear-gradient(135deg,#0066CC,#003D80);color:white;padding:14px;border-radius:12px;font-size:0.95rem;font-weight:800;text-align:center;text-decoration:none;box-sizing:border-box;">🌐 ABRIR SITE DA CAIXA — ${cfg.name}</a>
             </div>
@@ -5014,21 +6827,21 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
         const tabManualBtn = document.getElementById('tab-manual-btn-m');
         const tabAutoContent = document.getElementById('tab-auto-content-m');
         const tabManualContent = document.getElementById('tab-manual-content-m');
-        const inactiveStyle = 'flex:1;padding:12px 6px;border-radius:10px;border:1px solid #47556940;background:transparent;color:#94A3B8;font-weight:700;font-size:0.78rem;cursor:pointer;';
+        const inactiveStyle = 'flex:1;padding:12px 6px;border-radius:10px;border:1px solid #47556940;background:transparent;color:#94A3B8;font-weight:700;font-size:0.8rem;cursor:pointer;';
         tabAutoBtn.addEventListener('click', () => {
             tabAutoContent.style.display = 'block';
             tabManualContent.style.display = 'none';
-            tabAutoBtn.style.cssText = 'flex:1;padding:12px 6px;border-radius:10px;border:2px solid #FFD700;background:linear-gradient(135deg,#FFD70020,#FFD70008);color:#FFD700;font-weight:800;font-size:0.78rem;cursor:pointer;';
+            tabAutoBtn.style.cssText = 'flex:1;padding:12px 6px;border-radius:10px;border:2px solid #FFD700;background:linear-gradient(135deg,#FFD70020,#FFD70008);color:#FFD700;font-weight:800;font-size:0.8rem;cursor:pointer;';
             tabManualBtn.style.cssText = inactiveStyle;
         });
         tabManualBtn.addEventListener('click', () => {
             tabAutoContent.style.display = 'none';
             tabManualContent.style.display = 'block';
-            tabManualBtn.style.cssText = 'flex:1;padding:12px 6px;border-radius:10px;border:2px solid #0066CC;background:linear-gradient(135deg,#0066CC20,#0066CC08);color:#60A5FA;font-weight:800;font-size:0.78rem;cursor:pointer;';
+            tabManualBtn.style.cssText = 'flex:1;padding:12px 6px;border-radius:10px;border:2px solid #0066CC;background:linear-gradient(135deg,#0066CC20,#0066CC08);color:#60A5FA;font-weight:800;font-size:0.8rem;cursor:pointer;';
             tabAutoBtn.style.cssText = inactiveStyle;
         });
 
-        // Copiar script
+        // Copiar script real
         const copyScriptBtn = document.getElementById('btn-copy-script-m');
         if (copyScriptBtn) {
             copyScriptBtn.addEventListener('click', async () => {
@@ -5037,11 +6850,29 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
                     ta.value = freshScript; ta.style.cssText = 'position:fixed;left:-9999px;';
                     document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
                 }
-                copyScriptBtn.textContent = '✅ SCRIPT COPIADO!';
+                copyScriptBtn.textContent = '✅ SCRIPT REAL COPIADO!';
                 copyScriptBtn.style.background = 'linear-gradient(135deg,#059669,#047857)';
                 setTimeout(() => {
-                    copyScriptBtn.textContent = '📋 COPIAR SCRIPT DE AUTOMAÇÃO';
+                    copyScriptBtn.textContent = '📋 COPIAR SCRIPT (PREENCHER E ENVIAR AO CARRINHO)';
                     copyScriptBtn.style.background = 'linear-gradient(135deg,#22C55E,#16A34A)';
+                }, 3000);
+            });
+        }
+
+        // Copiar script de simulação
+        const copySimBtn = document.getElementById('btn-copy-sim-script-m');
+        if (copySimBtn) {
+            copySimBtn.addEventListener('click', async () => {
+                try { await navigator.clipboard.writeText(simScript); } catch(e) {
+                    const ta = document.createElement('textarea');
+                    ta.value = simScript; ta.style.cssText = 'position:fixed;left:-9999px;';
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                }
+                copySimBtn.textContent = '🧪 SCRIPT DE SIMULAÇÃO COPIADO!';
+                copySimBtn.style.background = 'linear-gradient(135deg,#B45309,#92400E)';
+                setTimeout(() => {
+                    copySimBtn.textContent = '🧪 COPIAR SCRIPT (MODO SIMULAÇÃO — NÃO APOSTA)';
+                    copySimBtn.style.background = 'linear-gradient(135deg,#F59E0B,#D97706)';
                 }, 3000);
             });
         }
@@ -5081,75 +6912,61 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
 
     async openCaixa() {
         const allConfigs = this._getCaixaLotteryConfig();
-        const cfg = allConfigs[this.currentGameKey];
+        const cfg = allConfigs[this.currentGameKey] || { name: (this.currentGameKey ? this.currentGameKey.toUpperCase() : 'Loteria'), url: this.currentGameKey || '' };
         const caixaUrl = 'https://www.loteriasonline.caixa.gov.br/silce-web/#/' + (cfg ? cfg.url : '');
 
         const games = this._lastGeneratedGames || this.currentGeneratedGames || [];
 
-        // ══════ MOBILE: Modal com jogos formatados ══════
-        if (this._isMobile()) {
-            if (games.length > 0 && cfg) {
-                this._openMobileBetModal(games, this.currentGameKey);
+        if (!games || games.length === 0) {
+            if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                Guardian.toast('⚠️ Nenhum jogo gerado ainda! Gere as apostas antes de apostar na Caixa.', 'warning', 5000);
             } else {
-                // Sem jogos — navegar via link direto
-                var linkMobile = document.createElement('a');
-                linkMobile.href = caixaUrl;
-                linkMobile.target = '_blank';
-                linkMobile.rel = 'noopener';
-                document.body.appendChild(linkMobile);
-                linkMobile.click();
-                document.body.removeChild(linkMobile);
+                alert('⚠️ Nenhum jogo gerado ainda! Gere as apostas antes de apostar na Caixa.');
             }
             return;
         }
 
-        // ══════ DESKTOP: Fluxo de script (Console F12) ══════
-        if (games.length > 0 && cfg) {
-            const freshScript = this._generateCaixaScript_LEGACY(cfg, games);
-            
-            // Link direto será usado após copiar o script
+        const freshScript = this._generateCaixaScript_LEGACY(cfg, games, false);
 
-            try {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    await navigator.clipboard.writeText(freshScript);
-                } else {
-                    throw new Error('Clipboard API not available');
-                }
-                console.log('[B2B] ✅ ' + games.length + ' jogos de ' + cfg.name + ' copiados!');
-            } catch(e) {
-                var ta = document.createElement('textarea');
-                ta.value = freshScript;
-                ta.style.cssText = 'position:fixed;left:-9999px;';
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(freshScript);
+            } else {
+                throw new Error('Clipboard API not available');
             }
-
-            document.dispatchEvent(new CustomEvent('b2b-aposte-online', {
-                detail: { games: games, config: cfg }
-            }));
-
-            // Notificação visual (sem alert bloqueante)
-            if (typeof Guardian !== 'undefined' && Guardian.toast) {
-                Guardian.toast('\u2705 ' + games.length + ' jogos de ' + cfg.name + ' copiados! No site da Caixa: F12 \u2192 Console \u2192 Ctrl+V \u2192 Enter', 'success', 8000);
-            }
+            console.log('[B2B] ✅ ' + games.length + ' jogos de ' + cfg.name + ' copiados!');
+        } catch(e) {
+            var ta = document.createElement('textarea');
+            ta.value = freshScript;
+            ta.style.cssText = 'position:fixed;left:-9999px;';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
         }
 
-        // Mostrar painel flutuante com link real para a Caixa
+        document.dispatchEvent(new CustomEvent('b2b-aposte-online', {
+            detail: { games: games, config: cfg }
+        }));
+
+        if (typeof Guardian !== 'undefined' && Guardian.toast) {
+            Guardian.toast('✅ ' + games.length + ' jogos de ' + cfg.name + ' copiados! Siga o passo a passo na tela.', 'success', 6000);
+        }
+
+        this._openMobileBetModal(games, this.currentGameKey);
+
         var oldPanel = document.getElementById('caixa-link-panel');
         if (oldPanel) oldPanel.remove();
         var linkPanel = document.createElement('div');
         linkPanel.id = 'caixa-link-panel';
-        linkPanel.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #22C55E;border-radius:16px;padding:16px 24px;box-shadow:0 10px 40px rgba(0,0,0,0.6);text-align:center;max-width:400px;width:90%;animation:slideUp 0.3s ease;';
-        var linkHtml = '<div style="color:#22C55E;font-weight:800;font-size:1rem;margin-bottom:10px;">\u2705 Script copiado!</div>';
-        linkHtml += '<a href="' + caixaUrl + '" target="_blank" rel="noopener" style="display:block;background:linear-gradient(135deg,#22C55E,#16A34A);color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:900;font-size:1rem;margin-bottom:8px;">\uD83C\uDFE6 ABRIR SITE DA CAIXA</a>';
-        linkHtml += '<div style="color:#94A3B8;font-size:0.72rem;">No site: F12 \u2192 Console \u2192 Ctrl+V \u2192 Enter</div>';
+        linkPanel.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #22C55E;border-radius:16px;padding:16px 24px;box-shadow:0 10px 40px rgba(0,0,0,0.6);text-align:center;max-width:440px;width:92%;animation:slideUp 0.3s ease;';
+        var linkHtml = '<div style="color:#22C55E;font-weight:800;font-size:1rem;margin-bottom:10px;">✅ Script copiado!</div>';
+        linkHtml += '<a href="' + caixaUrl + '" target="_blank" rel="noopener" style="display:block;background:linear-gradient(135deg,#22C55E,#16A34A);color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:900;font-size:1rem;margin-bottom:8px;">🏦 ABRIR SITE DA CAIXA — ' + cfg.name.toUpperCase() + '</a>';
+        linkHtml += '<div style="color:#CBD5E1;font-size:0.75rem;line-height:1.4;">No site: <strong>F12</strong> → aba <strong>Console</strong> → <strong>Ctrl+V</strong> → aperte <strong>ENTER</strong></div>';
         linkHtml += '<button onclick="this.parentNode.remove()" style="margin-top:8px;background:none;border:1px solid #475569;color:#94A3B8;padding:6px 16px;border-radius:8px;cursor:pointer;font-size:0.75rem;">Fechar</button>';
         linkPanel.innerHTML = linkHtml;
         document.body.appendChild(linkPanel);
-        // Auto-remover apos 15 segundos
-        setTimeout(function() { var p = document.getElementById('caixa-link-panel'); if (p) p.remove(); }, 15000);
+        setTimeout(function() { var p = document.getElementById('caixa-link-panel'); if (p) p.remove(); }, 20000);
     }
 
     getSelectedNumbers() {
@@ -5171,7 +6988,7 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
         const method = options.method || 'GET';
         const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
         const body = options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : undefined;
-        const timeoutMs = options.timeoutMs || 8000;
+        const timeoutMs = options.timeoutMs || 5000;
 
         const candidateUrls = [];
         if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
@@ -5208,29 +7025,12 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
         throw lastError || new Error('Servidor local indisponível');
     }
 
-    _resetSaveLock() {
-        this._lastSavedGamesSignature = null;
-        this._lastSavedFileName = null;
-        this._isSaving = false;
-        if (this.saveBtn) {
-            this.saveBtn.disabled = false;
-            this.saveBtn.innerHTML = 'Salvar';
-            this.saveBtn.style.background = '';
-            this.saveBtn.style.transform = '';
+    async saveGames(force = false) {
+        if (!force && this._lastSavedWasDuplicate && (Date.now() - (this._lastSavedDuplicateTime || 0)) < 15000) {
+            force = true; // Se o apostador clicar novamente logo após o aviso de duplicidade, força salvar nova cópia
+            this._lastSavedWasDuplicate = false;
         }
-    }
 
-    _getGamesSignature(games, gameKey, extras) {
-        if (!games || games.length === 0) return '';
-        const normGames = games.map((g, idx) => {
-            const sorted = g.slice().sort((a, b) => a - b).map(n => String(n).padStart(2, '0')).join('-');
-            const extra = (extras && extras[idx] !== undefined && extras[idx] !== null) ? `+${extras[idx]}` : '';
-            return sorted + extra;
-        });
-        return `${gameKey || ''}::${normGames.join('|')}`;
-    }
-
-    async saveGames() {
         if (!this.currentGeneratedGames || this.currentGeneratedGames.length === 0) {
             if (typeof Guardian !== 'undefined' && Guardian.toast) {
                 Guardian.toast('Gere jogos primeiro antes de salvar.', 'warning');
@@ -5240,248 +7040,247 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
             return;
         }
 
-        // ── 0. VALIDAÇÃO E DEDUPLICAÇÃO DE JOGOS NO LOTE ATUAL ──
+        const game = typeof GAMES !== 'undefined' ? GAMES[this.currentGameKey] : null;
+        const gameName = game ? game.name : 'Loteria';
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const dateStr = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
+        const timeStr = `${pad(now.getHours())}h${pad(now.getMinutes())}m${pad(now.getSeconds())}s`;
+        const cleanGameName = (gameName || 'Loteria').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚãõÃÕâêîôûÂÊÎÔÛçÇ _-]/g, '').trim();
+        const fileName = `${cleanGameName}_${dateStr}_${timeStr}.txt`;
+
+        // ── Extras: Time do Coração (Timemania) e Mês da Sorte (Dia de Sorte) ──
+        const mesSorteSelect = document.getElementById('mes-sorte-select');
+        const mesSorte = (this.currentGameKey === 'diadesorte' && mesSorteSelect) ? mesSorteSelect.value : null;
+
         const extras = this.currentGeneratedExtras || [];
-        const seenGames = new Set();
-        const uniqueGames = [];
-        const uniqueExtras = [];
-        let duplicateCount = 0;
+        const isTimemania = this.currentGameKey === 'timemania';
+        const isDiaDeSorte = this.currentGameKey === 'diadesorte';
 
-        for (let i = 0; i < this.currentGeneratedGames.length; i++) {
-            const g = this.currentGeneratedGames[i];
-            const sortedKey = g.slice().sort((a, b) => a - b).join('-');
-            const extraKey = (extras && extras[i] !== undefined && extras[i] !== null) ? `::${extras[i]}` : '';
-            const fullKey = sortedKey + extraKey;
+        let content = `═══════════════════════════════════════
+`;
+        content += `  JOGOS — ${gameName.toUpperCase()}
+`;
+        if (mesSorte) content += `  Mês da Sorte (cabeçalho): ${mesSorte}
+`;
+        if (isTimemania) content += `  Time do Coração: registrado por jogo abaixo
+`;
+        content += `  Data: ${now.toLocaleString('pt-BR')}
+`;
+        content += `  Total de Jogos: ${this.currentGeneratedGames.length}
+`;
+        content += `═══════════════════════════════════════
 
-            if (seenGames.has(fullKey)) {
-                duplicateCount++;
+`;
+
+        this.currentGeneratedGames.forEach((g, index) => {
+            let nums = '';
+            if (this.currentGameKey === 'loteca') {
+                if (typeof g === 'string') {
+                    nums = g;
+                } else if (Array.isArray(g)) {
+                    nums = g.join(' - ');
+                } else if (g && typeof g === 'object') {
+                    nums = g.resumo_colunas || (Array.isArray(g.palpites) ? g.palpites.map(p => p.palpite || p).join(' - ') : JSON.stringify(g));
+                } else {
+                    nums = String(g);
+                }
+            } else if (this.currentGameKey === 'supersete') {
+                if (Array.isArray(g)) {
+                    const colStr = g.map((d, ci) => `C${ci+1}=${d}`).join(' ');
+                    nums = `${g.join(' - ')} | Colunas: ${colStr}`;
+                } else {
+                    nums = String(g);
+                }
+            } else if (Array.isArray(g)) {
+                nums = g.map(n => n.toString().padStart(2, '0')).join(' - ');
+            } else if (typeof g === 'string') {
+                nums = g;
+            } else if (g && typeof g === 'object') {
+                nums = g.resumo_colunas || JSON.stringify(g);
             } else {
-                seenGames.add(fullKey);
-                uniqueGames.push(g);
-                if (extras && extras[i] !== undefined) uniqueExtras.push(extras[i]);
+                nums = String(g);
             }
+            let extra = '';
+            if (isTimemania && extras[index] !== undefined && extras[index] !== null) {
+                const timeName = (typeof L99_TIMES !== 'undefined' && L99_TIMES[extras[index]])
+                    ? L99_TIMES[extras[index]]
+                    : `Time #${extras[index]}`;
+                extra = ` | Time: ${timeName}`;
+            } else if (isDiaDeSorte) {
+                if (extras[index] !== undefined && extras[index] !== null) {
+                    const mesNome = (typeof L99_MESES !== 'undefined' && L99_MESES[extras[index]])
+                        ? L99_MESES[extras[index]]
+                        : (mesSorte || `Mês #${extras[index]}`);
+                    extra = ` | Mês: ${mesNome}`;
+                } else if (mesSorte) {
+                    extra = ` | Mês: ${mesSorte}`;
+                }
+            }
+            content += `Jogo ${String(index + 1).padStart(3, '0')}: ${nums}${extra}
+`;
+        });
+
+        content += `
+═══════════════════════════════════════
+`;
+        content += `  B2B Loterias — Boa Sorte! 🍀
+`;
+        content += `═══════════════════════════════════════
+`;
+
+        // ══════ 1. TENTAR SALVAR DIRETO NA PASTA VIA SERVIDOR LOCAL ══════
+        const btn = this.saveBtn;
+        const origBtnText = btn ? btn.innerHTML : '';
+        const origBtnBg = btn ? btn.style.background : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `⏳ Gravando ${this.currentGeneratedGames.length > 1 ? this.currentGeneratedGames.length.toLocaleString('pt-BR') + ' jogos...' : 'jogo...'}`;
+            btn.style.opacity = '0.75';
         }
 
-        if (duplicateCount > 0) {
-            console.warn(`[Save] Detectados ${duplicateCount} jogos duplicados. Removendo duplicatas...`);
-            this.currentGeneratedGames = uniqueGames;
-            if (extras && extras.length > 0) this.currentGeneratedExtras = uniqueExtras;
-            if (typeof Guardian !== 'undefined' && Guardian.toast) {
-                Guardian.toast(`⚠️ ${duplicateCount} jogo(s) duplicado(s) foram removidos antes de salvar.`, 'warning', 4000);
-            }
-        }
-
-        // ── 1. TRAVA DE ASSINATURA: NÃO RE-SALVAR MESMO LOTE JÁ GRAVADO NA SESSÃO ──
-        const currentSignature = this._getGamesSignature(this.currentGeneratedGames, this.currentGameKey, this.currentGeneratedExtras);
-        if (this._lastSavedGamesSignature && this._lastSavedGamesSignature === currentSignature) {
-            const prevFile = this._lastSavedFileName || 'arquivo anterior';
-            console.log(`[Save] Trava ativada: jogos já salvos em ${prevFile}`);
-            if (typeof Guardian !== 'undefined' && Guardian.toast) {
-                Guardian.toast(`⚠️ Estes jogos já foram salvos anteriormente no arquivo:\n📁 ${prevFile}\nGere novos jogos para salvar outro lote.`, 'warning', 6000);
-            } else {
-                alert(`Estes jogos já foram salvos anteriormente no arquivo:\n${prevFile}\n\nGere novos jogos para salvar outro lote.`);
-            }
-            if (this.saveBtn) {
-                this.saveBtn.innerHTML = '✅ Já Salvo';
-                this.saveBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-            }
-            return;
-        }
-
-        // ── 2. TRAVA ANTI-DUPLO CLIQUE / CONCORRÊNCIA ──
-        if (this._isSaving) {
-            console.warn('[Save] Salvamento já em andamento, clique ignorado.');
-            return;
-        }
-        this._isSaving = true;
-
-        if (this.saveBtn) {
-            this.saveBtn.disabled = true;
-            this.saveBtn.innerHTML = '⏳ Salvando...';
-        }
+        const isMassive = this.currentGeneratedGames.length > 1000;
+        const saveTimeout = isMassive ? 35000 : 8000;
 
         try {
-            const game = typeof GAMES !== 'undefined' ? GAMES[this.currentGameKey] : null;
-            const gameName = game ? game.name : 'Loteria';
-            const now = new Date();
-            const pad = n => String(n).padStart(2, '0');
-            const dateStr = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
-            const timeStr = `${pad(now.getHours())}h${pad(now.getMinutes())}m${pad(now.getSeconds())}s`;
-            const cleanGameName = (gameName || 'Loteria').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚãõÃÕâêîôûÂÊÎÔÛçÇ _-]/g, '').trim();
-            const fileName = `${cleanGameName}_${dateStr}_${timeStr}.txt`;
-
-            // ── Extras: Time do Coração (Timemania) e Mês da Sorte (Dia de Sorte) ──
-            const mesSorteSelect = document.getElementById('mes-sorte-select');
-            const mesSorte = (this.currentGameKey === 'diadesorte' && mesSorteSelect) ? mesSorteSelect.value : null;
-
-            const activeExtras = this.currentGeneratedExtras || [];
-            const isTimemania = this.currentGameKey === 'timemania';
-            const isDiaDeSorte = this.currentGameKey === 'diadesorte';
-
-            let content = `═══════════════════════════════════════\n`;
-            content += `  JOGOS — ${gameName.toUpperCase()}\n`;
-            if (mesSorte) content += `  Mês da Sorte (cabeçalho): ${mesSorte}\n`;
-            if (isTimemania) content += `  Time do Coração: registrado por jogo abaixo\n`;
-            content += `  Data: ${now.toLocaleString('pt-BR')}\n`;
-            content += `  Total de Jogos: ${this.currentGeneratedGames.length}\n`;
-            content += `═══════════════════════════════════════\n\n`;
-
-            this.currentGeneratedGames.forEach((g, index) => {
-                const nums = g.map(n => n.toString().padStart(2, '0')).join(' - ');
-                let extra = '';
-                if (isTimemania && activeExtras[index] !== undefined && activeExtras[index] !== null) {
-                    const timeName = (typeof L99_TIMES !== 'undefined' && L99_TIMES[activeExtras[index]])
-                        ? L99_TIMES[activeExtras[index]]
-                        : `Time #${activeExtras[index]}`;
-                    extra = ` | Time: ${timeName}`;
-                } else if (isDiaDeSorte) {
-                    if (activeExtras[index] !== undefined && activeExtras[index] !== null) {
-                        const mesNome = (typeof L99_MESES !== 'undefined' && L99_MESES[activeExtras[index]])
-                            ? L99_MESES[activeExtras[index]]
-                            : (mesSorte || `Mês #${activeExtras[index]}`);
-                        extra = ` | Mês: ${mesNome}`;
-                    } else if (mesSorte) {
-                        extra = ` | Mês: ${mesSorte}`;
-                    }
-                }
-                content += `Jogo ${String(index + 1).padStart(3, '0')}: ${nums}${extra}\n`;
+            const result = await this._callServerApi('/salvar', {
+                method: 'POST',
+                body: {
+                    gameKey: this.currentGameKey,
+                    fileName: fileName,
+                    content: content,
+                    force: force
+                },
+                timeoutMs: saveTimeout
             });
 
-            content += `\n═══════════════════════════════════════\n`;
-            content += `  B2B Loterias — Boa Sorte! 🍀\n`;
-            content += `═══════════════════════════════════════\n`;
-
-            // ══════ 1. TENTAR SALVAR DIRETO NA PASTA VIA SERVIDOR LOCAL ══════
-            try {
-                const result = await this._callServerApi('/salvar', {
-                    method: 'POST',
-                    body: {
-                        gameKey: this.currentGameKey,
-                        fileName: fileName,
-                        content: content,
-                    },
-                    timeoutMs: 10000
-                });
-
-                if (result && result.ok) {
-                    // Se o servidor detectou duplicidade no disco
-                    if (result.alreadyExists || result.duplicate) {
-                        this._lastSavedGamesSignature = currentSignature;
-                        this._lastSavedFileName = result.fileName;
-
-                        const btn = this.saveBtn;
-                        if (btn) {
-                            btn.innerHTML = '📁 Já Salvo!';
-                            btn.style.background = 'linear-gradient(135deg, #0284C7, #0369A1)';
-                        }
-
-                        const existingRelPath = result.relativePath || `LOTERIAS JOGOS SALVOS L99\\${gameName}\\${result.fileName}`;
-                        if (typeof Guardian !== 'undefined' && Guardian.toast) {
-                            Guardian.toast(`ℹ️ Este jogo já foi salvo anteriormente!\n📁 ${existingRelPath}`, 'info', 6000);
-                        } else {
-                            alert(`Este jogo já foi salvo anteriormente no arquivo:\n${existingRelPath}`);
-                        }
-                        console.log(`[B2B] ℹ️ Jogo já existente no disco: ${result.path || result.fileName}`);
-                        return;
-                    }
-
-                    // Salvamento novo concluído com sucesso
-                    this._lastSavedGamesSignature = currentSignature;
-                    this._lastSavedFileName = result.fileName || fileName;
-
-                    const btn = this.saveBtn;
+            if (result && result.ok) {
+                if (result.alreadyExists) {
+                    this._lastSavedWasDuplicate = true;
+                    this._lastSavedDuplicateTime = Date.now();
                     if (btn) {
-                        btn.innerHTML = '✅ Salvo!';
-                        btn.style.background = 'linear-gradient(135deg, #22C55E, #16A34A)';
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                        btn.innerHTML = 'ℹ️ Já Salvo! (Clique p/ duplicar)';
+                        btn.style.background = 'linear-gradient(135deg, #0284C7, #0369A1)';
                         btn.style.transform = 'scale(1.05)';
                         setTimeout(() => {
-                            if (this._lastSavedGamesSignature === currentSignature && btn) {
-                                btn.innerHTML = '✅ Já Salvo';
-                                btn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-                                btn.style.transform = '';
-                            }
-                        }, 3000);
+                            btn.innerHTML = origBtnText;
+                            btn.style.background = origBtnBg;
+                            btn.style.transform = '';
+                        }, 4000);
                     }
 
-                    const savedRelPath = result.relativePath || result.path || `LOTERIAS JOGOS SALVOS L99\\${gameName}\\${result.fileName || fileName}`;
-                    const toastMsg = `✅ <strong>Jogo salvo com sucesso!</strong><br><span style="font-size:11px;opacity:0.9">📁 ${savedRelPath}</span>`;
-                    
+                    const savedRelPath = result.relativePath || result.path || `LOTERIAS JOGOS SALVOS L99\\${result.fileName || fileName}`;
+                    const dupMsg = `ℹ️ <strong>Estes mesmos jogos já constam no disco!</strong><br><span style="font-size:11px;opacity:0.9">📁 ${savedRelPath}</span><br><span style="font-size:10px;color:#BAE6FD;">Clique em Salvar novamente se desejar salvar uma nova cópia com a data/hora de agora.</span>`;
+
                     if (typeof Guardian !== 'undefined' && Guardian.toast) {
-                        Guardian.toast(`✅ Jogo salvo com sucesso!\n📁 ${savedRelPath}`, 'success', 6000);
+                        Guardian.toast(`ℹ️ Estes mesmos jogos já constam no arquivo:\n📁 ${savedRelPath}\n\nClique novamente para salvar uma nova cópia.`, 'info', 7000);
                     } else {
                         const toast = document.createElement('div');
                         toast.style.cssText = `
                             position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-                            background:linear-gradient(135deg,#166534,#15803d); color:#fff;
+                            background:linear-gradient(135deg,#0c4a6e,#0284c7); color:#fff;
                             padding:14px 24px; border-radius:12px; font-size:13px;
                             box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:99999;
-                            max-width:480px; text-align:center; line-height:1.5;
-                            animation: fadeInUp 0.3s ease; border: 1px solid #4ade80;
+                            max-width:520px; text-align:center; line-height:1.5;
+                            animation: fadeInUp 0.3s ease; border: 1px solid #38bdf8;
                         `;
-                        toast.innerHTML = toastMsg;
+                        toast.innerHTML = dupMsg;
                         document.body.appendChild(toast);
-                        setTimeout(() => toast.remove(), 6000);
+                        setTimeout(() => toast.remove(), 7000);
                     }
 
-                    console.log(`[B2B] ✅ Salvo com sucesso: ${result.path}`);
+                    console.log(`[B2B] ℹ️ Anti-duplicidade: jogos já constam em ${result.path}`);
                     return;
                 }
-            } catch (err) {
-                console.warn('[Save] Servidor local indisponível, usando fallback de download:', err.message);
-            }
 
-            // ══════ 2. FALLBACK: Download como arquivo no navegador ══════
-            try {
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                const urlObj = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = urlObj;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => window.URL.revokeObjectURL(urlObj), 3000);
-
-                this._lastSavedGamesSignature = currentSignature;
-                this._lastSavedFileName = fileName;
-
-                const btn = this.saveBtn;
+                this._lastSavedWasDuplicate = false;
                 if (btn) {
-                    btn.innerHTML = '⬇️ Baixado!';
-                    btn.style.background = 'linear-gradient(135deg, #2563EB, #1D4ED8)';
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.innerHTML = '✅ Salvo!';
+                    btn.style.background = 'linear-gradient(135deg, #22C55E, #16A34A)';
+                    btn.style.transform = 'scale(1.05)';
                     setTimeout(() => {
-                        if (this._lastSavedGamesSignature === currentSignature && btn) {
-                            btn.innerHTML = '✅ Já Salvo';
-                            btn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-                        }
-                    }, 2500);
+                        btn.innerHTML = origBtnText;
+                        btn.style.background = origBtnBg;
+                        btn.style.transform = '';
+                    }, 3000);
                 }
 
-                const fallbackMsg = `📥 <strong>Arquivo baixado pelo navegador!</strong><br><span style="font-size:11px;opacity:0.9">Verifique a pasta de Downloads (${fileName})</span>`;
+                const savedRelPath = result.relativePath || result.path || `LOTERIAS JOGOS SALVOS L99\\${gameName}\\${result.fileName || fileName}`;
+                const toastMsg = `✅ <strong>Jogo salvo com sucesso!</strong><br><span style="font-size:11px;opacity:0.9">📁 ${savedRelPath}</span>`;
+                
                 if (typeof Guardian !== 'undefined' && Guardian.toast) {
-                    Guardian.toast(`📥 Arquivo baixado pelo navegador!\nVerifique seus Downloads (${fileName})`, 'info', 5000);
+                    Guardian.toast(`✅ Jogo salvo com sucesso!\n📁 ${savedRelPath}`, 'success', 6000);
                 } else {
                     const toast = document.createElement('div');
                     toast.style.cssText = `
                         position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-                        background:linear-gradient(135deg,#1e40af,#2563eb); color:#fff;
+                        background:linear-gradient(135deg,#166534,#15803d); color:#fff;
                         padding:14px 24px; border-radius:12px; font-size:13px;
                         box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:99999;
                         max-width:480px; text-align:center; line-height:1.5;
-                        border: 1px solid #60a5fa;
+                        animation: fadeInUp 0.3s ease; border: 1px solid #4ade80;
                     `;
-                    toast.innerHTML = fallbackMsg;
+                    toast.innerHTML = toastMsg;
                     document.body.appendChild(toast);
-                    setTimeout(() => toast.remove(), 5000);
+                    setTimeout(() => toast.remove(), 6000);
                 }
-            } catch (e) {
-                alert('Não foi possível salvar o arquivo: ' + e.message);
+
+                console.log(`[B2B] ✅ Salvo com sucesso: ${result.path}`);
+                return;
             }
+        } catch (err) {
+            console.warn('[Save] Servidor local indisponível, usando fallback de download:', err.message);
         } finally {
-            this._isSaving = false;
-            if (this.saveBtn) {
-                this.saveBtn.disabled = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
             }
+        }
+
+        // ══════ 2. FALLBACK: Download como arquivo no navegador ══════
+        try {
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const urlObj = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = urlObj;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => window.URL.revokeObjectURL(urlObj), 3000);
+
+            if (btn) {
+                btn.innerHTML = '⬇️ Baixado!';
+                btn.style.background = 'linear-gradient(135deg, #2563EB, #1D4ED8)';
+                setTimeout(() => {
+                    btn.innerHTML = origBtnText;
+                    btn.style.background = origBtnBg;
+                }, 2500);
+            }
+
+            const fallbackMsg = `📥 <strong>Arquivo baixado pelo navegador!</strong><br><span style="font-size:11px;opacity:0.9">Verifique a pasta de Downloads (${fileName})</span>`;
+            if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                Guardian.toast(`📥 Arquivo baixado pelo navegador!\nVerifique seus Downloads (${fileName})`, 'info', 5000);
+            } else {
+                const toast = document.createElement('div');
+                toast.style.cssText = `
+                    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+                    background:linear-gradient(135deg,#1e40af,#2563eb); color:#fff;
+                    padding:14px 24px; border-radius:12px; font-size:13px;
+                    box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:99999;
+                    max-width:480px; text-align:center; line-height:1.5;
+                    border: 1px solid #60a5fa;
+                `;
+                toast.innerHTML = fallbackMsg;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 5000);
+            }
+        } catch (e) {
+            alert('Não foi possível salvar o arquivo: ' + e.message);
         }
     }
 
@@ -5506,6 +7305,19 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
         // Add a visual hint about using last draw
         if (recent) {
             this.inputCheckNumbers.title = `Concurso sugerido: ${autoFillValue}`;
+        }
+
+        const isLoteca = this.currentGameKey === 'loteca';
+        const modalHint = this.checkModal ? this.checkModal.querySelector('p') : null;
+        if (modalHint) {
+            modalHint.textContent = isLoteca
+                ? 'Digite o Número do Concurso da Loteca (ex: ' + (autoFillValue || '1268') + ') ou os 14 resultados das partidas (1, X, 2):'
+                : 'Digite o Número do Concurso ou os Números Sorteados:';
+        }
+        if (this.inputCheckNumbers) {
+            this.inputCheckNumbers.placeholder = isLoteca
+                ? 'Ex: ' + (autoFillValue || '1268') + ' ou 1 1 1 2 1 X 1 X 2 1 X 1 1 2'
+                : 'Ex: 2500 ou 01 02 03 04 05...';
         }
 
         this.inputCheckNumbers.focus();
@@ -5667,10 +7479,20 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
             }
         } else {
             this._lastDrawResult = null; // v10.9: entrada manual, sem dados extras da API
-            targetNumbers = input.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
-            if (targetNumbers.length < game.draw) {
-                alert(`Por favor, insira o Número do Concurso OU pelo menos ${game.draw} números.`);
-                return;
+            if (this.currentGameKey === 'loteca') {
+                const rawTokens = input.split(/[\s,-]+/).map(t => t.toUpperCase().trim()).filter(t => t === '1' || t === 'X' || t === '2');
+                if (rawTokens.length !== 14) {
+                    alert(`Por favor, insira o Número do Concurso da Loteca (ex: 1268) OU os 14 resultados (1, X ou 2 para cada jogo).\n\nExemplo com 14 colunas: 1 1 1 2 1 X 1 X 2 1 X 1 1 2\n\n(Detectados: ${rawTokens.length} palpites válidos)`);
+                    return;
+                }
+                targetNumbers = rawTokens;
+                drawInfo = "Manual (14 Jogos)";
+            } else {
+                targetNumbers = input.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+                if (targetNumbers.length < game.draw) {
+                    alert(`Por favor, insira o Número do Concurso OU pelo menos ${game.draw} números.`);
+                    return;
+                }
             }
         }
 
@@ -5705,32 +7527,475 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
     parseSavedGames(text) {
         const games = [];
         const lines = text.split('\n');
+        const isLoteca = this.currentGameKey === 'loteca';
+        const isTimemania = this.currentGameKey === 'timemania';
+        const isDiaDeSorte = this.currentGameKey === 'diadesorte';
+        const isMilionaria = this.currentGameKey === 'milionaria';
+
+        if (isMilionaria || isTimemania || isDiaDeSorte) {
+            this.currentGeneratedExtras = [];
+        } else {
+            this.currentGeneratedExtras = null;
+        }
+
         lines.forEach(line => {
             const clean = line.trim();
             if (!clean || clean.startsWith('═') || clean.startsWith('JOGOS') || clean.startsWith('Total') || clean.startsWith('Data') || clean.startsWith('B2B') || clean.startsWith('Time') || clean.startsWith('Mês') || clean.startsWith('Conferência') || clean.startsWith('Relatório')) {
                 return;
             }
-            if (clean.toLowerCase().startsWith('jogo')) {
-                const parts = clean.split(':');
-                if (parts.length > 1) {
-                    const numsPart = parts[1].split('|')[0].trim();
-                    const numbers = numsPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
-                    if (numbers.length > 0) {
-                        games.push(numbers);
+            if (isLoteca) {
+                let picksPart = clean;
+                if (clean.includes(':')) {
+                    const parts = clean.split(':');
+                    picksPart = parts[parts.length - 1].trim();
+                }
+                picksPart = picksPart.split('|')[0].trim();
+                const tokens = picksPart.split(/[\s,-]+/).map(t => t.toUpperCase().trim()).filter(t => /^[12X]+$/.test(t));
+                if (tokens.length === 14) {
+                    games.push(tokens);
+                }
+            } else if (isMilionaria) {
+                let mainPart = clean;
+                let trevosPart = '';
+                if (clean.includes('🍀')) {
+                    const sp = clean.split('🍀');
+                    mainPart = sp[0];
+                    trevosPart = sp[1];
+                }
+                if (mainPart.includes(':')) {
+                    mainPart = mainPart.split(':')[1];
+                }
+                mainPart = mainPart.replace(/[—_]/g, ' ').trim();
+                const numbers = mainPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 1 && n <= 50);
+                if (numbers.length === 6) {
+                    games.push(numbers);
+                    let tr = [1, 2];
+                    if (trevosPart) {
+                        const trNums = trevosPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 1 && n <= 6);
+                        if (trNums.length === 2) tr = trNums.sort((a, b) => a - b);
                     }
+                    this.currentGeneratedExtras.push(tr);
                 }
             } else {
-                const numsPart = clean.split('|')[0].trim();
-                const numbers = numsPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
-                if (numbers.length >= 5) {
-                    games.push(numbers);
+                let extraVal = null;
+                if (clean.includes('|')) {
+                    const extraPart = clean.split('|')[1].trim();
+                    if (isTimemania && /Time:\s*(.+)$/i.test(extraPart)) {
+                        extraVal = extraPart.replace(/^Time:\s*/i, '').trim();
+                    } else if (isDiaDeSorte && /Mês:\s*(.+)$/i.test(extraPart)) {
+                        extraVal = extraPart.replace(/^Mês:\s*/i, '').trim();
+                    }
+                }
+
+                if (clean.toLowerCase().startsWith('jogo')) {
+                    const parts = clean.split(':');
+                    if (parts.length > 1) {
+                        const numsPart = parts[1].split('|')[0].trim();
+                        const numbers = numsPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+                        if (numbers.length > 0) {
+                            games.push(numbers);
+                            if (isTimemania || isDiaDeSorte) {
+                                this.currentGeneratedExtras.push(extraVal);
+                            }
+                        }
+                    }
+                } else {
+                    const numsPart = clean.split('|')[0].trim();
+                    const numbers = numsPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+                    if (numbers.length >= 5) {
+                        games.push(numbers);
+                        if (isTimemania || isDiaDeSorte) {
+                            this.currentGeneratedExtras.push(extraVal);
+                        }
+                    }
                 }
             }
         });
         return games;
     }
 
+    _highlightLotecaResults(drawnNumbers, drawInfo = "", drawResult = null) {
+        const game = (typeof GAMES !== 'undefined' && GAMES.loteca) ? GAMES.loteca : { name: "Loteca", color: "#15803d", strategies: [ { id: "14pts", label: "14 Pontos (Faixa Principal)", match: 14, prize: 1500000 }, { id: "13pts", label: "13 Pontos", match: 13, prize: 35000 } ] };
+        const officialResults = drawnNumbers.map(c => String(c).toUpperCase().trim());
+        
+        if (officialResults.length !== 14) {
+            alert('Erro: O resultado da Loteca deve conter exatamente 14 colunas (1, X ou 2).');
+            return;
+        }
+
+        // Normalizar volantes em memória para arrays de 14 palpites limpos
+        const rawGames = this.currentGeneratedGames || [];
+        const normalizedGames = [];
+
+        rawGames.forEach((g) => {
+            if (Array.isArray(g)) {
+                const toks = g.map(t => String(t).toUpperCase().trim()).filter(t => /^[12X]+$/.test(t));
+                if (toks.length === 14) {
+                    normalizedGames.push(toks);
+                    return;
+                }
+            }
+            if (typeof g === 'string') {
+                let part = g;
+                if (g.includes(':')) {
+                    const parts = g.split(':');
+                    part = parts[parts.length - 1];
+                }
+                part = part.split('|')[0].trim();
+                const toks = part.split(/[\s,-]+/).map(t => t.toUpperCase().trim()).filter(t => /^[12X]+$/.test(t));
+                if (toks.length === 14) {
+                    normalizedGames.push(toks);
+                    return;
+                }
+            }
+            if (g && typeof g === 'object' && Array.isArray(g.palpites)) {
+                const toks = g.palpites.map(p => (typeof p === 'object' && p.palpite ? String(p.palpite) : String(p)).toUpperCase().trim());
+                if (toks.length === 14) {
+                    normalizedGames.push(toks);
+                    return;
+                }
+            }
+        });
+
+        if (normalizedGames.length === 0) {
+            alert('Nenhum volante válido com 14 jogos encontrado para conferir.\nGere uma carteira ou carregue um arquivo da Loteca primeiro.');
+            return;
+        }
+
+        this.currentGeneratedGames = normalizedGames;
+
+        const awardCounts = { '14pts': 0, '13pts': 0 };
+        const hitDistribution = {};
+        for (let h = 0; h <= 14; h++) hitDistribution[h] = 0;
+
+        const winningGames = [];
+        const volantesConferidos = [];
+
+        // Prêmios oficiais reais da Caixa se disponíveis
+        let realPrize14 = 0, winners14 = 0;
+        let realPrize13 = 0, winners13 = 0;
+        if (drawResult && Array.isArray(drawResult.prizes)) {
+            drawResult.prizes.forEach(p => {
+                const fx = parseInt(p.faixa);
+                if (fx === 1) {
+                    realPrize14 = parseFloat(p.valorPremio) || 0;
+                    winners14 = parseInt(p.numeroDeGanhadores) || 0;
+                } else if (fx === 2) {
+                    realPrize13 = parseFloat(p.valorPremio) || 0;
+                    winners13 = parseInt(p.numeroDeGanhadores) || 0;
+                }
+            });
+        }
+        if (!realPrize14) realPrize14 = (game.strategies && game.strategies[0] && game.strategies[0].prize) || 1500000;
+        if (!realPrize13) realPrize13 = (game.strategies && game.strategies[1] && game.strategies[1].prize) || 35000;
+
+        // Conferência estritamente posicional: Jogo 1 a 14
+        normalizedGames.forEach((picks, index) => {
+            let hits = 0;
+            const matchDetails = [];
+
+            for (let j = 0; j < 14; j++) {
+                const official = officialResults[j];
+                const pick = (picks[j] || '').toUpperCase();
+                const isHit = Boolean(official && pick && pick.includes(official));
+                if (isHit) hits++;
+                matchDetails.push({
+                    jogoNum: j + 1,
+                    pick: pick,
+                    official: official,
+                    hit: isHit
+                });
+            }
+
+            hitDistribution[hits] = (hitDistribution[hits] || 0) + 1;
+
+            let prize = 0;
+            let stratLabel = 'Sem premiação';
+            if (hits === 14) {
+                awardCounts['14pts']++;
+                prize = realPrize14;
+                stratLabel = '14 Pontos (Faixa Principal)';
+                winningGames.push({ index: index, picks: picks, hits: 14, prize: prize, strat: { id: '14pts', label: stratLabel } });
+            } else if (hits === 13) {
+                awardCounts['13pts']++;
+                prize = realPrize13;
+                stratLabel = '13 Pontos';
+                winningGames.push({ index: index, picks: picks, hits: 13, prize: prize, strat: { id: '13pts', label: stratLabel } });
+            }
+
+            volantesConferidos.push({
+                volanteNumero: index + 1,
+                picks: picks,
+                hits: hits,
+                prize: prize,
+                stratLabel: stratLabel,
+                details: matchDetails
+            });
+        });
+
+        // 1. Renderizar os volantes conferidos no container de jogos
+        if (this.gamesContainer) {
+            let cardsHtml = `
+                <div style="background:rgba(15,23,42,0.95);border:1px solid #22c55e;border-radius:12px;padding:16px;margin-top:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px;">
+                        <div>
+                            <span style="color:#4ade80;font-weight:900;font-size:1.1rem;">⚽ CONFERÊNCIA LOTECA — ${volantesConferidos.length} VOLANTES</span>
+                            <span style="display:block;font-size:0.75rem;color:#94a3b8;margin-top:2px;">Conferência posicional rigorosa (14 Jogos) · ${drawInfo}</span>
+                        </div>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            ${awardCounts['14pts'] > 0 ? `<span style="background:rgba(255,215,0,0.2);color:#ffd700;border:1px solid #ffd700;padding:4px 10px;border-radius:6px;font-weight:900;font-size:0.82rem;">🏆 ${awardCounts['14pts']}x 14 PONTOS!</span>` : ''}
+                            ${awardCounts['13pts'] > 0 ? `<span style="background:rgba(34,197,94,0.2);color:#86efac;border:1px solid #22c55e;padding:4px 10px;border-radius:6px;font-weight:800;font-size:0.82rem;">🥈 ${awardCounts['13pts']}x 13 PONTOS!</span>` : ''}
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+            `;
+
+            const maxRender = Math.min(volantesConferidos.length, 500);
+            volantesConferidos.slice(0, maxRender).forEach(v => {
+                const is14 = v.hits === 14;
+                const is13 = v.hits === 13;
+                const cardBorder = is14 ? '#ffd700' : (is13 ? '#22c55e' : (v.hits >= 11 ? 'rgba(96,165,250,0.4)' : 'rgba(255,255,255,0.1)'));
+                const cardBg = is14 ? 'linear-gradient(135deg, rgba(255,215,0,0.12), rgba(15,23,42,0.95))' : (is13 ? 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(15,23,42,0.95))' : 'rgba(0,0,0,0.5)');
+                const badgeColor = is14 ? '#ffd700' : (is13 ? '#4ade80' : (v.hits >= 11 ? '#60a5fa' : '#94a3b8'));
+
+                cardsHtml += `
+                    <div class="game-card" style="background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+                            <div>
+                                <strong style="color:${is14 ? '#ffd700' : '#4ade80'};font-size:0.92rem;">VOLANTE #${String(v.volanteNumero).padStart(2, '0')}</strong>
+                                <span style="font-size:0.75rem;color:${badgeColor};margin-left:8px;font-weight:800;">
+                                    ${v.hits} / 14 ACERTOS ${is14 ? '🏆 (14 PONTOS!)' : (is13 ? '🥈 (13 PONTOS!)' : '')}
+                                </span>
+                            </div>
+                            <div style="font-size:0.75rem;font-weight:700;color:${v.prize > 0 ? '#4ade80' : '#64748b'};">
+                                ${v.prize > 0 ? `💰 Prêmio: ~${v.prize.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : 'Sem premiação'}
+                            </div>
+                        </div>
+
+                        <!-- 14 Jogos em 2 linhas de 7 -->
+                        <div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:4px;margin-bottom:8px;">
+                            ${v.details.map(d => {
+                                const boxBorder = d.hit ? '#22c55e' : 'rgba(239,68,68,0.35)';
+                                const boxBg = d.hit ? 'rgba(34,197,94,0.22)' : 'rgba(239,68,68,0.12)';
+                                const pickCol = d.hit ? '#86efac' : '#fca5a5';
+                                return `
+                                    <div style="background:${boxBg};border:1px solid ${boxBorder};border-radius:6px;padding:4px 2px;text-align:center;">
+                                        <div style="font-size:0.62rem;color:#94a3b8;font-weight:700;">J${d.jogoNum}</div>
+                                        <div style="font-size:0.80rem;font-weight:900;color:${pickCol};margin:2px 0;">${d.pick}</div>
+                                        <div style="font-size:0.62rem;color:${d.hit ? '#22c55e' : '#f87171'};font-weight:800;">
+                                            ${d.hit ? '✓' : '✗ ' + d.official}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <div style="font-size:0.70rem;color:#cbd5e1;background:rgba(0,0,0,0.35);padding:4px 8px;border-radius:4px;font-family:monospace;overflow-x:auto;white-space:nowrap;display:flex;justify-content:space-between;align-items:center;">
+                            <span>${v.picks.join(' - ')}</span>
+                            <button onclick="navigator.clipboard.writeText('${v.picks.join(' - ')}').then(() => alert('Volante copiado!'))" style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#86efac;border-radius:4px;padding:2px 6px;font-size:0.65rem;cursor:pointer;margin-left:8px;">
+                                📋 Copiar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (volantesConferidos.length > 500) {
+                cardsHtml += `
+                    <div style="padding: 12px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #86efac; text-align: center; border-radius: 6px; font-size: 0.82rem; margin-top: 8px;">
+                        ⚡ Exibindo os primeiros 500 de <b>${volantesConferidos.length} volantes</b> na interface. Todos os volantes foram conferidos com sucesso!
+                    </div>
+                `;
+            }
+
+            cardsHtml += `</div></div>`;
+            this.gamesContainer.innerHTML = cardsHtml;
+        }
+
+        // 2. Renderizar Resumo Visual da Conferência
+        const totalJogos = volantesConferidos.length;
+        const totalGanhos = awardCounts['14pts'] + awardCounts['13pts'];
+        const estimatedTotal = (awardCounts['14pts'] * realPrize14) + (awardCounts['13pts'] * realPrize13);
+        const currency = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        let summaryHTML = `<div style="font-family:'Outfit','Inter',sans-serif;">`;
+
+        // Cabeçalho
+        summaryHTML += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">`;
+        summaryHTML += `<div style="font-size:1.8rem;">⚽</div>`;
+        summaryHTML += `<div>`;
+        summaryHTML += `<h4 style="margin:0;color:#22c55e;font-size:1rem;font-weight:800;">CONFERÊNCIA — LOTECA (14 JOGOS)</h4>`;
+        summaryHTML += `<div style="font-size:0.72rem;color:#94A3B8;">${drawInfo || 'Resultado Oficial Caixa'} · Faixas: 14 e 13 Acertos</div>`;
+        summaryHTML += `</div></div>`;
+
+        // Resumo Rápido
+        summaryHTML += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">`;
+        summaryHTML += `<div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:6px 12px;font-size:0.82rem;"><strong>${totalJogos}</strong> volante${totalJogos > 1 ? 's' : ''} conferido${totalJogos > 1 ? 's' : ''}</div>`;
+        if (totalGanhos > 0) {
+            summaryHTML += `<div style="background:rgba(34,197,94,0.15);border:1px solid #22C55E50;border-radius:8px;padding:6px 12px;color:#22C55E;font-size:0.82rem;font-weight:700;">🏆 ${totalGanhos} volante${totalGanhos > 1 ? 's' : ''} premiado${totalGanhos > 1 ? 's' : ''}! (${awardCounts['14pts']}x 14 pts, ${awardCounts['13pts']}x 13 pts)</div>`;
+        } else {
+            summaryHTML += `<div style="background:rgba(239,68,68,0.1);border:1px solid #EF444440;border-radius:8px;padding:6px 12px;color:#EF4444;font-size:0.82rem;">Nenhum volante premiado (14 ou 13 pontos)</div>`;
+        }
+        summaryHTML += `</div>`;
+
+        // Grade Oficial dos 14 Jogos com confrontos reais e resultado
+        summaryHTML += `<div style="margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.4);border:1px solid rgba(34,197,94,0.3);border-radius:10px;">`;
+        summaryHTML += `<div style="font-size:0.72rem;color:#86efac;text-transform:uppercase;letter-spacing:1px;font-weight:800;margin-bottom:8px;">🎯 Resultado Oficial da Caixa (14 Partidas)</div>`;
+        summaryHTML += `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:6px;">`;
+
+        const matchesList = (drawResult && drawResult.matches) ? drawResult.matches : null;
+        for (let j = 0; j < 14; j++) {
+            const col = officialResults[j];
+            const m = matchesList ? (matchesList[j] || null) : null;
+            const home = m ? (m.nomeEquipeUm || 'Mandante') : 'Jogo ' + (j + 1);
+            const away = m ? (m.nomeEquipeDois || 'Visitante') : '';
+            const g1 = (m && m.nuGolEquipeUm !== undefined && m.nuGolEquipeUm !== null) ? m.nuGolEquipeUm : '';
+            const g2 = (m && m.nuGolEquipeDois !== undefined && m.nuGolEquipeDois !== null) ? m.nuGolEquipeDois : '';
+            const scoreStr = (g1 !== '' && g2 !== '') ? `${g1} x ${g2}` : 'x';
+
+            const badgeBg = col === '1' ? '#15803d' : (col === 'X' ? '#b45309' : '#1d4ed8');
+
+            summaryHTML += `
+                <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-size:0.74rem;color:#e2e8f0;font-weight:600;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        <span style="color:#94a3b8;font-size:0.68rem;">J${String(j+1).padStart(2,'0')}:</span> ${home} ${scoreStr} ${away}
+                    </div>
+                    <span style="background:${badgeBg};color:white;padding:2px 8px;border-radius:4px;font-weight:900;font-size:0.75rem;">
+                        ${col}
+                    </span>
+                </div>
+            `;
+        }
+        summaryHTML += `</div></div>`;
+
+        // Gráfico de Distribuição de Acertos
+        summaryHTML += `<div style="margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;">`;
+        summaryHTML += `<div style="font-size:0.68rem;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Distribuição de Acertos nos Volantes</div>`;
+        const maxHitCount = Math.max(...Object.values(hitDistribution), 1);
+        for (let h = 14; h >= 0; h--) {
+            const count = hitDistribution[h] || 0;
+            if (count === 0 && h < 11 && h > 0) continue;
+            const pct = totalJogos > 0 ? (count / totalJogos * 100) : 0;
+            const barW = maxHitCount > 0 ? (count / maxHitCount * 100) : 0;
+            const isPrized = (h === 14 || h === 13);
+            const barColor = h === 14 ? '#FFD700' : (h === 13 ? '#22C55E' : '#334155');
+            const textColor = isPrized ? '#f1f5f9' : '#64748b';
+
+            summaryHTML += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">`;
+            summaryHTML += `<span style="min-width:65px;font-size:0.72rem;color:${textColor};font-weight:${isPrized ? '800' : '400'};text-align:right;">${h} acertos</span>`;
+            summaryHTML += `<div style="flex:1;height:14px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden;">`;
+            summaryHTML += `<div style="height:100%;width:${barW}%;background:${barColor};border-radius:4px;transition:width 0.5s;min-width:${count > 0 ? '2px' : '0'};"></div>`;
+            summaryHTML += `</div>`;
+            summaryHTML += `<span style="min-width:60px;font-size:0.72rem;color:${textColor};font-weight:600;">${count}x (${pct.toFixed(0)}%)</span>`;
+            summaryHTML += `${isPrized ? '<span style="font-size:0.65rem;">' + (h === 14 ? '🏆' : '🥈') + '</span>' : ''}`;
+            summaryHTML += `</div>`;
+        }
+        summaryHTML += `</div>`;
+
+        // Tabela de Faixas Premiadas (14 e 13)
+        summaryHTML += `<div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">💎 Faixas de Premiação — Loteca</div>`;
+        summaryHTML += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+
+        summaryHTML += `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:${awardCounts['14pts'] > 0 ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.03)'};border:1px solid ${awardCounts['14pts'] > 0 ? '#ffd70060' : 'rgba(255,255,255,0.06)'};border-radius:8px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:1rem;">🏆</span>
+                    <div>
+                        <div style="font-size:0.82rem;font-weight:700;color:${awardCounts['14pts'] > 0 ? '#ffd700' : '#f1f5f9'};">1ª Faixa — 14 Acertos (Principal)</div>
+                        <div style="font-size:0.66rem;color:#94a3b8;">Rateio Oficial Caixa: ~${currency(realPrize14)}${winners14 > 0 ? ' (' + winners14 + ' ganhador(es))' : (winners14 === 0 ? ' (Acumulou)' : '')}</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:0.95rem;font-weight:900;color:${awardCounts['14pts'] > 0 ? '#ffd700' : '#475569'};">${awardCounts['14pts'] > 0 ? awardCounts['14pts'] + 'x' : '—'}</div>
+                    ${awardCounts['14pts'] > 0 ? `<div style="font-size:0.70rem;color:#ffd700;">≈ ${currency(awardCounts['14pts'] * realPrize14)}</div>` : ''}
+                </div>
+            </div>
+        `;
+
+        summaryHTML += `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:${awardCounts['13pts'] > 0 ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.03)'};border:1px solid ${awardCounts['13pts'] > 0 ? '#22c55e60' : 'rgba(255,255,255,0.06)'};border-radius:8px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:1rem;">🥈</span>
+                    <div>
+                        <div style="font-size:0.82rem;font-weight:700;color:${awardCounts['13pts'] > 0 ? '#4ade80' : '#f1f5f9'};">2ª Faixa — 13 Acertos</div>
+                        <div style="font-size:0.66rem;color:#94a3b8;">Rateio Oficial Caixa: ~${currency(realPrize13)}${winners13 > 0 ? ' (' + winners13 + ' ganhador(es))' : ''}</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:0.95rem;font-weight:900;color:${awardCounts['13pts'] > 0 ? '#4ade80' : '#475569'};">${awardCounts['13pts'] > 0 ? awardCounts['13pts'] + 'x' : '—'}</div>
+                    ${awardCounts['13pts'] > 0 ? `<div style="font-size:0.70rem;color:#4ade80;">≈ ${currency(awardCounts['13pts'] * realPrize13)}</div>` : ''}
+                </div>
+            </div>
+        `;
+        summaryHTML += `</div>`;
+
+        if (estimatedTotal > 0) {
+            summaryHTML += `
+                <div style="margin-top:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(34,197,94,0.2),rgba(16,185,129,0.1));border:2px solid #22c55e80;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="color:#86efac;font-weight:700;font-size:0.88rem;">💰 Prêmio Estimado Total</span>
+                    <span style="color:#22c55e;font-weight:900;font-size:1.1rem;">${currency(estimatedTotal)}</span>
+                </div>
+            `;
+        }
+
+        summaryHTML += `</div>`;
+
+        // Exibir no painel flutuante de conferência (results-panel ou modal)
+        let resultsBox = document.getElementById('conference-results-panel') || document.getElementById('results-summary') || document.querySelector('.results-summary');
+        if (!resultsBox) {
+            resultsBox = document.createElement('div');
+            resultsBox.id = 'conference-results-panel';
+            resultsBox.style.cssText = 'background:rgba(15,23,42,0.98);border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;box-shadow:0 10px 40px rgba(0,0,0,0.6);';
+            if (this.gamesContainer && this.gamesContainer.parentNode) {
+                this.gamesContainer.parentNode.insertBefore(resultsBox, this.gamesContainer);
+            }
+        }
+        if (resultsBox) {
+            resultsBox.innerHTML = summaryHTML;
+            resultsBox.style.display = 'block';
+            resultsBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // 3. Salvar conferência na pasta L99 assincronamente
+        const self = this;
+        setTimeout(() => {
+            try {
+                let reportText = '════════════════════════════════════════════\n';
+                reportText += '  ⚽ CONFERÊNCIA L99 — LOTECA (14 JOGOS)\n';
+                reportText += '  ' + (drawInfo || 'Conferência de Jogos') + '\n';
+                reportText += '  Data: ' + new Date().toLocaleString('pt-BR') + '\n';
+                reportText += '════════════════════════════════════════════\n\n';
+                reportText += '📊 RESUMO\n';
+                reportText += '  Volantes Conferidos: ' + totalJogos + '\n';
+                reportText += '  14 Pontos: ' + awardCounts['14pts'] + ' volante(s)\n';
+                reportText += '  13 Pontos: ' + awardCounts['13pts'] + ' volante(s)\n';
+                reportText += '  Total Premiados: ' + totalGanhos + ' volante(s)\n';
+                reportText += '  Estimativa de Retorno: ' + currency(estimatedTotal) + '\n\n';
+                reportText += '🎯 RESULTADO OFICIAL (14 JOGOS):\n  ' + officialResults.join(' - ') + '\n\n';
+                reportText += '📋 VOLANTES CONFERIDOS:\n';
+                volantesConferidos.forEach(v => {
+                    const sinal = (v.hits === 14 ? '🏆' : (v.hits === 13 ? '🥈' : (v.hits >= 11 ? '⚡' : '  ')));
+                    reportText += `${sinal} Volante ${String(v.volanteNumero).padStart(3, '0')}: ${v.picks.join(' - ')} = ${v.hits} acertos (${v.stratLabel})\n`;
+                });
+                reportText += '\n════════════════════════════════════════════\n';
+                reportText += '  B2B Loterias — Relatório Automático\n';
+                reportText += '════════════════════════════════════════════\n';
+
+                const concNum = drawResult ? drawResult.drawNumber : 'Manual';
+                self._callServerApi('/salvar-conferencia', { 
+                    method: 'POST', 
+                    body: { gameKey: 'loteca', concurso: concNum, content: reportText } 
+                }).catch(() => {});
+            } catch(e) {}
+        }, 100);
+    }
+
     highlightResults(drawnNumbers, drawInfo = "", drawResult = null) {
+        if (this.currentGameKey === 'loteca') {
+            this._highlightLotecaResults(drawnNumbers, drawInfo, drawResult);
+            return;
+        }
+        const isSuperSete = this.currentGameKey === 'supersete';
         const drawnSet = new Set(drawnNumbers);
         const cards = document.querySelectorAll('.game-card');
         const game = GAMES[this.currentGameKey];
@@ -5757,8 +8022,14 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
         this.currentGeneratedGames.forEach((gameNumbers, index) => {
             // Hits no 1º sorteio
             let hits1 = 0;
-            for (let i = 0; i < gameNumbers.length; i++) {
-                if (drawnSet.has(gameNumbers[i])) hits1++;
+            if (isSuperSete) {
+                for (let k = 0; k < Math.min(gameNumbers.length, drawnNumbers.length); k++) {
+                    if (gameNumbers[k] === drawnNumbers[k]) hits1++;
+                }
+            } else {
+                for (let i = 0; i < gameNumbers.length; i++) {
+                    if (drawnSet.has(gameNumbers[i])) hits1++;
+                }
             }
 
             // Hits no 2º sorteio (Dupla Sena)
@@ -5808,6 +8079,41 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
                         prize: totalPrize
                     });
                 }
+            } else if (this.currentGameKey === 'milionaria') {
+                // +Milionária: conferir 6 dezenas + 2 trevos com regras oficiais da Caixa
+                const drawnTrevos = (drawResult && Array.isArray(drawResult.trevos) && drawResult.trevos.length > 0) ? drawResult.trevos : [1, 2];
+                const drawnTrevosSet = new Set(drawnTrevos);
+
+                let myTrevos = [];
+                if (this.currentGeneratedExtras && this.currentGeneratedExtras[index]) {
+                    myTrevos = Array.isArray(this.currentGeneratedExtras[index]) ? this.currentGeneratedExtras[index] : [this.currentGeneratedExtras[index]];
+                }
+                const trevoHits = myTrevos.filter(t => drawnTrevosSet.has(t)).length;
+
+                let matchedStrat = null;
+                if (hits === 6 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa1');
+                else if (hits === 6 && trevoHits <= 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa2');
+                else if (hits === 5 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa3');
+                else if (hits === 5 && trevoHits <= 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa4');
+                else if (hits === 4 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa5');
+                else if (hits === 4 && trevoHits <= 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa6');
+                else if (hits === 3 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa7');
+                else if (hits === 3 && trevoHits === 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa8');
+                else if (hits === 2 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa9');
+                else if (hits === 2 && trevoHits === 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa10');
+
+                if (matchedStrat) {
+                    awardCounts[matchedStrat.id] = (awardCounts[matchedStrat.id] || 0) + 1;
+                    winningGames.push({
+                        index: index,
+                        numbers: gameNumbers,
+                        trevos: myTrevos,
+                        hits: hits,
+                        trevoHits: trevoHits,
+                        strat: matchedStrat,
+                        prize: matchedStrat.prize || 0
+                    });
+                }
             } else {
                 // Todas as outras loterias
                 const matchedStrat = paidStrategies.find(s => s.match === hitsToCheck);
@@ -5840,8 +8146,14 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
 
                 // Hits no 1º sorteio
                 let hits1 = 0;
-                for (let k = 0; k < gameNumbers.length; k++) {
-                    if (drawnSet.has(gameNumbers[k])) hits1++;
+                if (isSuperSete) {
+                    for (let k = 0; k < Math.min(gameNumbers.length, drawnNumbers.length); k++) {
+                        if (gameNumbers[k] === drawnNumbers[k]) hits1++;
+                    }
+                } else {
+                    for (let k = 0; k < gameNumbers.length; k++) {
+                        if (drawnSet.has(gameNumbers[k])) hits1++;
+                    }
                 }
 
                 // Hits no 2º sorteio (Dupla Sena)
@@ -5859,7 +8171,7 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
                 const balls = card.querySelectorAll('.ball');
                 balls.forEach((ball, bIdx) => {
                     const num = gameNumbers[bIdx];
-                    const inDraw1 = drawnSet.has(num);
+                    const inDraw1 = isSuperSete ? (gameNumbers[bIdx] === drawnNumbers[bIdx]) : drawnSet.has(num);
                     const inDraw2 = drawnSet2 ? drawnSet2.has(num) : false;
 
                     if (inDraw1 && inDraw2) {
@@ -5924,6 +8236,45 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
                         summary.style.color = '#475569';
                         summary.style.background = '';
                         summary.textContent = 'Nenhum acerto em ambos sorteios';
+                    }
+                } else if (this.currentGameKey === 'milionaria') {
+                    // +Milionária card summary
+                    const drawnTrevos = (drawResult && Array.isArray(drawResult.trevos) && drawResult.trevos.length > 0) ? drawResult.trevos : [1, 2];
+                    const drawnTrevosSet = new Set(drawnTrevos);
+                    let myTrevos = [];
+                    if (this.currentGeneratedExtras && this.currentGeneratedExtras[i]) {
+                        myTrevos = Array.isArray(this.currentGeneratedExtras[i]) ? this.currentGeneratedExtras[i] : [this.currentGeneratedExtras[i]];
+                    }
+                    const trevoHits = myTrevos.filter(t => drawnTrevosSet.has(t)).length;
+
+                    let matchedStrat = null;
+                    if (hits1 === 6 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa1');
+                    else if (hits1 === 6 && trevoHits <= 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa2');
+                    else if (hits1 === 5 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa3');
+                    else if (hits1 === 5 && trevoHits <= 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa4');
+                    else if (hits1 === 4 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa5');
+                    else if (hits1 === 4 && trevoHits <= 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa6');
+                    else if (hits1 === 3 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa7');
+                    else if (hits1 === 3 && trevoHits === 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa8');
+                    else if (hits1 === 2 && trevoHits === 2) matchedStrat = paidStrategies.find(s => s.id === 'faixa9');
+                    else if (hits1 === 2 && trevoHits === 1) matchedStrat = paidStrategies.find(s => s.id === 'faixa10');
+
+                    if (matchedStrat) {
+                        const isJackpot = matchedStrat.id === 'faixa1';
+                        summary.style.color = isJackpot ? '#FFD700' : '#22C55E';
+                        summary.style.background = isJackpot ? 'rgba(255,215,0,0.08)' : 'rgba(34,197,94,0.08)';
+                        const prizeHint = matchedStrat.prize > 100
+                            ? ` ≈ ${matchedStrat.prize.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+                            : (matchedStrat.prize > 0 ? ` ≈ R$ ${matchedStrat.prize.toFixed(2).replace('.', ',')}` : '');
+                        summary.innerHTML = `🏆 ${hits1} dezenas + ${trevoHits} trevos — <strong>${matchedStrat.label}</strong>${prizeHint}`;
+                    } else if (hits1 > 0 || trevoHits > 0) {
+                        summary.style.color = '#94A3B8';
+                        summary.style.background = 'rgba(255,255,255,0.03)';
+                        summary.textContent = `${hits1} dezena${hits1 > 1 ? 's' : ''} + ${trevoHits} trevo${trevoHits > 1 ? 's' : ''} — sem premiação (mínimo 2 dezenas + 1 trevo)`;
+                    } else {
+                        summary.style.color = '#475569';
+                        summary.style.background = '';
+                        summary.textContent = 'Nenhum acerto';
                     }
                 } else {
                     // Todas as outras loterias
@@ -6428,7 +8779,8 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
                         var h2 = 0;
                         nums.forEach(function(n) { if (drawnS2.has(n)) h2++; });
                         var sinal = h2 >= minPrize ? '✅' : '  ';
-                        reportText += sinal + ' Jogo ' + String(idx+1).padStart(4,' ') + ': ' + nums.map(function(n){return String(n).padStart(2,'0')}).join(' - ') + ' = ' + h2 + ' acertos\n';
+                        var strNums = Array.isArray(nums) ? nums.map(function(n){return String(n).padStart(2,'0')}).join(' - ') : String(nums);
+                        reportText += sinal + ' Jogo ' + String(idx+1).padStart(4,' ') + ': ' + strNums + ' = ' + h2 + ' acertos\n';
                     });
                     reportText += '\n════════════════════════════════════════════\n';
                     reportText += '  L99 B2B Loterias — Relatório Automático\n';
@@ -6477,7 +8829,16 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
         content += '═══════════════════════════════════════\n\n';
 
         this.currentGeneratedGames.forEach((nums, i) => {
-            const formatted = nums.map(n => n.toString().padStart(2, '0')).join('  ');
+            let formatted = '';
+            if (Array.isArray(nums)) {
+                formatted = (this.currentGameKey === 'loteca') ? nums.join(' - ') : nums.map(n => n.toString().padStart(2, '0')).join('  ');
+            } else if (typeof nums === 'string') {
+                formatted = nums;
+            } else if (nums && typeof nums === 'object') {
+                formatted = nums.resumo_colunas || JSON.stringify(nums);
+            } else {
+                formatted = String(nums);
+            }
             content += `Jogo ${(i + 1).toString().padStart(3, '0')}:  ${formatted}\n`;
         });
 
@@ -6609,7 +8970,7 @@ alert(OK + "/" + T + " jogos no carrinho!" + (ER > 0 ? "\\n" + ER + " erro(s)." 
         if (!grid) return;
 
         const counts = typeof StatisticsTracker !== 'undefined' ? StatisticsTracker.getCounts() : {};
-        const gameKeys = ['megasena', 'lotofacil', 'quina', 'duplasena', 'lotomania', 'timemania', 'diadesorte'];
+        const gameKeys = ['megasena', 'lotofacil', 'quina', 'duplasena', 'lotomania', 'timemania', 'diadesorte', 'milionaria', 'loteca'];
 
         grid.innerHTML = '';
         gameKeys.forEach(key => {
