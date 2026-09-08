@@ -12989,51 +12989,69 @@ class MotorTimemaniaB2BEngine {
         const coberturaNumeros = new Set();
         const maxOverlap = qtd <= 30 ? 7 : (qtd <= 100 ? 8 : 9);
 
+        // Pré-computar Set de números para cada candidato (O(1) lookup em vez de Array.includes O(N))
+        candidatosComScore.forEach(c => { c.jogoSet = new Set(c.jogo); });
+
+        // Conjunto de índices já selecionados para O(1) lookup no fallback
+        const selectedIndices = new Set([0]);
+
         // Primeiro jogo
         jogosSelecionados.push(candidatosComScore[0]);
         candidatosComScore[0].jogo.forEach(n => coberturaNumeros.add(n));
 
+        // Limitar pool de busca para evitar complexidade O(N³) em grandes quantidades
+        const limitePool = Math.min(candidatosComScore.length, Math.max(300, Math.min(qtd * 2, 3000)));
+
         while (jogosSelecionados.length < qtd) {
             let melhorCand = null;
             let melhorGanho = -1e9;
+            let melhorIdx = -1;
 
-            const poolBusca = candidatosComScore.slice(0, Math.min(candidatosComScore.length, Math.max(300, qtd * 4)));
-
-            for (const candItem of poolBusca) {
-                const setCand = new Set(candItem.jogo);
+            for (let ci = 0; ci < limitePool; ci++) {
+                if (selectedIndices.has(ci)) continue;
+                const candItem = candidatosComScore[ci];
                 let maxOv = 0;
                 for (const sel of jogosSelecionados) {
                     let ov = 0;
-                    candItem.jogo.forEach(n => { if (sel.jogo.includes(n)) ov++; });
+                    for (const n of candItem.jogo) {
+                        if (sel.jogoSet.has(n)) ov++;
+                    }
                     if (ov > maxOv) maxOv = ov;
+                    if (maxOv >= maxOverlap) break; // early-exit: já sabemos que este candidato falha
                 }
 
                 if (maxOv >= maxOverlap) continue;
 
                 let novos = 0;
-                candItem.jogo.forEach(n => { if (!coberturaNumeros.has(n)) novos++; });
+                for (const n of candItem.jogo) {
+                    if (!coberturaNumeros.has(n)) novos++;
+                }
 
                 const ganho = 0.50 * candItem.scoreGlobal + 0.35 * (novos * 10) - 0.15 * (maxOv * 8);
                 if (ganho > melhorGanho) {
                     melhorGanho = ganho;
                     melhorCand = candItem;
+                    melhorIdx = ci;
                 }
             }
 
             if (melhorCand) {
                 jogosSelecionados.push(melhorCand);
                 melhorCand.jogo.forEach(n => coberturaNumeros.add(n));
+                selectedIndices.add(melhorIdx);
             } else {
-                for (const candItem of candidatosComScore) {
-                    if (!jogosSelecionados.includes(candItem)) {
-                        jogosSelecionados.push(candItem);
-                        candItem.jogo.forEach(n => coberturaNumeros.add(n));
+                // Fallback: adicionar o próximo candidato não selecionado
+                for (let ci = 0; ci < candidatosComScore.length; ci++) {
+                    if (!selectedIndices.has(ci)) {
+                        jogosSelecionados.push(candidatosComScore[ci]);
+                        candidatosComScore[ci].jogo.forEach(n => coberturaNumeros.add(n));
+                        selectedIndices.add(ci);
                         break;
                     }
                 }
             }
 
-            if (jogosSelecionados.length === candidatosComScore.length) break;
+            if (selectedIndices.size >= candidatosComScore.length) break;
         }
 
         // Atribuição dos Times
