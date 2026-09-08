@@ -12810,6 +12810,11 @@ class MotorTimemaniaB2BEngine {
         const poolG2 = pool.filter(x => x >= 21 && x <= 40);
         const poolG3 = pool.filter(x => x >= 41 && x <= 60);
         const poolG4 = pool.filter(x => x >= 61 && x <= 80);
+        const expP = sniper ? 2.2 : 1.2;
+        const weightsG1 = poolG1.map(n => Math.pow(ifmScores[n] || 50, expP));
+        const weightsG2 = poolG2.map(n => Math.pow(ifmScores[n] || 50, expP));
+        const weightsG3 = poolG3.map(n => Math.pow(ifmScores[n] || 50, expP));
+        const weightsG4 = poolG4.map(n => Math.pow(ifmScores[n] || 50, expP));
 
         const particoes = sniper ? [
             [3, 3, 2, 2], [3, 2, 3, 2], [3, 2, 2, 3],
@@ -12821,18 +12826,17 @@ class MotorTimemaniaB2BEngine {
             [3, 3, 3, 1], [3, 3, 1, 3], [3, 1, 3, 3], [1, 3, 3, 3]
         ];
 
-        const amostrarGrupo = (arr, k) => {
+        const amostrarGrupo = (arr, weights, k) => {
             if (k <= 0 || !arr || arr.length === 0) return [];
             if (arr.length <= k) return [...arr].sort((a, b) => a - b);
 
-            const weights = arr.map(n => Math.pow(ifmScores[n] || 50, sniper ? 2.2 : 1.2));
-            
-            for (let t = 0; t < 100; t++) {
-                const scored = arr.map((num, i) => {
+            for (let t = 0; t < 25; t++) {
+                const scored = new Array(arr.length);
+                for (let i = 0; i < arr.length; i++) {
                     const r = Math.random();
                     const key = Math.pow(r, 1.0 / Math.max(0.0001, weights[i]));
-                    return { key, num };
-                });
+                    scored[i] = { key, num: arr[i] };
+                }
                 scored.sort((a, b) => b.key - a.key);
                 const cand = scored.slice(0, k).map(x => x.num).sort((a, b) => a - b);
 
@@ -12884,30 +12888,31 @@ class MotorTimemaniaB2BEngine {
                 }
             }
 
-            const soma = jogo.reduce((a, b) => a + b, 0);
+            const soma = jogo[0] + jogo[1] + jogo[2] + jogo[3] + jogo[4] + jogo[5] + jogo[6] + jogo[7] + jogo[8] + jogo[9];
             if (soma < somaMinValida || soma > somaMaxValida) return false;
             return true;
         };
 
-        // Geração de Candidatos
+        // Geração de Candidatos escalável
         const candidatos = [];
-        const totalCands = Math.max(qtd * 25, 400);
+        const totalCands = Math.max(qtd * 3, 500);
         const candSets = new Set();
 
         let attempts = 0;
-        while (candidatos.length < totalCands && attempts < totalCands * 8) {
+        const maxAtt = totalCands * 6;
+        while (candidatos.length < totalCands && attempts < maxAtt) {
             attempts++;
-            const part = particoes[Math.floor(Math.random() * particoes.length)];
+            const part = particoes[attempts % particoes.length];
             let cand = [];
 
             if (poolG1.length < part[0] || poolG2.length < part[1] || poolG3.length < part[2] || poolG4.length < part[3]) {
                 cand = [...pool].sort(() => 0.5 - Math.random()).slice(0, 10).sort((a, b) => a - b);
             } else {
                 cand = [
-                    ...amostrarGrupo(poolG1, part[0]),
-                    ...amostrarGrupo(poolG2, part[1]),
-                    ...amostrarGrupo(poolG3, part[2]),
-                    ...amostrarGrupo(poolG4, part[3])
+                    ...amostrarGrupo(poolG1, weightsG1, part[0]),
+                    ...amostrarGrupo(poolG2, weightsG2, part[1]),
+                    ...amostrarGrupo(poolG3, weightsG3, part[2]),
+                    ...amostrarGrupo(poolG4, weightsG4, part[3])
                 ].sort((a, b) => a - b);
             }
 
@@ -12920,26 +12925,12 @@ class MotorTimemaniaB2BEngine {
             }
         }
 
-        // Fallback garantido (com teto de segurança contra loop infinito)
+        // Fallback garantido
         let fallbackAttempts = 0;
-        while (candidatos.length < qtd && fallbackAttempts < 1000) {
+        while (candidatos.length < qtd && fallbackAttempts < 2000) {
             fallbackAttempts++;
             const cand = [...pool].sort(() => 0.5 - Math.random()).slice(0, 10).sort((a, b) => a - b);
             if (validarJogo(cand)) {
-                const key = cand.join('-');
-                if (!candSets.has(key)) {
-                    candSets.add(key);
-                    candidatos.push(cand);
-                }
-            }
-        }
-
-        // Se por restrições extremas ainda faltar, preencher mantendo 10 dezenas únicas
-        let safeAttempts = 0;
-        while (candidatos.length < qtd && safeAttempts < 300) {
-            safeAttempts++;
-            const cand = [...pool].sort(() => 0.5 - Math.random()).slice(0, 10).sort((a, b) => a - b);
-            if (cand.length === 10 && new Set(cand).size === 10) {
                 const key = cand.join('-');
                 if (!candSets.has(key)) {
                     candSets.add(key);
@@ -12955,7 +12946,7 @@ class MotorTimemaniaB2BEngine {
             const g2 = c.filter(x => x >= 21 && x <= 40).length;
             const g3 = c.filter(x => x >= 41 && x <= 60).length;
             const g4 = c.filter(x => x >= 61 && x <= 80).length;
-            const pares = c.filter(x => x % 2 === 0).length;
+            const pares = c.filter(n => n % 2 === 0).length;
             const impares = 10 - pares;
             const soma = c.reduce((a, b) => a + b, 0);
             const scoreGlobal = Math.round((0.50 * ifmMedio + 0.25 * (100 - Math.abs(pares - impares) * 12) + 0.25 * (100 - Math.abs(soma - 405) / 2)) * 10) / 10;
@@ -12966,7 +12957,8 @@ class MotorTimemaniaB2BEngine {
                 ifmMedio: Math.round(ifmMedio * 10) / 10,
                 estruturaGrupos: `${g1}-${g2}-${g3}-${g4}`,
                 paridade: `${pares}P/${impares}I`,
-                soma
+                soma,
+                jogoSet: new Set(c)
             };
         });
 
@@ -12978,53 +12970,53 @@ class MotorTimemaniaB2BEngine {
                 ifmMedio: 75.0,
                 estruturaGrupos: "3-3-2-2",
                 paridade: "5P/5I",
-                soma: emergency.reduce((a, b) => a + b, 0)
+                soma: emergency.reduce((a, b) => a + b, 0),
+                jogoSet: new Set(emergency)
             });
         }
 
         candidatosComScore.sort((a, b) => b.scoreGlobal - a.scoreGlobal);
 
-        // OTIMIZAÇÃO SUBMODULAR GULOSA
+        // Otimização Submodular Gulosa com janela de diversificação ultra-rápida
         const jogosSelecionados = [];
         const coberturaNumeros = new Set();
-        const maxOverlap = qtd <= 30 ? 7 : (qtd <= 100 ? 8 : 9);
-
-        // Pré-computar Set de números para cada candidato (O(1) lookup em vez de Array.includes O(N))
-        candidatosComScore.forEach(c => { c.jogoSet = new Set(c.jogo); });
-
-        // Conjunto de índices já selecionados para O(1) lookup no fallback
         const selectedIndices = new Set([0]);
+        const maxOverlap = qtd <= 30 ? 7 : (qtd <= 100 ? 8 : 9);
 
         // Primeiro jogo
         jogosSelecionados.push(candidatosComScore[0]);
         candidatosComScore[0].jogo.forEach(n => coberturaNumeros.add(n));
 
-        // Limitar pool de busca para evitar complexidade O(N³) em grandes quantidades
-        const limitePool = Math.min(candidatosComScore.length, Math.max(300, Math.min(qtd * 2, 3000)));
+        const poolBuscaMax = Math.min(candidatosComScore.length, Math.max(100, Math.min(qtd * 2, 600)));
+        const windowOverlap = qtd <= 100 ? 100 : 40;
 
-        while (jogosSelecionados.length < qtd) {
+        while (jogosSelecionados.length < qtd && selectedIndices.size < candidatosComScore.length) {
             let melhorCand = null;
             let melhorGanho = -1e9;
             let melhorIdx = -1;
 
-            for (let ci = 0; ci < limitePool; ci++) {
+            const checkStart = Math.max(0, jogosSelecionados.length - windowOverlap);
+
+            for (let ci = 0; ci < poolBuscaMax; ci++) {
                 if (selectedIndices.has(ci)) continue;
                 const candItem = candidatosComScore[ci];
+
                 let maxOv = 0;
-                for (const sel of jogosSelecionados) {
+                for (let s = checkStart; s < jogosSelecionados.length; s++) {
+                    const sel = jogosSelecionados[s];
                     let ov = 0;
-                    for (const n of candItem.jogo) {
-                        if (sel.jogoSet.has(n)) ov++;
+                    for (let n = 0; n < 10; n++) {
+                        if (sel.jogoSet.has(candItem.jogo[n])) ov++;
                     }
                     if (ov > maxOv) maxOv = ov;
-                    if (maxOv >= maxOverlap) break; // early-exit: já sabemos que este candidato falha
+                    if (maxOv >= maxOverlap) break;
                 }
 
                 if (maxOv >= maxOverlap) continue;
 
                 let novos = 0;
-                for (const n of candItem.jogo) {
-                    if (!coberturaNumeros.has(n)) novos++;
+                for (let n = 0; n < 10; n++) {
+                    if (!coberturaNumeros.has(candItem.jogo[n])) novos++;
                 }
 
                 const ganho = 0.50 * candItem.scoreGlobal + 0.35 * (novos * 10) - 0.15 * (maxOv * 8);
@@ -13040,7 +13032,6 @@ class MotorTimemaniaB2BEngine {
                 melhorCand.jogo.forEach(n => coberturaNumeros.add(n));
                 selectedIndices.add(melhorIdx);
             } else {
-                // Fallback: adicionar o próximo candidato não selecionado
                 for (let ci = 0; ci < candidatosComScore.length; ci++) {
                     if (!selectedIndices.has(ci)) {
                         jogosSelecionados.push(candidatosComScore[ci]);
@@ -13050,8 +13041,28 @@ class MotorTimemaniaB2BEngine {
                     }
                 }
             }
+        }
 
-            if (selectedIndices.size >= candidatosComScore.length) break;
+        // Se faltar para quantidade solicitada, completa com novas combinações únicas válidas
+        while (jogosSelecionados.length < qtd) {
+            const cand = [...pool].sort(() => 0.5 - Math.random()).slice(0, 10).sort((a, b) => a - b);
+            if (validarJogo(cand)) {
+                const key = cand.join('-');
+                if (!candSets.has(key)) {
+                    candSets.add(key);
+                    const item = {
+                        jogo: cand,
+                        scoreGlobal: 80.0,
+                        ifmMedio: 80.0,
+                        estruturaGrupos: "3-3-2-2",
+                        paridade: "5P/5I",
+                        soma: cand.reduce((a, b) => a + b, 0),
+                        jogoSet: new Set(cand)
+                    };
+                    jogosSelecionados.push(item);
+                    cand.forEach(n => coberturaNumeros.add(n));
+                }
+            }
         }
 
         // Atribuição dos Times
@@ -19913,9 +19924,11 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         this.currentGeneratedGames = result.games;
         this._lastInternalEngine = result.internalEngine || 'Desconhecido';
         
-        // Gerar múltiplos times/meses distribuídos com máxima cobertura (sem repetição precoce)
+        // Preservar times/meses/trevos já definidos pelo motor oficial; só gerar fallback se ausentes
         if (gameKey === 'timemania' || gameKey === 'diadesorte') {
-            this.currentGeneratedExtras = this._generateExtras(gameKey, result.games.length);
+            if (!this.currentGeneratedExtras || this.currentGeneratedExtras.length !== result.games.length) {
+                this.currentGeneratedExtras = this._generateExtras(gameKey, result.games.length);
+            }
         } else if (gameKey !== 'milionaria') {
             // Para +Milionária, os trevos já foram definidos ANTES de renderGames ser chamado
             // e devem ser preservados. Para as demais loterias, limpar.
@@ -20771,8 +20784,8 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 let digits = [];
                 if (Array.isArray(g)) {
                     digits = g.map(n => parseInt(n));
-                } else if (g && typeof g === 'object' && Array.isArray(g.jogo)) {
-                    digits = g.jogo.map(n => parseInt(n));
+                } else if (g && typeof g === 'object' && Array.isArray(g.jogo || g.numeros || g.dezenas)) {
+                    digits = (g.jogo || g.numeros || g.dezenas).map(n => parseInt(n));
                 } else if (typeof g === 'string') {
                     digits = g.split(/[\s,-|]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
                 }
@@ -20780,7 +20793,7 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             });
         } else {
             normalizedGames = (games || []).map((g, idx) => {
-                let nums = Array.isArray(g) ? g : (g.jogo || []);
+                let nums = Array.isArray(g) ? g : (g.jogo || g.numeros || g.dezenas || []);
                 if (isLM) {
                     nums = nums.map(n => {
                         let v = parseInt(n);
@@ -21861,19 +21874,24 @@ if(pp){
             }
             let extra = '';
             if (isTimemania && extras[index] !== undefined && extras[index] !== null) {
-                const timeName = (typeof L99_TIMES !== 'undefined' && L99_TIMES[extras[index]])
-                    ? L99_TIMES[extras[index]]
-                    : `Time #${extras[index]}`;
+                const rawTime = extras[index];
+                const timeName = typeof rawTime === 'string'
+                    ? rawTime
+                    : ((typeof L99_TIMES !== 'undefined' && L99_TIMES[rawTime]) ? L99_TIMES[rawTime] : `Time #${rawTime}`);
                 extra = ` | Time: ${timeName}`;
             } else if (isDiaDeSorte) {
                 if (extras[index] !== undefined && extras[index] !== null) {
-                    const mesNome = (typeof L99_MESES !== 'undefined' && L99_MESES[extras[index]])
-                        ? L99_MESES[extras[index]]
-                        : (mesSorte || `Mês #${extras[index]}`);
+                    const rawMes = extras[index];
+                    const mesNome = typeof rawMes === 'string'
+                        ? rawMes
+                        : ((typeof L99_MESES !== 'undefined' && L99_MESES[rawMes]) ? L99_MESES[rawMes] : (mesSorte || `Mês #${rawMes}`));
                     extra = ` | Mês: ${mesNome}`;
                 } else if (mesSorte) {
                     extra = ` | Mês: ${mesSorte}`;
                 }
+            } else if (this.currentGameKey === 'milionaria' && extras[index] !== undefined && extras[index] !== null) {
+                const tr = Array.isArray(extras[index]) ? extras[index].map(t => String(t).padStart(2, '0')).join(' ') : String(extras[index]);
+                extra = ` | Trevos: 🍀 ${tr}`;
             }
             content += `Jogo ${String(index + 1).padStart(3, '0')}: ${nums}${extra}
 `;

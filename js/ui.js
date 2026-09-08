@@ -5240,9 +5240,11 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         this.currentGeneratedGames = result.games;
         this._lastInternalEngine = result.internalEngine || 'Desconhecido';
         
-        // Gerar múltiplos times/meses distribuídos com máxima cobertura (sem repetição precoce)
+        // Preservar times/meses/trevos já definidos pelo motor oficial; só gerar fallback se ausentes
         if (gameKey === 'timemania' || gameKey === 'diadesorte') {
-            this.currentGeneratedExtras = this._generateExtras(gameKey, result.games.length);
+            if (!this.currentGeneratedExtras || this.currentGeneratedExtras.length !== result.games.length) {
+                this.currentGeneratedExtras = this._generateExtras(gameKey, result.games.length);
+            }
         } else if (gameKey !== 'milionaria') {
             // Para +Milionária, os trevos já foram definidos ANTES de renderGames ser chamado
             // e devem ser preservados. Para as demais loterias, limpar.
@@ -6098,8 +6100,8 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 let digits = [];
                 if (Array.isArray(g)) {
                     digits = g.map(n => parseInt(n));
-                } else if (g && typeof g === 'object' && Array.isArray(g.jogo)) {
-                    digits = g.jogo.map(n => parseInt(n));
+                } else if (g && typeof g === 'object' && Array.isArray(g.jogo || g.numeros || g.dezenas)) {
+                    digits = (g.jogo || g.numeros || g.dezenas).map(n => parseInt(n));
                 } else if (typeof g === 'string') {
                     digits = g.split(/[\s,-|]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
                 }
@@ -6107,7 +6109,7 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             });
         } else {
             normalizedGames = (games || []).map((g, idx) => {
-                let nums = Array.isArray(g) ? g : (g.jogo || []);
+                let nums = Array.isArray(g) ? g : (g.jogo || g.numeros || g.dezenas || []);
                 if (isLM) {
                     nums = nums.map(n => {
                         let v = parseInt(n);
@@ -7188,19 +7190,24 @@ if(pp){
             }
             let extra = '';
             if (isTimemania && extras[index] !== undefined && extras[index] !== null) {
-                const timeName = (typeof L99_TIMES !== 'undefined' && L99_TIMES[extras[index]])
-                    ? L99_TIMES[extras[index]]
-                    : `Time #${extras[index]}`;
+                const rawTime = extras[index];
+                const timeName = typeof rawTime === 'string'
+                    ? rawTime
+                    : ((typeof L99_TIMES !== 'undefined' && L99_TIMES[rawTime]) ? L99_TIMES[rawTime] : `Time #${rawTime}`);
                 extra = ` | Time: ${timeName}`;
             } else if (isDiaDeSorte) {
                 if (extras[index] !== undefined && extras[index] !== null) {
-                    const mesNome = (typeof L99_MESES !== 'undefined' && L99_MESES[extras[index]])
-                        ? L99_MESES[extras[index]]
-                        : (mesSorte || `Mês #${extras[index]}`);
+                    const rawMes = extras[index];
+                    const mesNome = typeof rawMes === 'string'
+                        ? rawMes
+                        : ((typeof L99_MESES !== 'undefined' && L99_MESES[rawMes]) ? L99_MESES[rawMes] : (mesSorte || `Mês #${rawMes}`));
                     extra = ` | Mês: ${mesNome}`;
                 } else if (mesSorte) {
                     extra = ` | Mês: ${mesSorte}`;
                 }
+            } else if (this.currentGameKey === 'milionaria' && extras[index] !== undefined && extras[index] !== null) {
+                const tr = Array.isArray(extras[index]) ? extras[index].map(t => String(t).padStart(2, '0')).join(' ') : String(extras[index]);
+                extra = ` | Trevos: 🍀 ${tr}`;
             }
             content += `Jogo ${String(index + 1).padStart(3, '0')}: ${nums}${extra}
 `;
