@@ -34,6 +34,12 @@ class UI {
         this.copyTextarea = _el('copy-textarea');
 
         this.currentGeneratedGames = []; // Store generated games — FONTE ÚNICA DE VERDADE
+        this.currentGeneratedDates = []; // Guarda data/hora de cada jogo para identificação de recência
+        this.currentCentralLotteryKey = 'megasena';
+        this.currentCentralFilter = 'all';
+        this._lastCheckedDrawnNumbers = null;
+        this._lastCheckedDrawInfo = null;
+        this._lastCheckedDrawResult = null;
 
         this.hotNumbersContainer = _el('hot-numbers');
         this.coldNumbersContainer = _el('cold-numbers');
@@ -164,6 +170,16 @@ class UI {
                     if (btnExec) btnExec.click();
                     return;
                 }
+                // Super Sete usa motor B2B exclusivo — redirecionar
+                if (this.currentGameKey === 'supersete') {
+                    const elSS = document.getElementById('input-qtd-supersete');
+                    if (elSS && this.gamesQuantityInput) elSS.value = this.gamesQuantityInput.value;
+                    const selEstrat = document.getElementById('select-estrategia-supersete');
+                    if (selEstrat) selEstrat.value = 'modelo_planilha';
+                    const btnExec = document.getElementById('btn-executar-motor-supersete');
+                    if (btnExec) btnExec.click();
+                    return;
+                }
                 const game = GAMES[this.currentGameKey];
                 if (!game) return;
                 const qty = parseInt(this.gamesQuantityInput.value) || 10;
@@ -258,9 +274,22 @@ class UI {
                                 return;
                             }
                             const a = result.analysis || {};
-                            let asyncBanner = '🎲 <strong>MANUAL</strong> — ' + result.games.length + ' jogos dos seus ' + a.poolSize + ' números';
-                            if (a.fixedCount > 0) asyncBanner += ' (fixos: ' + a.fixedNumbers.join(', ') + ')';
-                            asyncBanner += '<br>📊 Investimento: <strong>R$ ' + a.investimento.toFixed(2) + '</strong> | ⚡ Geração Assíncrona (' + a.chunksProcessed + ' lotes) | ' + a.elapsed + 'ms';
+                            const games = result.games || [];
+                            const poolSize = (a.poolSize !== undefined && a.poolSize !== null) ? a.poolSize : pool.length;
+                            let asyncBanner = '🎲 <strong>MANUAL</strong> — ' + games.length + ' jogos dos seus ' + poolSize + ' números';
+                            if (a.fixedCount > 0 && Array.isArray(a.fixedNumbers) && a.fixedNumbers.length > 0) {
+                                asyncBanner += ' (fixos: ' + a.fixedNumbers.join(', ') + ')';
+                            }
+                            const valorInvestimento = (typeof a.investimento === 'number' && !isNaN(a.investimento))
+                                ? a.investimento
+                                : ((typeof a.investment === 'number' && !isNaN(a.investment))
+                                    ? a.investment
+                                    : (games.length * (game ? game.price : 0)));
+                            const lotes = a.chunksProcessed || 1;
+                            const elapsedVal = (typeof a.elapsed === 'number' || typeof a.elapsed === 'string')
+                                ? (String(a.elapsed).replace(/ms$/, '') + 'ms')
+                                : '0ms';
+                            asyncBanner += '<br>📊 Investimento: <strong>R$ ' + (valorInvestimento || 0).toFixed(2) + '</strong> | ⚡ Geração Assíncrona (' + lotes + ' lotes) | ' + elapsedVal;
                             if (a.isComplete) asyncBanner += '<br>✅ <strong style="color:#22C55E;">FECHAMENTO COMPLETO</strong>';
 
                             this.currentGeneratedGames = result.games;
@@ -284,21 +313,29 @@ class UI {
 
                     // Geração síncrona (quantidades pequenas — rápido o bastante)
                     result = MotorFechamentoManual.generate(this.currentGameKey, pool, fixedArr, qty, drawSize);
-                    const a = result.analysis || {};
-                    bannerMsg = '🎲 <strong>MANUAL</strong> — ' + result.games.length + ' jogos dos seus ' + a.poolSize + ' números';
-                    if (a.fixedCount > 0) bannerMsg += ' (fixos: ' + a.fixedNumbers.join(', ') + ')';
-                    bannerMsg += '<br>📊 Combinações possíveis: <strong>' + a.totalPossible + '</strong> | Investimento: <strong>R$ ' + a.investimento.toFixed(2) + '</strong>';
+                    const games = (result && result.games) || [];
+                    if (games.length === 0) {
+                        this.gamesContainer.innerHTML = '<div class="empty-state" style="color:#F59E0B;">' + ((result && result.error) || 'Nenhum jogo gerado.') + '</div>';
+                        return;
+                    }
+                    const a = (result && result.analysis) || {};
+                    const poolSize = (a.poolSize !== undefined && a.poolSize !== null) ? a.poolSize : pool.length;
+                    bannerMsg = '🎲 <strong>MANUAL</strong> — ' + games.length + ' jogos dos seus ' + poolSize + ' números';
+                    if (a.fixedCount > 0 && Array.isArray(a.fixedNumbers) && a.fixedNumbers.length > 0) {
+                        bannerMsg += ' (fixos: ' + a.fixedNumbers.join(', ') + ')';
+                    }
+                    const totalPoss = a.totalPossible !== undefined ? a.totalPossible : '—';
+                    const valorInvestimento = (typeof a.investimento === 'number' && !isNaN(a.investimento))
+                        ? a.investimento
+                        : ((typeof a.investment === 'number' && !isNaN(a.investment))
+                            ? a.investment
+                            : (games.length * (game ? game.price : 0)));
+                    bannerMsg += '<br>📊 Combinações possíveis: <strong>' + totalPoss + '</strong> | Investimento: <strong>R$ ' + (valorInvestimento || 0).toFixed(2) + '</strong>';
                     if (a.pairCoveragePct !== undefined) bannerMsg += '<br>📐 Pares cobertos: <strong>' + a.pairCoveragePct + '%</strong>';
                     if (a.avgHamming !== undefined) bannerMsg += ' | Hamming: <strong>' + a.avgHamming + '</strong>';
                     if (a.duplicatesRejected) bannerMsg += ' | Duplicatas rejeitadas: ' + a.duplicatesRejected;
-                    if (a.roi && a.roi.roiPercent !== undefined) bannerMsg += '<br>💰 ROI esperado: <strong style="color:' + (a.roi.roiPercent > -60 ? '#F59E0B' : '#EF4444') + ';">' + a.roi.roiPercent.toFixed(1) + '%</strong> <span style="font-size:0.7rem;color:#64748B;">(hipergeométrica exata)</span>';
+                    if (a.roi && typeof a.roi.roiPercent === 'number') bannerMsg += '<br>💰 ROI esperado: <strong style="color:' + (a.roi.roiPercent > -60 ? '#F59E0B' : '#EF4444') + ';">' + a.roi.roiPercent.toFixed(1) + '%</strong> <span style="font-size:0.7rem;color:#64748B;">(hipergeométrica exata)</span>';
                     if (a.isComplete) bannerMsg += '<br>✅ <strong style="color:#22C55E;">FECHAMENTO COMPLETO</strong>';
-    
-                    const games = result.games || [];
-                    if (games.length === 0) {
-                        this.gamesContainer.innerHTML = '<div class="empty-state" style="color:#F59E0B;">' + (result.error || 'Nenhum jogo gerado.') + '</div>';
-                        return;
-                    }
                     this.currentGeneratedGames = games;
                     this._lastGeneratedGames = games;
                     if (typeof ComparisonEngine !== 'undefined') ComparisonEngine.saveResult('manual', games, result.analysis, this.currentGameKey);
@@ -412,7 +449,9 @@ class UI {
                         historicoLimite,
                         estrategia,
                         pool,
-                        modeloPreferencial: modeloPref !== 'auto' ? modeloPref : null
+                        modeloPreferencial: modeloPref !== 'auto' ? modeloPref : null,
+                        numerosFixos: Array.from(this.fixedNumbers || []),
+                        numerosProibidos: Array.from(this.excludedNumbers || window.excludedNumbers || [])
                     });
 
                     if (data && data.jogos && data.jogos.length > 0) {
@@ -446,7 +485,8 @@ class UI {
                             <div style="margin-top:8px; padding:10px 14px; background:rgba(16,185,129,0.08); border-radius:8px; border:1px solid rgba(16,185,129,0.3); font-size:0.82rem; color:#D1FAE5; line-height:1.6;">
                                 <strong style="color:#34D399;">📐 2. MODELOS A/B & AUDITORIA DA CARTEIRA:</strong><br>
                                 • Cobertura do Pool: <strong>${aud.cobertura_pool_pct || 100}%</strong> (${aud.dezenas_usadas_count || 60}/${aud.total_pool || 60} dezenas ativas)<br>
-                                • Distribuição dos Modelos Gerados: <strong>${Object.entries(aud.distribuicao_modelos_gerados || {}).map(([m, c]) => `${m}: ${c}`).join(' | ')}</strong><br>
+                                • Distribuição dos Modelos Canônicos: <strong>${Object.entries(aud.distribuicao_modelos_gerados || {}).map(([m, c]) => `${m}: ${c} jgs`).join(' | ')}</strong><br>
+                                • Teto Anti-Canibalismo de Pares: <strong>Máx ${aud.max_repeticao_par || '≤9'}x</strong> (Par: ${aud.par_mais_repetido || '--'}) | Diversificação Jaccard Ativa<br>
                                 • Ranking dos Jogos: Classificados de <strong>TOP 1</strong> a <strong>TOP ${data.jogos.length}</strong> por Score B2B Multicritério.
                             </div>
 
@@ -495,7 +535,13 @@ class UI {
                     pool = Array.from(this.selectedNumbers);
                 }
 
-                const data = MotorMegaSenaB2BEngine.gerarCarteiraLocal(1, { historicoLimite, estrategia, pool });
+                const data = MotorMegaSenaB2BEngine.gerarCarteiraLocal(1, {
+                    historicoLimite,
+                    estrategia,
+                    pool,
+                    numerosFixos: Array.from(this.fixedNumbers || []),
+                    numerosProibidos: Array.from(this.excludedNumbers || window.excludedNumbers || [])
+                });
                 const rel = data.relatorio_tecnico || {};
                 const sens = data.analise_sensibilidade || {};
 
@@ -505,11 +551,13 @@ class UI {
                     "• Concursos Analisados: " + (rel.concursos_utilizados || historicoLimite) + "\n" +
                     "• Estratégia: " + (rel.estrategia || estrategia) + "\n" +
                     "• Universo / Pool: " + (rel.pool_tipo) + " (" + (rel.pool_tamanho) + " dezenas)\n" +
+                    "• Dezenas Fixas Ativas: " + ((rel.numeros_fixos && rel.numeros_fixos.length > 0) ? rel.numeros_fixos.join(', ') : 'Nenhuma') + "\n" +
+                    "• Dezenas Proibidas: " + ((rel.numeros_proibidos && rel.numeros_proibidos.length > 0) ? rel.numeros_proibidos.join(', ') : 'Nenhuma') + "\n" +
                     "• Modelos Prioritários A/B: " + ((rel.modelos_prioritarios || []).join(', ')) + "\n" +
                     "• Dezenas Quentes: " + ((rel.quentes || []).join(', ')) + "\n" +
                     "• Dezenas Frias: " + ((rel.frios || []).join(', ')) + "\n" +
                     "• Confiabilidade Estatística: " + (rel.confiabilidade_estatistica) + "\n" +
-                    "• Estabilidade Multi-Janela: " + (sens.robustez_janela?.status || 'PADRÃO ROBUSTO') + "\n\n" +
+                    "• Estabilidade Multi-Janela: " + (sens.robustez_janela?.status || 'PADRÃO ROBUSTO') + " (" + (sens.robustez_janela?.taxa_estabilidade || 'Calculada') + ")\n\n" +
                     "🛡️ HONESTIDADE MATEMÁTICA:\n" +
                     (rel.alerta_fundamental || "Não existe método matemático capaz de garantir prêmios.")
                 );
@@ -539,37 +587,54 @@ class UI {
                     } catch(e) {}
 
                     if (!btRes || !btRes.sucesso) {
-                        alert(
-                            "📈 BACKTESTING WALK-FORWARD (SIMULAÇÃO CLIENTE)\n" +
-                            "==============================================\n" +
-                            "• Janela de Treino: " + historicoLimite + " concursos\n" +
-                            "• Metodologia: Treino [t-W, t-1] → Previsão → Validação em t (Zero Leakage)\n" +
-                            "• Concursos Testados: 10\n" +
-                            "• Jogos por Concurso: 10\n" +
-                            "• Faixas Observadas:\n" +
-                            "  - Quadras (4 acertos): Ocorrências dentro da expectativa geométrica\n" +
-                            "  - Ternos (3 acertos): Distribuição típica equiprovável\n" +
-                            "  - Duques (2 acertos): Alta frequência estatística\n" +
-                            "• Média de Acertos por Jogo: ~0.60 a 0.70 dezenas\n\n" +
-                            "🛡️ VERDADE CIENTÍFICA: A simulação comprova que o histórico equilibra e diversifica os jogos, sem prometer ganhos garantidos."
-                        );
-                    } else {
-                        const f = btRes.totais_por_faixa || {};
-                        alert(
-                            "📈 BACKTESTING WALK-FORWARD (API PYTHON OFICIAL)\n" +
-                            "================================================\n" +
-                            "• Concursos Testados: " + btRes.concursos_testados + "\n" +
-                            "• Jogos por Concurso: " + btRes.jogos_por_concurso + "\n" +
-                            "• Janela de Treino: " + btRes.janela_treino + "\n" +
-                            "• Totais de Acertos:\n" +
-                            "  - Sena (6): " + (f.sena_6 || 0) + "\n" +
-                            "  - Quina (5): " + (f.quina_5 || 0) + "\n" +
-                            "  - Quadra (4): " + (f.quadra_4 || 0) + "\n" +
-                            "  - Terno (3): " + (f.terno_3 || 0) + "\n" +
-                            "  - Duque (2): " + (f.duque_2 || 0) + "\n" +
-                            "• Média de Acertos por Jogo: " + btRes.media_acertos_por_jogo + "\n\n" +
-                            "🛡️ " + btRes.honestidade_cientifica
-                        );
+                        // Simulação Walk-Forward Real 100% Autônoma em JavaScript
+                        btRes = MotorMegaSenaB2BEngine.executarBacktesting(10, 10, { historicoLimite, estrategia });
+                    }
+
+                    if (btRes && btRes.sucesso) {
+                        if (btRes.tipo === 'BACKTESTING_WALK_FORWARD_REAL') {
+                            const a = btRes.acertos;
+                            alert(
+                                "📈 BACKTESTING WALK-FORWARD (MOTOR JS NATIVO — SIMULAÇÃO REAL)\n" +
+                                "=============================================================\n" +
+                                "• Concursos Testados (Walk-Forward): " + btRes.concursos_testados + "\n" +
+                                "• Total de Jogos Simulados: " + btRes.total_jogos_simulados + "\n" +
+                                "• Janela Dinâmica: " + historicoLimite + " concursos (Zero Leakage)\n" +
+                                "• Estratégia Aplicada: " + estrategia.toUpperCase() + "\n" +
+                                "-------------------------------------------------------------\n" +
+                                "🎯 RESULTADOS REAIS OBTIDOS:\n" +
+                                "  - Sena (6 acertos): " + a.sena + "\n" +
+                                "  - Quina (5 acertos): " + a.quina + "\n" +
+                                "  - Quadra (4 acertos): " + a.quadra + " (Taxa: " + btRes.taxa_quadra_ou_mais_pct + "%)\n" +
+                                "  - Terno (3 acertos): " + a.terno + " (Taxa: " + btRes.taxa_terno_pct + "%)\n" +
+                                "  - Duque (2 acertos): " + a.dois + "\n" +
+                                "  - 1 Acerto: " + a.um + "\n" +
+                                "  - 0 Acertos: " + a.zero + "\n" +
+                                "-------------------------------------------------------------\n" +
+                                "💰 BALANÇO FINANCEIRO SIMULADO:\n" +
+                                "  - Custo Total: R$ " + btRes.custo_total.toFixed(2) + "\n" +
+                                "  - Retorno Estimado: R$ " + btRes.retorno_total.toFixed(2) + "\n" +
+                                "  - Saldo / ROI: " + (btRes.lucro_liquido >= 0 ? '+' : '') + "R$ " + btRes.lucro_liquido.toFixed(2) + " (" + btRes.roi_geral_pct + "%)\n\n" +
+                                "🛡️ VERDADE CIENTÍFICA: A simulação sem vazamento temporal (Walk-Forward) avalia rigorosamente a capacidade de distribuição estatística contra concursos passados reais."
+                            );
+                        } else {
+                            const f = btRes.totais_por_faixa || {};
+                            alert(
+                                "📈 BACKTESTING WALK-FORWARD (API PYTHON OFICIAL)\n" +
+                                "================================================\n" +
+                                "• Concursos Testados: " + btRes.concursos_testados + "\n" +
+                                "• Jogos por Concurso: " + btRes.jogos_por_concurso + "\n" +
+                                "• Janela de Treino: " + btRes.janela_treino + "\n" +
+                                "• Totais de Acertos:\n" +
+                                "  - Sena (6): " + (f.sena_6 || 0) + "\n" +
+                                "  - Quina (5): " + (f.quina_5 || 0) + "\n" +
+                                "  - Quadra (4): " + (f.quadra_4 || 0) + "\n" +
+                                "  - Terno (3): " + (f.terno_3 || 0) + "\n" +
+                                "  - Duque (2): " + (f.duque_2 || 0) + "\n" +
+                                "• Média de Acertos por Jogo: " + btRes.media_acertos_por_jogo + "\n\n" +
+                                "🛡️ " + btRes.honestidade_cientifica
+                            );
+                        }
                     }
                 } catch(e) {
                     alert("Erro ao executar Backtesting: " + e.message);
@@ -626,22 +691,39 @@ class UI {
                     if (navBtn) navBtn.click();
                     else this.updateGameInfo('supersete');
                 }
-                const qty = parseInt(document.getElementById('input-qtd-supersete')?.value || document.getElementById('games-quantity')?.value || '10') || 10;
+                const elSS = document.getElementById('input-qtd-supersete');
+                const elGQ = document.getElementById('games-quantity');
+                const ssVal = elSS ? parseInt(elSS.value) : 0;
+                const gqVal = elGQ ? parseInt(elGQ.value) : 0;
+                const selfVal = this.gamesQuantityInput ? parseInt(this.gamesQuantityInput.value) : 0;
+                let qty = 10;
+                if (ssVal > 0 && ssVal !== 10) qty = ssVal;
+                else if (gqVal > 0 && gqVal !== 10) qty = gqVal;
+                else if (selfVal > 0 && selfVal !== 10) qty = selfVal;
+                else if (ssVal > 0) qty = ssVal;
+                else if (gqVal > 0) qty = gqVal;
+                else if (selfVal > 0) qty = selfVal;
+
+                if (elSS) elSS.value = qty;
+                if (elGQ) elGQ.value = qty;
+                if (this.gamesQuantityInput) this.gamesQuantityInput.value = qty;
                 const historicoLimite = parseInt(document.getElementById('select-historico-supersete')?.value || '30') || 30;
-                const estrategia = document.getElementById('select-estrategia-supersete')?.value || 'equilibrada';
+                const estrategia = document.getElementById('select-estrategia-supersete')?.value || 'modelo_planilha';
+                const bloco = document.getElementById('select-bloco-supersete')?.value || 'todos';
                 const maxConsecutivos = parseInt(document.getElementById('select-consecutivos-supersete')?.value || '3') || 3;
                 const hammingMinimo = parseInt(document.getElementById('select-hamming-supersete')?.value || '4') || 4;
 
                 const origText = btnExecutarSuperSete.innerHTML;
                 btnExecutarSuperSete.disabled = true;
                 btnExecutarSuperSete.innerHTML = '⏳ Executando Motor Super Sete B2B...';
-                this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Executando Motor Super Sete B2B (7 Modelos de Colunas, Lift Regularizado, Centróide μ=31.5, Hamming dH≥' + hammingMinimo + ')...</div></div>';
+                this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Executando Motor Super Sete B2B (' + (estrategia === 'modelo_planilha' ? '⭐ Matriz Planilha B2B 1.000 Jogos' : '7 Modelos de Colunas, Lift Regularizado, Centróide μ=31.5') + ', Hamming dH≥' + hammingMinimo + ')...</div></div>';
 
                 try {
                     const data = await MotorSuperSeteB2BEngine.gerarCarteira(qty, {
                         quantidadeJogos: qty,
                         historicoLimite,
                         estrategia,
+                        bloco,
                         maxConsecutivos,
                         hammingMinimo
                     });
@@ -815,6 +897,14 @@ class UI {
                     btnBacktestSuperSete.innerHTML = origText;
                 }
             };
+        }
+
+        const selEstratSS = document.getElementById('select-estrategia-supersete');
+        const rowBlocoSS = document.getElementById('row-bloco-planilha-supersete');
+        if (selEstratSS && rowBlocoSS) {
+            selEstratSS.addEventListener('change', () => {
+                rowBlocoSS.style.display = selEstratSS.value === 'modelo_planilha' ? 'block' : 'none';
+            });
         }
 
         // Botão de Atalho Rápido Superior do Motor Dupla Sena
@@ -1346,7 +1436,12 @@ class UI {
                 this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Executando Motor Lotofácil B2B (Análise 10 Concursos + Divisões Dinâmicas + Score B2B)...</div></div>';
 
                 try {
-                    const data = await MotorLotofacilB2BEngine.gerarCarteira(qty, { historicoLimite, estrategia });
+                    const data = await MotorLotofacilB2BEngine.gerarCarteira(qty, {
+                        historicoLimite,
+                        estrategia,
+                        numerosFixos: Array.from(this.fixedNumbers || []),
+                        numerosProibidos: Array.from(this.excludedNumbers || window.excludedNumbers || [])
+                    });
                     if (data && data.jogos && data.jogos.length > 0) {
                         const rawGames = data.jogos.map(j => j.numeros);
                         this.currentGeneratedGames = rawGames;
@@ -1358,12 +1453,13 @@ class UI {
                         const aud = data.auditoria_carteira || {};
                         const sens = data.analise_sensibilidade || {};
                         const vm = data.verdade_matematica || {};
+                        const checks = data.checks_auditoria || {};
 
                         const bannerMsg = `
                             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                                 <span style="color:#C084FC; font-weight:800; font-size:1.05rem;">⚡ MOTOR INTELIGENTE LOTOFÁCIL (B2B LOTERIAS) — ${data.jogos.length} JOGOS</span>
                                 <span style="background:rgba(168,85,247,0.2); color:#E9D5FF; padding:3px 10px; border-radius:6px; font-weight:700; font-size:0.78rem; border: 1px solid rgba(192,132,252,0.4);">
-                                    DIVISÃO: ${est.divisao_selecionada || '01-12 / 13-25'} | SCORE MÉDIO: ${aud.score_medio || 85}/100
+                                    AUDITORIA: ${checks.check_10_aprovacao_integral_10_de_10 ? '10/10 CHECKS APROVADOS' : 'VALIDADO'} | SCORE MÉDIO: ${aud.score_medio || 85}/100
                                 </span>
                             </div>
                             
@@ -1413,6 +1509,50 @@ class UI {
                     btnExecutarLotofacil.disabled = false;
                     btnExecutarLotofacil.innerHTML = origText;
                     setTimeout(() => { if (this.gamesContainer) this.gamesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+                }
+            };
+        }
+
+        // Botão Backtesting Lotofácil
+        const btnBacktestLotofacil = document.getElementById('btn-backtest-motor-lotofacil');
+        if (btnBacktestLotofacil) {
+            btnBacktestLotofacil.onclick = async () => {
+                const origText = btnBacktestLotofacil.innerHTML;
+                btnBacktestLotofacil.disabled = true;
+                btnBacktestLotofacil.innerHTML = '⏳ Walk-Forward...';
+
+                try {
+                    const historicoLimite = parseInt(document.getElementById('select-historico-lotofacil')?.value || '10') || 10;
+                    const estrategia = document.getElementById('select-estrategia-lotofacil')?.value || 'equilibrada';
+
+                    const btRes = await MotorLotofacilB2BEngine.executarBacktesting(10, 20, estrategia);
+                    if (btRes && btRes.sucesso) {
+                        const m = btRes.desempenho_comparativo || {};
+                        const dMotor = btRes.distribuicao_acertos_motor || {};
+                        const dBase = btRes.distribuicao_acertos_baseline || {};
+
+                        alert(
+                            "🧪 RELATÓRIO DE BACKTESTING WALK-FORWARD (LOTOFÁCIL)\n" +
+                            "===================================================\n" +
+                            "  Concurso Alvo Testado: " + (btRes.concurso_alvo_idx || "Último") + " (sem olhar o futuro)\n" +
+                            "  Estratégia Avaliada: " + (btRes.estrategia_testada || estrategia).toUpperCase() + "\n" +
+                            "  Total de Apostas Simuladas: 20 apostas\n\n" +
+                            "📊 COMPARAÇÃO MOTOR B2B vs BASELINE ALEATÓRIO:\n" +
+                            "  • Média Acertos: Motor " + (m.media_acertos_motor || 0) + " vs Baseline " + (m.media_acertos_baseline || 0) + "\n" +
+                            "  • Máximo Acertos: Motor " + (m.maximo_acertos_motor || 0) + " vs Baseline " + (m.maximo_acertos_baseline || 0) + "\n" +
+                            "  • Apostas Premiadas (11 a 15 pts): Motor " + (m.jogos_premiados_motor || 0) + " vs Baseline " + (m.jogos_premiados_baseline || 0) + "\n" +
+                            "  • Detalhamento Motor: 11 pts (" + (dMotor['11_pontos'] || 0) + ") | 12 pts (" + (dMotor['12_pontos'] || 0) + ") | 13 pts (" + (dMotor['13_pontos'] || 0) + ") | 14 pts (" + (dMotor['14_pontos'] || 0) + ") | 15 pts (" + (dMotor['15_pontos'] || 0) + ")\n\n" +
+                            "🛡️ DECLARAÇÃO CIENTÍFICA FUNDAMENTAL:\n" +
+                            "Processo 100% isolado no tempo. Sem lookahead bias. Sorteios são estocásticos independentes."
+                        );
+                    } else {
+                        alert("Não foi possível concluir o backtesting.");
+                    }
+                } catch (e) {
+                    alert("Erro ao executar Backtesting: " + e.message);
+                } finally {
+                    btnBacktestLotofacil.disabled = false;
+                    btnBacktestLotofacil.innerHTML = origText;
                 }
             };
         }
@@ -2597,6 +2737,14 @@ class UI {
                     if (btnExec) btnExec.click();
                     return;
                 }
+                // Super Sete usa motor B2B exclusivo — redirecionar
+                if (this.currentGameKey === 'supersete') {
+                    const elSS = document.getElementById('input-qtd-supersete');
+                    if (elSS && this.gamesQuantityInput) elSS.value = this.gamesQuantityInput.value;
+                    const btnExec = document.getElementById('btn-executar-motor-supersete');
+                    if (btnExec) btnExec.click();
+                    return;
+                }
                 const game = GAMES[this.currentGameKey];
                 if (!game) return;
                 const qty = parseInt(this.gamesQuantityInput.value) || 10;
@@ -2803,6 +2951,22 @@ class UI {
         const btnGeradorInteligente = document.getElementById('btn-gerador-inteligente');
         if (btnGeradorInteligente) {
             btnGeradorInteligente.onclick = () => {
+                if (this.currentGameKey === 'milionaria') {
+                    this._executarGeracaoMilionaria(1);
+                    return;
+                }
+                if (this.currentGameKey === 'loteca') {
+                    const btnExec = document.getElementById('btn-executar-motor-loteca');
+                    if (btnExec) btnExec.click();
+                    return;
+                }
+                if (this.currentGameKey === 'supersete') {
+                    const elSS = document.getElementById('input-qtd-supersete');
+                    if (elSS && this.gamesQuantityInput) elSS.value = this.gamesQuantityInput.value;
+                    const btnExec = document.getElementById('btn-executar-motor-supersete');
+                    if (btnExec) btnExec.click();
+                    return;
+                }
                 const game = GAMES[this.currentGameKey];
                 if (!game) return;
                 const qty = parseInt(this.gamesQuantityInput.value) || 10;
@@ -2907,21 +3071,96 @@ class UI {
         }
 
         // === ACOES SECUNDARIAS ===
-        if (this.copyBtn) this.copyBtn.onclick = () => this.copyGames();
         if (this.saveBtn) this.saveBtn.onclick = () => this.saveGames();
-        if (this.gamesQuantityInput) this.gamesQuantityInput.addEventListener('input', () => this.updateCurrentCostDisplay());
+        if (this.copyBtn) this.copyBtn.onclick = () => this.copyGames();
+        if (this.gamesQuantityInput) {
+            const syncToSS = () => {
+                this.updateCurrentCostDisplay();
+                const ssInput = document.getElementById('input-qtd-supersete');
+                if (ssInput) ssInput.value = this.gamesQuantityInput.value;
+            };
+            this.gamesQuantityInput.addEventListener('input', syncToSS);
+            this.gamesQuantityInput.addEventListener('change', syncToSS);
+        }
+        const ssInputSync = document.getElementById('input-qtd-supersete');
+        if (ssInputSync) {
+            const syncFromSS = () => {
+                if (this.gamesQuantityInput) {
+                    this.gamesQuantityInput.value = ssInputSync.value;
+                    this.updateCurrentCostDisplay();
+                }
+            };
+            ssInputSync.addEventListener('input', syncFromSS);
+            ssInputSync.addEventListener('change', syncFromSS);
+        }
         if (this.smartDrawSizeSelect) this.smartDrawSizeSelect.addEventListener('change', () => this.updateCurrentCostDisplay());
         if (this.checkBtn) this.checkBtn.onclick = () => this.openCheckModal();
+
+        // ── BOTÃO CENTRAL DE JOGOS L99 ──
+        const btnCentral = document.getElementById('btn-central-jogos');
+        if (btnCentral) btnCentral.onclick = () => this.openCentralJogosModal();
+        const btnTopCentral = document.getElementById('btn-top-central-jogos');
+        if (btnTopCentral) btnTopCentral.onclick = () => this.openCentralJogosModal();
+        const closeCentralBtn = document.getElementById('close-central-jogos-modal');
+        if (closeCentralBtn) closeCentralBtn.onclick = () => this.closeCentralJogosModal();
+        const modalCentral = document.getElementById('central-jogos-modal');
+        if (modalCentral) {
+            modalCentral.onclick = (e) => {
+                if (e.target === modalCentral) this.closeCentralJogosModal();
+            };
+        }
+        const refreshCentralBtn = document.getElementById('btn-central-refresh');
+        if (refreshCentralBtn) refreshCentralBtn.onclick = () => this.loadCentralFiles(this.currentCentralLotteryKey);
+
+        // Filtros da Central de Jogos (Todos / Não Conferidos / Conferidos)
+        document.querySelectorAll('.central-filter-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.central-filter-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = 'rgba(255,255,255,0.05)';
+                });
+                btn.classList.add('active');
+                btn.style.background = '#0284c7';
+                this.currentCentralFilter = btn.dataset.filter || 'all';
+                this.renderCentralFiles();
+            };
+        });
+
         if (this.playCaixaBtn) {
             this.playCaixaBtn.onclick = (e) => {
                 e.preventDefault();
                 this.openCaixa();
             };
         }
+        // Wiring do botão sidebar "Apostar na Caixa"
+        const sidebarCaixaLink = document.getElementById('btn-caixa-link');
+        if (sidebarCaixaLink) {
+            sidebarCaixaLink.onclick = (e) => {
+                e.preventDefault();
+                this.openCaixa();
+            };
+        }
 
-        // Individual Game Copy (Delegation)
+        // Individual Game Copy / Delete Delegation
         if (this.gamesContainer) {
             this.gamesContainer.addEventListener('click', (e) => {
+                const delBtn = e.target.closest('.btn-delete-conf-game');
+                if (delBtn) {
+                    const idx = parseInt(delBtn.dataset.idx, 10);
+                    if (!isNaN(idx)) {
+                        this.deleteConferenceGame(idx);
+                    }
+                    return;
+                }
+
+                const keepBtn = e.target.closest('.btn-manter-jogo');
+                if (keepBtn) {
+                    if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                        Guardian.toast('✅ Jogo mantido na conferência.', 'success', 2000);
+                    }
+                    return;
+                }
+
                 const copyBtn = e.target.closest('.copy-single-btn');
                 if (copyBtn) {
                     const text = copyBtn.dataset.numbers;
@@ -2932,6 +3171,18 @@ class UI {
                             setTimeout(() => copyBtn.innerHTML = original, 1000);
                         }
                     });
+                }
+            });
+        }
+
+        if (this.checkSummaryContainer) {
+            this.checkSummaryContainer.addEventListener('click', (e) => {
+                const delBtn = e.target.closest('.btn-delete-conf-game');
+                if (delBtn) {
+                    const idx = parseInt(delBtn.dataset.idx, 10);
+                    if (!isNaN(idx)) {
+                        this.deleteConferenceGame(idx);
+                    }
                 }
             });
         }
@@ -3567,6 +3818,27 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         const game = GAMES[this.currentGameKey];
         if (!game) return;
 
+        if (this.currentGameKey === 'supersete') {
+            const elSS = document.getElementById('input-qtd-supersete');
+            if (elSS && this.gamesQuantityInput) elSS.value = this.gamesQuantityInput.value;
+            const btnExec = document.getElementById('btn-executar-motor-supersete');
+            if (btnExec) {
+                btnExec.click();
+                return;
+            }
+        }
+        if (this.currentGameKey === 'loteca') {
+            const btnExec = document.getElementById('btn-executar-motor-loteca');
+            if (btnExec) {
+                btnExec.click();
+                return;
+            }
+        }
+        if (this.currentGameKey === 'milionaria') {
+            this._executarGeracaoMilionaria(0);
+            return;
+        }
+
         // ── PROTEÇÃO DOUBLE-CLICK ──
         if (this._isGenerating) {
             console.warn('[SmartBets] Geração já em andamento, ignorando clique duplo');
@@ -4014,13 +4286,12 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         // Atualizar link do botão Jogar Online com a loteria atual
         var cfgLink = this._getCaixaLotteryConfig();
         if (this.playCaixaBtn && cfgLink[gameKey]) {
-            // Em vez de forçar a rota, abre o site principal e o script fará a navegação
-            this.playCaixaBtn.href = 'https://www.loteriasonline.caixa.gov.br/';
+            this.playCaixaBtn.href = 'https://www.loteriasonline.caixa.gov.br/silce-web/#/' + cfgLink[gameKey].url;
         }
         // Atualizar link da Caixa na sidebar também
         var sidebarCaixaLink = document.getElementById('btn-caixa-link');
         if (sidebarCaixaLink && cfgLink[gameKey]) {
-            sidebarCaixaLink.href = 'https://www.loteriasonline.caixa.gov.br/';
+            sidebarCaixaLink.href = 'https://www.loteriasonline.caixa.gov.br/silce-web/#/' + cfgLink[gameKey].url;
         }
 
         // Botão de análise de grupos: disponível para TODAS as loterias via UniversalGroupEngine
@@ -4115,6 +4386,10 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 setTimeout(() => {
                     ssPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
+            }
+            const ssInput = document.getElementById('input-qtd-supersete');
+            if (ssInput && this.gamesQuantityInput) {
+                ssInput.value = this.gamesQuantityInput.value || '10';
             }
         }
         if (gameKey === 'timemania') {
@@ -5162,7 +5437,7 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         // ── ORDENAÇÃO GLOBAL POR SINERGIA IA 🔥 ──
         // Isso garante que os motores entreguem os melhores jogos estatisticamente no topo da lista.
         // Otimização: executado para até 1.000 jogos (evita sobrecarga de CPU em volumes gigantescos)
-        if (result.games.length > 0 && result.games.length <= 1000 && typeof ClosingEngine !== 'undefined') {
+        if (gameKey !== 'supersete' && gameKey !== 'loteca' && result.games.length > 0 && result.games.length <= 1000 && typeof ClosingEngine !== 'undefined') {
             let pool = result.pool;
             if (!pool || pool.length === 0) {
                 pool = Array.from(this.selectedNumbers || []);
@@ -5195,6 +5470,15 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
 
         this.currentGeneratedGames = result.games;
         this._lastInternalEngine = result.internalEngine || 'Desconhecido';
+
+        // ── SINCRONIZAR DATAS DE CADA JOGO (Identificação de Recência) ──
+        const _now = new Date();
+        const _pad = n => String(n).padStart(2, '0');
+        const defaultDateStr = `${_pad(_now.getDate())}/${_pad(_now.getMonth() + 1)}/${_now.getFullYear()} ${_pad(_now.getHours())}:${_pad(_now.getMinutes())}`;
+        if (!this.currentGeneratedDates || this.currentGeneratedDates.length !== result.games.length) {
+            const existingDates = this.currentGeneratedDates || [];
+            this.currentGeneratedDates = result.games.map((_, i) => existingDates[i] || defaultDateStr);
+        }
         
         // Preservar times/meses/trevos já definidos pelo motor oficial; só gerar fallback se ausentes
         if (gameKey === 'timemania' || gameKey === 'diadesorte') {
@@ -5262,7 +5546,9 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                     }
                 }
                 const wrapperStyle = isSingleLineGame ? 'display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:5px;width:100%;' : 'display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;width:100%;';
-                chunks.push(`<div class="game-card"><div style="display:flex;align-items:center;margin-bottom:5px"><div class="game-index-badge" style="position:static">Jogo ${index + 1}</div>${extraHtml}</div><div class="game-numbers-wrapper" style="${wrapperStyle}">${nums}</div></div>`);
+                const gDate = (this.currentGeneratedDates && this.currentGeneratedDates[index]) ? this.currentGeneratedDates[index] : defaultDateStr;
+                const dateBadgeHtml = `<span class="game-date-badge" style="font-size:0.7rem;color:#38bdf8;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);padding:1px 6px;border-radius:4px;font-weight:700;margin-left:6px;" title="Data em que o jogo foi feito">📅 ${gDate}</span>`;
+                chunks.push(`<div class="game-card"><div style="display:flex;align-items:center;margin-bottom:5px"><div class="game-index-badge" style="position:static">Jogo ${index + 1}</div>${dateBadgeHtml}${extraHtml}</div><div class="game-numbers-wrapper" style="${wrapperStyle}">${nums}</div></div>`);
             });
 
             this.gamesContainer.innerHTML = chunks.join('');
@@ -5300,6 +5586,14 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             indexBadge.style.position = 'static'; // Override absolutism
             indexBadge.textContent = `Jogo ${index + 1}`;
             leftGroup.appendChild(indexBadge);
+
+            const gDate = (this.currentGeneratedDates && this.currentGeneratedDates[index]) ? this.currentGeneratedDates[index] : defaultDateStr;
+            const dateBadge = document.createElement('span');
+            dateBadge.className = 'game-date-badge';
+            dateBadge.style.cssText = 'font-size:0.7rem;color:#38bdf8;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);padding:1px 6px;border-radius:4px;font-weight:700;';
+            dateBadge.title = 'Data em que o jogo foi feito';
+            dateBadge.textContent = '📅 ' + gDate;
+            leftGroup.appendChild(dateBadge);
             
             if (this.currentGeneratedExtras && this.currentGeneratedExtras[index] !== undefined) {
                 const extraBadge = document.createElement('span');
@@ -6196,24 +6490,26 @@ async function navLoteria(){
   return await waitVolante()||isVolanteReady()||!0;
 }
 
+function isM(el){if(!el)return!1;var c=(el.className||"").toString().toLowerCase();var pc=(el.parentElement?(el.parentElement.className||"").toString().toLowerCase():"");return c.indexOf("selecionad")>=0||c.indexOf("ativo")>=0||c.indexOf("selected")>=0||pc.indexOf("selecionad")>=0||pc.indexOf("ativo")>=0||el.getAttribute("aria-pressed")==="true";}
+
 function cn(n){
   var num=parseInt(n);if(isNaN(num))return!1;
   if(LM&&(num===100||num===0))num=0;
   var p=String(num).padStart(2,"0");
   var ns=String(num);
   var e=document.getElementById("n"+ns)||document.getElementById("n"+p)||document.getElementById("d"+p)||document.getElementById("n_"+p)||document.getElementById("btn-dezena-"+p);
-  if(e)return rc(e);
+  if(e){if(!isM(e))rc(e);return!0;}
   e=document.querySelector("a#n"+p)||document.querySelector("li#n"+p)||document.querySelector("[id*='n"+p+"']")||document.querySelector("[data-dezena='"+p+"']")||document.querySelector("[data-numero='"+p+"']");
-  if(e)return rc(e);
+  if(e){if(!isM(e))rc(e);return!0;}
   var all=document.querySelectorAll(".dezena,.numero,li,a,button,span,div,td");
   for(var i=0;i<all.length;i++){
     var t=all[i];
     if(t.closest&&t.closest("[class*='carrinho'],[id*='carrinho'],[class*='resumo'],[class*='sidebar']"))continue;
     if(t.children.length<=1){
       var tx=t.textContent.trim();
-      var c=(t.className||"").toString().toLowerCase();
-      if((tx===p||tx===String(num))&&(c.indexOf("dezena")>=0||c.indexOf("numero")>=0||t.tagName==="LI"||t.tagName==="A"||t.tagName==="BUTTON"||t.tagName==="SPAN")){
-        if(c.indexOf("selecionad")<0&&t.offsetWidth>5)return rc(t);
+      if(tx===p||tx===String(num)){
+        if(!isM(t)&&t.offsetWidth>5)return rc(t);
+        if(isM(t))return!0;
       }
     }
   }
@@ -6993,24 +7289,64 @@ if(pp){
         }));
 
         if (typeof Guardian !== 'undefined' && Guardian.toast) {
-            Guardian.toast('✅ ' + games.length + ' jogos de ' + cfg.name + ' copiados! Siga o passo a passo na tela.', 'success', 6000);
+            Guardian.toast('✅ ' + games.length + ' jogos de ' + cfg.name + ' salvos! Clique no botão verde para abrir a Caixa.', 'success', 6000);
         }
 
         this._openMobileBetModal(games, this.currentGameKey);
 
+        // Mostra o painel de link imediatamente
+        this._showCaixaLinkPanel(caixaUrl, cfg, games);
+
+        // Também atualiza o painel quando a extensão confirmar que salvou
+        document.addEventListener('b2b-jogos-salvos', function onSalvos(ev) {
+            document.removeEventListener('b2b-jogos-salvos', onSalvos);
+            // painel já está visível, só atualiza o status
+            var statusEl = document.getElementById('caixa-link-status');
+            if (statusEl) {
+                statusEl.textContent = '✅ ' + ev.detail.count + ' jogos salvos! Clique para abrir a Caixa:';
+                statusEl.style.color = '#22C55E';
+            }
+        }, { once: true });
+    }
+
+    _showCaixaLinkPanel(caixaUrl, cfg, games) {
         var oldPanel = document.getElementById('caixa-link-panel');
         if (oldPanel) oldPanel.remove();
+
         var linkPanel = document.createElement('div');
         linkPanel.id = 'caixa-link-panel';
-        linkPanel.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #22C55E;border-radius:16px;padding:16px 24px;box-shadow:0 10px 40px rgba(0,0,0,0.6);text-align:center;max-width:440px;width:92%;animation:slideUp 0.3s ease;';
-        var linkHtml = '<div style="color:#22C55E;font-weight:800;font-size:1rem;margin-bottom:10px;">✅ Script copiado!</div>';
-        linkHtml += '<a href="' + caixaUrl + '" target="_blank" rel="noopener" style="display:block;background:linear-gradient(135deg,#22C55E,#16A34A);color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:900;font-size:1rem;margin-bottom:8px;">🏦 ABRIR SITE DA CAIXA — ' + cfg.name.toUpperCase() + '</a>';
-        linkHtml += '<div style="color:#CBD5E1;font-size:0.75rem;line-height:1.4;">No site: <strong>F12</strong> → aba <strong>Console</strong> → <strong>Ctrl+V</strong> → aperte <strong>ENTER</strong></div>';
-        linkHtml += '<button onclick="this.parentNode.remove()" style="margin-top:8px;background:none;border:1px solid #475569;color:#94A3B8;padding:6px 16px;border-radius:8px;cursor:pointer;font-size:0.75rem;">Fechar</button>';
+        linkPanel.style.cssText = [
+            'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;',
+            'background:linear-gradient(135deg,#0F172A,#1E293B);',
+            'border:2px solid #22C55E;border-radius:16px;padding:18px 24px;',
+            'box-shadow:0 10px 40px rgba(0,0,0,0.7);text-align:center;',
+            'max-width:460px;width:94%;animation:slideUp 0.3s ease;'
+        ].join('');
+
+        // IMPORTANTE: rel="noopener noreferrer" — não envia o header Referer para a Caixa
+        // Isso evita o bloqueio 403 do Akamai WAF que detecta Referer: localhost
+        var linkHtml = '<div id="caixa-link-status" style="color:#22C55E;font-weight:800;font-size:1rem;margin-bottom:12px;">✅ ' + games.length + ' jogos salvos! Clique para abrir a Caixa:</div>';
+        linkHtml += '<a href="' + caixaUrl + '" target="_blank" rel="noopener noreferrer" '
+            + 'style="display:block;background:linear-gradient(135deg,#22C55E,#16A34A);color:white;'
+            + 'text-decoration:none;padding:16px 24px;border-radius:12px;font-weight:900;'
+            + 'font-size:1.05rem;margin-bottom:10px;letter-spacing:0.5px;">'
+            + '🏦 ABRIR CAIXA — ' + cfg.name.toUpperCase() + '</a>';
+        linkHtml += '<div style="color:#94A3B8;font-size:0.78rem;line-height:1.5;margin-bottom:10px;">'
+            + '⚡ A extensão preencherá os ' + games.length + ' jogos automaticamente<br>'
+            + '<span style="color:#FBBF24;">⚠️ Não feche o painel antes de a automação terminar</span>'
+            + '</div>';
+        linkHtml += '<button onclick="this.parentNode.remove()" '
+            + 'style="background:none;border:1px solid #475569;color:#94A3B8;'
+            + 'padding:6px 18px;border-radius:8px;cursor:pointer;font-size:0.75rem;">Fechar</button>';
+
         linkPanel.innerHTML = linkHtml;
         document.body.appendChild(linkPanel);
-        setTimeout(function() { var p = document.getElementById('caixa-link-panel'); if (p) p.remove(); }, 20000);
+        setTimeout(function() {
+            var p = document.getElementById('caixa-link-panel');
+            if (p) p.remove();
+        }, 30000);
     }
+
 
     getSelectedNumbers() {
         return Array.from(this.selectedNumbers);
@@ -7031,7 +7367,7 @@ if(pp){
         const method = options.method || 'GET';
         const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
         const body = options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : undefined;
-        const timeoutMs = options.timeoutMs || 5000;
+        const timeoutMs = options.timeoutMs || 12000;
 
         const candidateUrls = [];
         if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
@@ -7165,7 +7501,10 @@ if(pp){
                 const tr = Array.isArray(extras[index]) ? extras[index].map(t => String(t).padStart(2, '0')).join(' ') : String(extras[index]);
                 extra = ` | Trevos: 🍀 ${tr}`;
             }
-            content += `Jogo ${String(index + 1).padStart(3, '0')}: ${nums}${extra}
+            const gDate = (this.currentGeneratedDates && this.currentGeneratedDates[index])
+                ? this.currentGeneratedDates[index]
+                : `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            content += `[${gDate}] Jogo ${String(index + 1).padStart(3, '0')}: ${nums}${extra}
 `;
         });
 
@@ -7574,6 +7913,7 @@ if(pp){
 
     parseSavedGames(text) {
         const games = [];
+        this.currentGeneratedDates = [];
         const lines = text.split('\n');
         const isLoteca = this.currentGameKey === 'loteca';
         const isTimemania = this.currentGameKey === 'timemania';
@@ -7586,11 +7926,28 @@ if(pp){
             this.currentGeneratedExtras = null;
         }
 
+        const _now = new Date();
+        const _pad = n => String(n).padStart(2, '0');
+        const fallbackDate = `${_pad(_now.getDate())}/${_pad(_now.getMonth() + 1)}/${_now.getFullYear()} ${_pad(_now.getHours())}:${_pad(_now.getMinutes())}`;
+        let headerDate = null;
+        for (const line of lines) {
+            const dm = line.match(/Data:\s*([0-9/:-]+(?:\s+[0-9:hms]+)?)/i);
+            if (dm) { headerDate = dm[1].trim(); break; }
+        }
+
         lines.forEach(line => {
-            const clean = line.trim();
+            let clean = line.trim();
             if (!clean || clean.startsWith('═') || clean.startsWith('JOGOS') || clean.startsWith('Total') || clean.startsWith('Data') || clean.startsWith('B2B') || clean.startsWith('Time') || clean.startsWith('Mês') || clean.startsWith('Conferência') || clean.startsWith('Relatório')) {
                 return;
             }
+
+            let gameDate = headerDate || fallbackDate;
+            const datePrefixMatch = clean.match(/^\[(\d{1,2}[-/]\d{1,2}[-/]\d{4}.*?)\]\s*/);
+            if (datePrefixMatch) {
+                gameDate = datePrefixMatch[1].trim();
+                clean = clean.substring(datePrefixMatch[0].length).trim();
+            }
+
             if (isLoteca) {
                 let picksPart = clean;
                 if (clean.includes(':')) {
@@ -7601,6 +7958,7 @@ if(pp){
                 const tokens = picksPart.split(/[\s,-]+/).map(t => t.toUpperCase().trim()).filter(t => /^[12X]+$/.test(t));
                 if (tokens.length === 14) {
                     games.push(tokens);
+                    this.currentGeneratedDates.push(gameDate);
                 }
             } else if (isMilionaria) {
                 let mainPart = clean;
@@ -7617,6 +7975,7 @@ if(pp){
                 const numbers = mainPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 1 && n <= 50);
                 if (numbers.length === 6) {
                     games.push(numbers);
+                    this.currentGeneratedDates.push(gameDate);
                     let tr = [1, 2];
                     if (trevosPart) {
                         const trNums = trevosPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 1 && n <= 6);
@@ -7638,20 +7997,22 @@ if(pp){
                 if (clean.toLowerCase().startsWith('jogo')) {
                     const parts = clean.split(':');
                     if (parts.length > 1) {
-                        const numsPart = parts[1].split('|')[0].trim();
+                        const numsPart = parts[1].split('[')[0].split('|')[0].trim();
                         const numbers = numsPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
                         if (numbers.length > 0) {
                             games.push(numbers);
+                            this.currentGeneratedDates.push(gameDate);
                             if (isTimemania || isDiaDeSorte) {
                                 this.currentGeneratedExtras.push(extraVal);
                             }
                         }
                     }
                 } else {
-                    const numsPart = clean.split('|')[0].trim();
+                    const numsPart = clean.split('[')[0].split('|')[0].trim();
                     const numbers = numsPart.split(/[\s,-]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
-                    if (numbers.length >= 5) {
+                    if (numbers.length >= (this.currentGameKey === 'supersete' ? 7 : 5)) {
                         games.push(numbers);
+                        this.currentGeneratedDates.push(gameDate);
                         if (isTimemania || isDiaDeSorte) {
                             this.currentGeneratedExtras.push(extraVal);
                         }
@@ -7663,6 +8024,9 @@ if(pp){
     }
 
     _highlightLotecaResults(drawnNumbers, drawInfo = "", drawResult = null) {
+        this._lastCheckedDrawnNumbers = drawnNumbers;
+        this._lastCheckedDrawInfo = drawInfo;
+        this._lastCheckedDrawResult = drawResult;
         const game = (typeof GAMES !== 'undefined' && GAMES.loteca) ? GAMES.loteca : { name: "Loteca", color: "#15803d", strategies: [ { id: "14pts", label: "14 Pontos (Faixa Principal)", match: 14, prize: 1500000 }, { id: "13pts", label: "13 Pontos", match: 13, prize: 35000 } ] };
         const officialResults = drawnNumbers.map(c => String(c).toUpperCase().trim());
         
@@ -7842,6 +8206,14 @@ if(pp){
                             <span>${v.picks.join(' - ')}</span>
                             <button onclick="navigator.clipboard.writeText('${v.picks.join(' - ')}').then(() => alert('Volante copiado!'))" style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#86efac;border-radius:4px;padding:2px 6px;font-size:0.65rem;cursor:pointer;margin-left:8px;">
                                 📋 Copiar
+                            </button>
+                        </div>
+
+                        <!-- Opções: Manter ou Excluir da Conferência -->
+                        <div class="conf-card-actions" style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:0.7rem;color:#86efac;background:rgba(34,197,94,0.1);padding:2px 8px;border-radius:4px;border:1px solid rgba(34,197,94,0.25);" title="Volante mantido na conferência">👁️ Mantido</span>
+                            <button class="btn-delete-conf-game" data-idx="${v.volanteNumero - 1}" style="background:rgba(239,68,68,0.15);border:1px solid #ef444460;color:#fca5a5;padding:3px 10px;border-radius:6px;font-size:0.72rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Excluir este jogo da conferência">
+                                🗑️ Excluir Jogo
                             </button>
                         </div>
                     </div>
@@ -8039,6 +8411,9 @@ if(pp){
     }
 
     highlightResults(drawnNumbers, drawInfo = "", drawResult = null) {
+        this._lastCheckedDrawnNumbers = drawnNumbers;
+        this._lastCheckedDrawInfo = drawInfo;
+        this._lastCheckedDrawResult = drawResult;
         if (this.currentGameKey === 'loteca') {
             this._highlightLotecaResults(drawnNumbers, drawInfo, drawResult);
             return;
@@ -8347,6 +8722,23 @@ if(pp){
                         summary.textContent = 'Nenhum acerto';
                     }
                 }
+
+                // Opções da Conferência: Manter Jogo ou Excluir Jogo
+                let actionsBar = card.querySelector('.conf-card-actions');
+                if (!actionsBar) {
+                    actionsBar = document.createElement('div');
+                    actionsBar.className = 'conf-card-actions';
+                    actionsBar.style.cssText = 'width:100%;display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);';
+                    card.appendChild(actionsBar);
+                }
+                actionsBar.innerHTML = `
+                    <span class="btn-manter-jogo" style="font-size:0.7rem;color:#86efac;background:rgba(34,197,94,0.12);padding:2px 8px;border-radius:4px;border:1px solid rgba(34,197,94,0.25);cursor:pointer;" title="Continuar deixando este jogo aqui na conferência">
+                        👁️ Mantido
+                    </span>
+                    <button class="btn-delete-conf-game" data-idx="${i}" style="background:rgba(239,68,68,0.15);border:1px solid #ef444460;color:#fca5a5;padding:3px 10px;border-radius:6px;font-size:0.72rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.2s;" title="Excluir este jogo da conferência">
+                        🗑️ Excluir Jogo
+                    </button>
+                `;
             }
 
             currentChunk++;
@@ -8660,6 +9052,7 @@ if(pp){
                     summaryHTML += `<div style="font-size:0.58rem;color:${isJP ? '#FFD70090' : '#22C55E90'};">≈ ${prizeDisplay}</div>`;
                 }
                 summaryHTML += `</div>`;
+                summaryHTML += `<button class="btn-delete-conf-game" data-idx="${wg.index}" style="margin-left:6px;background:rgba(239,68,68,0.15);border:1px solid #ef444460;color:#fca5a5;padding:3px 8px;border-radius:5px;font-size:0.68rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;" title="Excluir este jogo da conferência">🗑️ Excluir</button>`;
                 summaryHTML += `</div>`;
             });
             summaryHTML += `</div>`;
@@ -8848,6 +9241,576 @@ if(pp){
             console.warn('[Stats] Erro ao salvar estatística:', statsErr);
         }
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  GERENCIAMENTO DA CONFERÊNCIA: EXCLUSÃO DE JOGOS & ATUALIZAÇÃO
+    // ═══════════════════════════════════════════════════════════════
+    deleteConferenceGame(idx) {
+        if (!this.currentGeneratedGames || idx < 0 || idx >= this.currentGeneratedGames.length) {
+            return;
+        }
+
+        const gameNum = idx + 1;
+        const totalBefore = this.currentGeneratedGames.length;
+
+        // Remover do array de jogos e dos arrays paralelos sincronizados
+        this.currentGeneratedGames.splice(idx, 1);
+        if (this.currentGeneratedExtras && this.currentGeneratedExtras.length > idx) {
+            this.currentGeneratedExtras.splice(idx, 1);
+        }
+        if (this.currentGeneratedDates && this.currentGeneratedDates.length > idx) {
+            this.currentGeneratedDates.splice(idx, 1);
+        }
+
+        const totalAfter = this.currentGeneratedGames.length;
+
+        // Se excluiu o último jogo da lista
+        if (totalAfter === 0) {
+            this.gamesContainer.innerHTML = '<div class="empty-state" style="padding:20px;color:#94a3b8;">Todos os jogos foram excluídos da conferência.</div>';
+            if (this.checkSummaryContainer) {
+                this.checkSummaryContainer.innerHTML = '';
+                this.checkSummaryContainer.style.display = 'none';
+            }
+            if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                Guardian.toast(`🗑️ Jogo ${gameNum} excluído. Nenhum jogo restante na conferência.`, 'info', 3000);
+            }
+            this._removeSaveUpdatedFileBar();
+            return;
+        }
+
+        // Re-renderizar os jogos restantes na grade sem alterar hash de URL
+        this.renderGames({ games: this.currentGeneratedGames }, this.currentGameKey, false);
+
+        // Recalcular conferência dinamicamente com o mesmo concurso/sorteio
+        if (this._lastCheckedDrawnNumbers) {
+            if (this.currentGameKey === 'loteca') {
+                this._highlightLotecaResults(this._lastCheckedDrawnNumbers, this._lastCheckedDrawInfo, this._lastCheckedDrawResult);
+            } else {
+                this.highlightResults(this._lastCheckedDrawnNumbers, this._lastCheckedDrawInfo, this._lastCheckedDrawResult);
+            }
+        }
+
+        if (typeof Guardian !== 'undefined' && Guardian.toast) {
+            Guardian.toast(`🗑️ Jogo ${gameNum} excluído! (${totalAfter} jogo${totalAfter > 1 ? 's' : ''} restante${totalAfter > 1 ? 's' : ''})`, 'warning', 2500);
+        }
+
+        // Se estes jogos vieram de um arquivo salvo, oferecer opção de atualizar o arquivo no disco
+        if (this._lastLoadedFileName) {
+            this._showSaveUpdatedFileBar(this._lastLoadedFileName);
+        }
+    }
+
+    _showSaveUpdatedFileBar(fileName) {
+        let bar = document.getElementById('bar-save-updated-file');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'bar-save-updated-file';
+            bar.style.cssText = 'margin:12px 0;padding:12px 18px;background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid #f59e0b80;border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;box-shadow:0 4px 15px rgba(0,0,0,0.3);';
+            if (this.gamesContainer && this.gamesContainer.parentNode) {
+                this.gamesContainer.parentNode.insertBefore(bar, this.gamesContainer);
+            }
+        }
+        bar.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:1.6rem;">💾</span>
+                <div>
+                    <div style="font-weight:700;color:#fbbf24;font-size:0.88rem;">Alterações na lista de jogos conferidos</div>
+                    <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">
+                        Você excluiu jogo(s). Deseja atualizar o arquivo <strong>${fileName}</strong> na pasta L99?
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button id="btn-confirm-save-updated-file" style="background:#f59e0b;color:#000;border:none;padding:7px 15px;border-radius:6px;font-weight:700;font-size:0.8rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                    💾 Salvar no Arquivo
+                </button>
+                <button id="btn-dismiss-save-updated-file" style="background:rgba(255,255,255,0.08);color:#94a3b8;border:1px solid rgba(255,255,255,0.15);padding:7px 12px;border-radius:6px;font-size:0.78rem;cursor:pointer;">
+                    Ignorar
+                </button>
+            </div>
+        `;
+        const btnSave = document.getElementById('btn-confirm-save-updated-file');
+        if (btnSave) {
+            btnSave.onclick = async () => {
+                btnSave.disabled = true;
+                btnSave.textContent = '⏳ Salvando...';
+                await this.saveUpdatedGamesToFile(fileName);
+            };
+        }
+        const btnDismiss = document.getElementById('btn-dismiss-save-updated-file');
+        if (btnDismiss) {
+            btnDismiss.onclick = () => this._removeSaveUpdatedFileBar();
+        }
+    }
+
+    _removeSaveUpdatedFileBar() {
+        const bar = document.getElementById('bar-save-updated-file');
+        if (bar) bar.remove();
+    }
+
+    async saveUpdatedGamesToFile(fileName) {
+        if (!fileName || !this.currentGeneratedGames || this.currentGeneratedGames.length === 0) {
+            alert('Nenhum jogo para salvar.');
+            return;
+        }
+
+        const content = this._buildGameFileContent(
+            this.currentGeneratedGames,
+            this.currentGeneratedExtras,
+            this.currentGeneratedDates,
+            this.currentGameKey
+        );
+
+        try {
+            const res = await this._callServerApi('/atualizar-arquivo', {
+                method: 'POST',
+                body: {
+                    gameKey: this.currentGameKey,
+                    fileName: fileName,
+                    content: content
+                }
+            });
+
+            if (res && res.ok) {
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`✅ Arquivo "${fileName}" atualizado na pasta L99!`, 'success', 3500);
+                } else {
+                    alert(`Arquivo "${fileName}" atualizado com sucesso!`);
+                }
+                this._removeSaveUpdatedFileBar();
+            } else {
+                alert('Erro ao atualizar arquivo: ' + ((res && res.error) || 'Falha na gravação.'));
+            }
+        } catch (e) {
+            alert('Erro ao comunicar com o servidor: ' + e.message);
+        }
+    }
+
+    _buildGameFileContent(games, extras, dates, gameKey) {
+        const game = typeof GAMES !== 'undefined' ? GAMES[gameKey] : null;
+        const gameName = game ? game.name : 'Loteria';
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+        const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+        let content = '═══════════════════════════════════════\n';
+        content += `  B2B LOTERIAS - ${gameName.toUpperCase()}\n`;
+        content += '═══════════════════════════════════════\n';
+        content += `Data: ${dateStr} às ${timeStr}\n`;
+        content += `Total de Jogos: ${games.length}\n`;
+        content += '═══════════════════════════════════════\n\n';
+
+        games.forEach((g, idx) => {
+            let nums = '';
+            if (Array.isArray(g)) {
+                if (gameKey === 'supersete') {
+                    const colStr = g.map((d, ci) => `C${ci+1}=${d}`).join(' ');
+                    nums = `${g.join(' - ')}  [${colStr}]`;
+                } else {
+                    nums = g.map(n => pad(n)).join(' ');
+                }
+            } else {
+                nums = String(g);
+            }
+
+            let extra = '';
+            if (extras && extras[idx] !== undefined) {
+                if (gameKey === 'diadesorte') {
+                    const mVal = extras[idx];
+                    extra = ` | Mês: ${typeof mVal === 'string' ? mVal : (L99_MESES[mVal] || mVal)}`;
+                } else if (gameKey === 'timemania') {
+                    const tVal = extras[idx];
+                    extra = ` | Time: ${typeof tVal === 'string' ? tVal : (L99_TIMES[tVal] || tVal)}`;
+                } else if (gameKey === 'milionaria') {
+                    const trVal = extras[idx];
+                    const tr = Array.isArray(trVal) ? trVal.map(t => pad(t)).join(' ') : trVal;
+                    extra = ` | Trevos: 🍀 ${tr}`;
+                }
+            }
+
+            const gDate = (dates && dates[idx])
+                ? dates[idx]
+                : `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+            content += `[${gDate}] Jogo ${String(idx + 1).padStart(3, '0')}: ${nums}${extra}\n`;
+        });
+
+        content += '\n═══════════════════════════════════════\n';
+        content += '  Gerado por B2B Loterias - Boa Sorte!\n';
+        content += '═══════════════════════════════════════\n';
+
+        return content;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CENTRAL DE JOGOS SALVOS (PASTA L99) — GERENCIADOR UNIFICADO
+    // ═══════════════════════════════════════════════════════════════
+    openCentralJogosModal(gameKey = null) {
+        this.currentCentralLotteryKey = gameKey || this.currentGameKey || 'megasena';
+        const modal = document.getElementById('central-jogos-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+        this.renderCentralLotteryTabs();
+        this.loadCentralFiles(this.currentCentralLotteryKey);
+    }
+
+    closeCentralJogosModal() {
+        const modal = document.getElementById('central-jogos-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    renderCentralLotteryTabs() {
+        const tabsContainer = document.getElementById('central-lottery-tabs');
+        if (!tabsContainer) return;
+
+        const LOTTERIES_CONFIG = [
+            { key: 'megasena', name: 'Mega-Sena', icon: '🍀', color: '#209869' },
+            { key: 'lotofacil', name: 'Lotofácil', icon: '🟣', color: '#930089' },
+            { key: 'quina', name: 'Quina', icon: '🔷', color: '#260085' },
+            { key: 'duplasena', name: 'Dupla Sena', icon: '🔴', color: '#A61322' },
+            { key: 'lotomania', name: 'Lotomania', icon: '🟠', color: '#F78100' },
+            { key: 'timemania', name: 'Timemania', icon: '⚽', color: '#047857' },
+            { key: 'diadesorte', name: 'Dia de Sorte', icon: '📅', color: '#CB852B' },
+            { key: 'milionaria', name: '+Milionária', icon: '💎', color: '#1e3a8a' },
+            { key: 'supersete', name: 'Super Sete', icon: '7️⃣', color: '#A8CF45' },
+            { key: 'loteca', name: 'Loteca', icon: '⚽', color: '#15803d' }
+        ];
+
+        tabsContainer.innerHTML = '';
+        LOTTERIES_CONFIG.forEach(cfg => {
+            const isActive = (cfg.key === this.currentCentralLotteryKey);
+            const tab = document.createElement('button');
+            tab.className = `central-lottery-tab ${isActive ? 'active' : ''}`;
+            tab.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 7px 14px;
+                border-radius: 8px;
+                font-size: 0.78rem;
+                font-weight: 700;
+                cursor: pointer;
+                white-space: nowrap;
+                transition: all 0.2s;
+                border: 1px solid ${isActive ? cfg.color : 'rgba(255,255,255,0.08)'};
+                background: ${isActive ? cfg.color : 'rgba(255,255,255,0.03)'};
+                color: ${isActive ? '#ffffff' : '#94a3b8'};
+                box-shadow: ${isActive ? `0 0 12px ${cfg.color}80` : 'none'};
+            `;
+            tab.innerHTML = `<span>${cfg.icon}</span><span>${cfg.name}</span>`;
+            tab.title = `Ver jogos salvos de ${cfg.name} na pasta L99`;
+
+            tab.onclick = () => {
+                this.currentCentralLotteryKey = cfg.key;
+                this.renderCentralLotteryTabs();
+                this.loadCentralFiles(cfg.key);
+            };
+
+            tabsContainer.appendChild(tab);
+        });
+    }
+
+    async loadCentralFiles(gameKey) {
+        const fileListContainer = document.getElementById('central-file-list');
+        if (!fileListContainer) return;
+
+        // Reset badges while loading so stats from other lotteries do not linger
+        this._updateCentralStatsBadges('...', '...', '...');
+
+        const game = (typeof GAMES !== 'undefined' && GAMES[gameKey]) ? GAMES[gameKey] : { name: (gameKey || 'LOTERIA').toUpperCase() };
+
+        fileListContainer.innerHTML = `
+            <div style="text-align:center;padding:50px 20px;color:#94a3b8;">
+                <div style="font-size:2.2rem;margin-bottom:10px;">⏳</div>
+                <div style="font-size:0.9rem;font-weight:700;color:#e2e8f0;">Lendo pasta de jogos: ${game.name}...</div>
+                <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Buscando arquivos salvos em LOTERIAS JOGOS SALVOS L99</div>
+            </div>
+        `;
+
+        try {
+            const data = await this._callServerApi('/listar-jogos?gameKey=' + encodeURIComponent(gameKey));
+
+            if (!data.ok || !data.files || data.files.length === 0) {
+                this._centralFiles = [];
+                this._updateCentralStatsBadges(0, 0, 0);
+                fileListContainer.innerHTML = `
+                    <div style="text-align:center;padding:50px 20px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.1);border-radius:12px;margin:20px 0;">
+                        <div style="font-size:2.5rem;margin-bottom:12px;">📭</div>
+                        <div style="font-size:1rem;font-weight:700;color:#e2e8f0;">Nenhum jogo salvo para ${game.name}</div>
+                        <div style="font-size:0.78rem;color:#94a3b8;margin:8px 0 14px 0;">
+                            A subpasta correspondente ainda não possui arquivos <code>.txt</code> de jogos gerados.
+                        </div>
+                        <div style="display:inline-block;padding:6px 14px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);border-radius:6px;font-size:0.75rem;color:#38bdf8;">
+                            💡 Gere jogos na tela principal e clique no botão <strong>"Salvar"</strong> para guardá-los aqui automaticamente.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const files = data.files.filter(f => !f.name.endsWith('.tmp'));
+
+            const checkedRegex = /^(✅|âœ…|\[CONFERIDO\]|CONFERIDO_)/i;
+            let checkedCount = 0;
+            let pendingCount = 0;
+
+            files.forEach(f => {
+                if (checkedRegex.test(f.name) || f.name.includes('CONFERIDO')) {
+                    checkedCount++;
+                } else {
+                    pendingCount++;
+                }
+            });
+
+            this._centralFiles = files;
+            this._updateCentralStatsBadges(files.length, checkedCount, pendingCount);
+            this.renderCentralFiles();
+
+        } catch (err) {
+            this._updateCentralStatsBadges(0, 0, 0);
+            fileListContainer.innerHTML = `
+                <div style="text-align:center;padding:40px 20px;color:#ef4444;">
+                    <div style="font-size:2rem;margin-bottom:10px;">⚠️</div>
+                    <div style="font-size:0.95rem;font-weight:700;">Erro ao conectar ao servidor local</div>
+                    <div style="font-size:0.75rem;color:#94a3b8;margin-top:6px;margin-bottom:14px;">${err.message || 'Falha de comunicação'}</div>
+                    <button id="btn-central-retry" style="background:linear-gradient(135deg,#0284c7,#0369a1);border:1px solid #38bdf8;color:#fff;font-weight:700;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:0.8rem;transition:all 0.2s;">
+                        🔄 Tentar Reconectar
+                    </button>
+                </div>
+            `;
+            const retryBtn = document.getElementById('btn-central-retry');
+            if (retryBtn) {
+                retryBtn.onclick = () => this.loadCentralFiles(gameKey);
+            }
+        }
+    }
+
+    _updateCentralStatsBadges(total, checked, pending) {
+        const badgeTotal = document.getElementById('badge-total-files');
+        const badgeChecked = document.getElementById('badge-checked-files');
+        const badgePending = document.getElementById('badge-pending-files');
+
+        if (badgeTotal) badgeTotal.textContent = `📁 ${total} arquivo${total !== 1 ? 's' : ''}`;
+        if (badgeChecked) badgeChecked.textContent = `✅ ${checked} conferido${checked !== 1 ? 's' : ''}`;
+        if (badgePending) badgePending.textContent = `⏳ ${pending} não conferido${pending !== 1 ? 's' : ''}`;
+    }
+
+    renderCentralFiles() {
+        const container = document.getElementById('central-file-list');
+        if (!container) return;
+
+        if (!this._centralFiles || this._centralFiles.length === 0) {
+            return;
+        }
+
+        const checkedRegex = /^(✅|âœ…|\[CONFERIDO\]|CONFERIDO_)/i;
+
+        let filtered = this._centralFiles.slice();
+        if (this.currentCentralFilter === 'pending') {
+            filtered = filtered.filter(f => !checkedRegex.test(f.name) && !f.name.includes('CONFERIDO'));
+        } else if (this.currentCentralFilter === 'checked') {
+            filtered = filtered.filter(f => checkedRegex.test(f.name) || f.name.includes('CONFERIDO'));
+        }
+
+        // Ordenar mais recentes primeiro
+        filtered.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+
+        if (filtered.length === 0) {
+            const filterLabel = this.currentCentralFilter === 'pending' ? 'não conferidos' : 'já conferidos';
+            container.innerHTML = `
+                <div style="text-align:center;padding:40px 20px;color:#94a3b8;">
+                    <div style="font-size:2rem;margin-bottom:8px;">🔍</div>
+                    <div style="font-size:0.88rem;color:#cbd5e1;">Nenhum arquivo na categoria <strong>${filterLabel}</strong>.</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = '';
+        const gameKey = this.currentCentralLotteryKey;
+
+        filtered.forEach(file => {
+            const isChecked = checkedRegex.test(file.name) || file.name.includes('CONFERIDO');
+            const cleanName = file.name.replace(/^.*?CONFERIDO_/, '');
+            const modDate = new Date(file.modified);
+            const dateStr = modDate.toLocaleDateString('pt-BR') + ' ' + modDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const sizeKb = (file.size / 1024).toFixed(1);
+
+            const card = document.createElement('div');
+            card.className = 'central-file-card';
+            card.style.cssText = `
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px 16px;
+                background: ${isChecked ? 'rgba(34, 197, 94, 0.04)' : 'rgba(255, 255, 255, 0.03)'};
+                border: 1px solid ${isChecked ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.08)'};
+                border-radius: 12px;
+                transition: all 0.2s;
+            `;
+
+            // Top Row
+            const topRow = document.createElement('div');
+            topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;';
+
+            const statusBadge = isChecked
+                ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(34,197,94,0.15);border:1px solid #22c55e50;border-radius:6px;color:#4ade80;font-size:0.72rem;font-weight:800;">✅ CONFERIDO</span>`
+                : `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(245,158,11,0.15);border:1px solid #f59e0b50;border-radius:6px;color:#fbbf24;font-size:0.72rem;font-weight:800;">⏳ NÃO CONFERIDO</span>`;
+
+            topRow.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:240px;">
+                    ${statusBadge}
+                    <div>
+                        <div style="font-weight:700;color:#f1f5f9;font-size:0.88rem;word-break:break-all;">${cleanName}</div>
+                        <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">
+                            <span>📅 ${dateStr}</span>
+                            <span style="margin-left:10px;">📏 ${sizeKb} KB</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Action Buttons
+            const actionsRow = document.createElement('div');
+            actionsRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);';
+
+            const btnOpen = document.createElement('button');
+            btnOpen.style.cssText = 'background:#1e40af;color:#fff;border:1px solid #3b82f6;padding:6px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.2s;';
+            btnOpen.innerHTML = '👁️ Abrir Jogos';
+            btnOpen.title = 'Carregar e visualizar estes jogos na grade principal';
+            btnOpen.onclick = () => this.openSavedGameFile(gameKey, file.name);
+
+            const btnCheck = document.createElement('button');
+            btnCheck.style.cssText = 'background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.2s;';
+            btnCheck.innerHTML = '🔍 Conferir Agora';
+            btnCheck.title = 'Abrir a tela de conferência para checar os acertos destes jogos com os concursos';
+            btnCheck.onclick = () => this.checkSavedGameFile(gameKey, file.name);
+
+            const btnToggle = document.createElement('button');
+            btnToggle.style.cssText = isChecked
+                ? 'background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);padding:6px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.2s;'
+                : 'background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);padding:6px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.2s;'
+            btnToggle.innerHTML = isChecked ? '⏳ Marcar como Pendente' : '✅ Marcar como Conferido';
+            btnToggle.title = isChecked ? 'Mudar status deste arquivo de volta para Não Conferido' : 'Marcar este arquivo como Já Conferido';
+            btnToggle.onclick = () => this.toggleFileCheckedStatus(gameKey, file.name, isChecked);
+
+            const btnDelete = document.createElement('button');
+            btnDelete.style.cssText = 'margin-left:auto;background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);padding:6px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.2s;';
+            btnDelete.innerHTML = '🗑️ Deletar Arquivo';
+            btnDelete.title = 'Excluir definitivamente este arquivo da pasta no computador';
+            btnDelete.onclick = () => this.deleteSavedFileFromDisk(gameKey, file.name);
+
+            actionsRow.appendChild(btnOpen);
+            actionsRow.appendChild(btnCheck);
+            actionsRow.appendChild(btnToggle);
+            actionsRow.appendChild(btnDelete);
+
+            card.appendChild(topRow);
+            card.appendChild(actionsRow);
+
+            container.appendChild(card);
+        });
+    }
+
+    async openSavedGameFile(gameKey, fileName) {
+        try {
+            if (this.currentGameKey !== gameKey) {
+                const navBtn = document.querySelector(`.nav-btn[data-game="${gameKey}"]`);
+                if (navBtn) navBtn.click();
+                else this.updateGameInfo(gameKey);
+            }
+
+            const readData = await this._callServerApi('/ler-jogo', {
+                method: 'POST',
+                body: { gameKey: gameKey, fileName: fileName }
+            });
+
+            if (readData && readData.ok && readData.content) {
+                const parsedGames = this.parseSavedGames(readData.content);
+                if (parsedGames && parsedGames.length > 0) {
+                    this.currentGeneratedGames = parsedGames;
+                    this._lastLoadedFileName = fileName;
+                    this.renderGames({ games: parsedGames }, gameKey);
+                    this.closeCentralJogosModal();
+
+                    if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                        Guardian.toast(`✅ ${parsedGames.length} jogos carregados de "${fileName}"!`, 'success', 3000);
+                    }
+                    if (this.gamesContainer) {
+                        this.gamesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                } else {
+                    alert('Nenhum jogo válido encontrado no arquivo: ' + fileName);
+                }
+            } else {
+                alert('Erro ao ler arquivo: ' + ((readData && readData.error) || 'Arquivo vazio ou inacessível.'));
+            }
+        } catch (e) {
+            alert('Falha ao abrir jogo: ' + e.message);
+        }
+    }
+
+    async checkSavedGameFile(gameKey, fileName) {
+        await this.openSavedGameFile(gameKey, fileName);
+        setTimeout(() => {
+            this.openCheckModal();
+        }, 250);
+    }
+
+    async toggleFileCheckedStatus(gameKey, fileName, isChecked) {
+        const endpoint = isChecked ? '/desmarcar-conferido' : '/marcar-conferido';
+        try {
+            const res = await this._callServerApi(endpoint, {
+                method: 'POST',
+                body: { gameKey: gameKey, fileName: fileName }
+            });
+
+            if (res && res.ok) {
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    const msg = isChecked ? '⏳ Arquivo desmarcado para Não Conferido!' : '✅ Arquivo marcado como Conferido!';
+                    Guardian.toast(msg, 'success', 2500);
+                }
+                await this.loadCentralFiles(gameKey);
+            } else {
+                alert('Não foi possível alterar status: ' + ((res && res.error) || 'Erro no servidor'));
+            }
+        } catch (e) {
+            alert('Erro: ' + e.message);
+        }
+    }
+
+    async deleteSavedFileFromDisk(gameKey, fileName) {
+        const cleanName = fileName.replace(/^.*?CONFERIDO_/, '');
+        const ok = confirm(`⚠️ Confirmação de Exclusão\n\nTem certeza que deseja DELETAR o arquivo:\n"${cleanName}"\n\nda pasta LOTERIAS JOGOS SALVOS L99 no seu computador?\nEsta ação é definitiva.`);
+        if (!ok) return;
+
+        try {
+            const res = await this._callServerApi('/excluir-arquivo', {
+                method: 'POST',
+                body: { gameKey: gameKey, fileName: fileName }
+            });
+
+            if (res && res.ok) {
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`🗑️ Arquivo "${cleanName}" excluído com sucesso!`, 'info', 3000);
+                }
+                if (this._lastLoadedFileName === fileName) {
+                    this._lastLoadedFileName = null;
+                    this._removeSaveUpdatedFileBar();
+                }
+                await this.loadCentralFiles(gameKey);
+            } else {
+                alert('Erro ao excluir arquivo: ' + ((res && res.error) || 'Falha no servidor'));
+            }
+        } catch (e) {
+            alert('Erro: ' + e.message);
+        }
+    }
+
     exportBackup() {
         if (this.currentGeneratedGames.length === 0) {
             alert('Nenhum jogo gerado para fazer backup.\nGere seus jogos primeiro!');

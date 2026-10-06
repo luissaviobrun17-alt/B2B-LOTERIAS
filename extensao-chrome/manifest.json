@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "B2B Loterias - Apostador Automático",
+  "version": "8.6",
+  "description": "B2B Loterias v8.6 TURBO - Preenche apostas automaticamente no site da Caixa com lotes de 10 e fluxo de pagamento",
+  "permissions": ["storage", "activeTab"],
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://127.0.0.1/*",
+        "*://localhost/*",
+        "*://*.github.io/*",
+        "file:///*"
+      ],
+      "js": ["b2b_bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.loteriasonline.caixa.gov.br/*",
+        "https://loteriasonline.caixa.gov.br/*"
+      ],
+      "js": ["caixa_automator.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

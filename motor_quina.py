@@ -553,7 +553,7 @@ class MotorQuinaB2B:
 
     def gerar_carteira(self, quantidade_jogos: int) -> Dict[str, Any]:
         """Gera carteira de alta assertividade respeitando todos os 43 critérios."""
-        qtd = max(1, min(200, int(quantidade_jogos)))
+        qtd = max(1, min(50000, int(quantidade_jogos)))
 
         # 1. Cotas dos modelos (Item 8)
         if self.modelo_preferencial and self.modelo_preferencial in ["3/2", "2/3", "4/1", "1/4", "5/0", "0/5"]:

@@ -90,33 +90,57 @@ class MotorMegaSenaB2B:
         numeros_fixos: Optional[List[int]] = None,
         numeros_proibidos: Optional[List[int]] = None
     ):
+        estr_aliases = {
+            "equilibrada": "equilibrada",
+            "sniper": "sniper",
+            "frequencia_historica": "frequencia_historica",
+            "frequencia_recente": "frequencia_recente",
+            "tendencia": "frequencia_recente",
+            "atrasos_recuperacoes": "atrasos_recuperacoes",
+            "ciclos_atraso": "atrasos_recuperacoes",
+            "anti_inercia": "atrasos_recuperacoes",
+            "pares_trios": "pares_trios",
+            "fechamento_bayesiano": "pares_trios",
+            "coocorrencia_lift_zscore": "coocorrencia_lift_zscore",
+            "cobertura_estatistica": "frequencia_historica",
+            "auto_pesos": "auto_pesos"
+        }
         estr_norm = str(estrategia).lower().strip().replace("-", "_").replace(" ", "_")
-        matched_estr = "equilibrada"
-        for k in self.ESTRATEGIAS_VALIDAS:
-            if k in estr_norm:
-                matched_estr = k
-                break
-        self.estrategia = matched_estr
+        matched_estr = estr_aliases.get(estr_norm, None)
+        if not matched_estr:
+            for k, target in estr_aliases.items():
+                if k in estr_norm:
+                    matched_estr = target
+                    break
+        self.estrategia = matched_estr or "equilibrada"
         self.is_sniper = (self.estrategia == "sniper")
 
+        self.proibidos = set(int(x) for x in (numeros_proibidos or []) if 1 <= int(x) <= 60)
+        self.fixos = sorted(list(set(int(x) for x in (numeros_fixos or []) if 1 <= int(x) <= 60 and int(x) not in self.proibidos)))
+
         if pool and len(pool) >= 6:
-            valid_pool = sorted(list(set(int(x) for x in pool if 1 <= int(x) <= 60)))
+            valid_pool = sorted(list(set(int(x) for x in pool if 1 <= int(x) <= 60 and int(x) not in self.proibidos)))
             if len(valid_pool) >= 6:
                 self.pool = valid_pool
                 self.is_custom_pool = (len(self.pool) < 60)
             else:
-                self.pool = list(self.UNIVERSO)
-                self.is_custom_pool = False
+                self.pool = [n for n in self.UNIVERSO if n not in self.proibidos]
+                self.is_custom_pool = (len(self.pool) < 60)
         else:
-            self.pool = list(self.UNIVERSO)
-            self.is_custom_pool = False
+            self.pool = [n for n in self.UNIVERSO if n not in self.proibidos]
+            self.is_custom_pool = (len(self.pool) < 60)
 
+        # Garantir que todas as fixas estejam obrigatoriamente no pool
+        for f in self.fixos:
+            if f not in self.pool:
+                self.pool.append(f)
+        self.pool.sort()
         self.set_pool = set(self.pool)
+
         self.pool_A = [n for n in self.pool if n in self.SET_A]
         self.pool_B = [n for n in self.pool if n in self.SET_B]
-
-        self.fixos = [n for n in (numeros_fixos or []) if n in self.set_pool]
-        self.proibidos = set(numeros_proibidos or [])
+        self.fixos_A = [n for n in self.fixos if n in self.SET_A]
+        self.fixos_B = [n for n in self.fixos if n in self.SET_B]
 
         self.raw_historico = self._carregar_historico(historico)
         limite = 30
@@ -423,6 +447,26 @@ class MotorMegaSenaB2B:
         elif self.estrategia == "coocorrencia_lift_zscore":
             pesos["lift_zscore"] = 0.40
             pesos["pares"] = 0.25
+        elif self.estrategia == "auto_pesos":
+            f_vals = list(self.stats["freq_abs"].values())
+            var_obs = statistics.variance(f_vals) if len(f_vals) > 1 else 1.0
+            var_esp = W * 0.10 * 0.90
+            razao_sinal = min(2.5, max(0.5, var_obs / (var_esp or 1.0)))
+
+            qtd_pares_relevantes = sum(1 for p in self.stats["pares_top"] if p.get("lift", 0) > 1.2)
+            peso_lift = min(0.35, 0.10 + (qtd_pares_relevantes / 25.0) * 0.20)
+
+            qtd_recup = len(self.stats["recuperacoes"])
+            peso_recup = min(0.18, 0.04 + (qtd_recup / 10.0) * 0.12)
+
+            pesos["freq_hist"] = 0.20 * razao_sinal
+            pesos["freq_rec"] = 0.18 * razao_sinal
+            pesos["pares"] = 0.15 + (peso_lift * 0.5)
+            pesos["lift_zscore"] = peso_lift
+            pesos["recuperacao"] = peso_recup
+            pesos["atraso"] = 0.08
+            pesos["centroide"] = 0.12
+            pesos["modelo_ab"] = 0.06
 
         total = sum(pesos.values())
         return {k: round(v / total, 3) for k, v in pesos.items()}
@@ -509,7 +553,10 @@ class MotorMegaSenaB2B:
             score_paridade = 10
 
         max_c = self.contar_max_consecutivos(s)
-        penalidade_consec = 25 if max_c == 3 else (10 if max_c == 2 else 0)
+        penalidade_consec = 15 if max_c == 3 else 0
+
+        lift_medio = round(total_lift / len(pares_jogo), 2) if pares_jogo else 1.0
+        score_lift = min(200, max(20, int(lift_medio * 65.0 + (pares_qualificados * 10.0))))
 
         raw_score = (
             score_freq_hist * self.pesos.get("freq_hist", 0.20) +
@@ -517,9 +564,10 @@ class MotorMegaSenaB2B:
             (score_atraso + bonus_recup) * (self.pesos.get("atraso", 0.10) + self.pesos.get("recuperacao", 0.05)) +
             score_pares * self.pesos.get("pares", 0.15) +
             score_trios * self.pesos.get("trios", 0.08) +
+            score_lift * self.pesos.get("lift_zscore", 0.12) +
             score_centroide * self.pesos.get("centroide", 0.10) +
             score_ab * self.pesos.get("modelo_ab", 0.05) +
-            score_paridade * 0.12 -
+            score_paridade * 0.10 -
             penalidade_consec
         )
 
@@ -534,12 +582,13 @@ class MotorMegaSenaB2B:
             "pares_impares": f"{pares_qtd}P / {impares_qtd}I",
             "max_consecutivo": max_c,
             "pares_qualificados": pares_qualificados,
-            "lift_medio": round(total_lift / len(pares_jogo), 2),
+            "lift_medio": lift_medio,
             "fatores_transparencia": {
                 "frequencia_historica": round(score_freq_hist, 1),
                 "frequencia_recente": round(score_freq_rec, 1),
                 "atraso_e_recuperacao": round(score_atraso + bonus_recup, 1),
                 "pares_e_trios": round(score_pares + score_trios, 1),
+                "lift_e_zscore": round(score_lift, 1),
                 "centroide_simetrico": round(score_centroide, 1),
                 "modelo_ab": round(score_ab, 1),
                 "paridade": score_paridade,
@@ -549,29 +598,53 @@ class MotorMegaSenaB2B:
         }
 
     def _gerar_subconjuntos(self, pool_grupo: List[int], k: int, grupo_nome: str, max_candidatos: int = 150) -> List[Dict[str, Any]]:
+        if k == 0:
+            return [{"sub": [], "score_sub": 0.0, "grupo": grupo_nome}]
+
         if len(pool_grupo) < k:
             return []
 
+        fixos_grupo = [f for f in (self.fixos_A if grupo_nome == "A" else self.fixos_B) if f in pool_grupo]
+        if len(fixos_grupo) > k:
+            return []
+
+        k_livre = k - len(fixos_grupo)
+        pool_livre = [n for n in pool_grupo if n not in fixos_grupo]
+
+        if len(pool_livre) < k_livre:
+            return []
+
+        if k_livre == 0:
+            sub_list = sorted(list(fixos_grupo))
+            if self.validar_consecutivos(sub_list):
+                s_freq = sum(self.stats["freq_abs"].get(n, 0) for n in sub_list)
+                s_rec = sum(self.stats["freq_rec"].get(n, 0) for n in sub_list)
+                return [{
+                    "sub": sub_list,
+                    "score_sub": s_freq * 2.0 + s_rec * 3.0,
+                    "grupo": grupo_nome
+                }]
+            return []
+
         candidatos = []
-        comb_totais = math.comb(len(pool_grupo), k)
+        comb_totais = math.comb(len(pool_livre), k_livre)
 
         if comb_totais <= max_candidatos * 3:
-            todas = list(itertools.combinations(pool_grupo, k))
+            todas_livres = list(itertools.combinations(pool_livre, k_livre))
         else:
-            pesos_num = [self.stats["dezenas_stats"][n]["freq_abs"] + 1 for n in pool_grupo]
+            pesos_num = [self.stats["dezenas_stats"][n]["freq_abs"] + 1 for n in pool_livre]
             total_peso = sum(pesos_num)
             probs = [p / total_peso for p in pesos_num]
             todas_set = set()
-            for _ in range(max_candidatos * 6):
-                escolha = tuple(sorted(random.choices(pool_grupo, weights=probs, k=k)))
-                if len(set(escolha)) == k:
-                    todas_set.add(escolha)
-                if len(todas_set) >= max_candidatos * 3:
-                    break
-            todas = list(todas_set)
+            tentativas_amostra = 0
+            while len(todas_set) < max_candidatos * 3 and tentativas_amostra < max_candidatos * 15:
+                tentativas_amostra += 1
+                escolha = tuple(sorted(random.sample(pool_livre, k_livre)))
+                todas_set.add(escolha)
+            todas_livres = list(todas_set)
 
-        for sub in todas:
-            sub_list = sorted(list(sub))
+        for sub_livre in todas_livres:
+            sub_list = sorted(list(sub_livre) + list(fixos_grupo))
             if not self.validar_consecutivos(sub_list):
                 continue
 
@@ -595,8 +668,13 @@ class MotorMegaSenaB2B:
         if nA_pool < 1 and nB_pool < 6:
             raise ValueError("Pool selecionado insuficiente para formar jogos válidos de 6 números.")
 
+        canonicos = [(3, 3), (2, 4), (4, 2), (1, 5), (5, 1)]
+        modelos_candidatos = self.stats["modelos_ordenados"]
+        if not self.modelo_preferencial and nA_pool >= 5 and nB_pool >= 5:
+            modelos_candidatos = [m for m in self.stats["modelos_ordenados"] if (m["kA"], m["kB"]) in canonicos]
+
         modelos_viaveis = []
-        for m in self.stats["modelos_ordenados"]:
+        for m in modelos_candidatos:
             kA, kB = m["kA"], m["kB"]
             if nA_pool >= kA and nB_pool >= kB:
                 modelos_viaveis.append((kA, kB, m["rotulo"], m["score_relevancia"]))
@@ -616,116 +694,352 @@ class MotorMegaSenaB2B:
         total_rel = sum(m[3] for m in modelos_viaveis)
         cotas = {}
         resto = qtd
-        for m in modelos_viaveis:
-            c = max(1, int(round(qtd * (m[3] / total_rel)))) if total_rel > 0 else 1
-            cotas[(m[0], m[1])] = min(c, resto)
-            resto -= cotas[(m[0], m[1])]
-            if resto <= 0:
-                break
-        if resto > 0:
+        for idx, m in enumerate(modelos_viaveis):
+            if idx == len(modelos_viaveis) - 1:
+                cotas[(m[0], m[1])] = resto
+                resto = 0
+            else:
+                c = max(1, int(round(qtd * (m[3] / total_rel)))) if total_rel > 0 else 1
+                cotas[(m[0], m[1])] = min(c, resto)
+                resto -= cotas[(m[0], m[1])]
+        if resto > 0 and modelos_viaveis:
             primeiro = (modelos_viaveis[0][0], modelos_viaveis[0][1])
             cotas[primeiro] = cotas.get(primeiro, 0) + resto
 
-        candidatos_gerais = []
+        candidatos_por_modelo = collections.defaultdict(list)
         for (kA, kB), cota in cotas.items():
             if cota <= 0:
                 continue
 
-            subs_A = self._gerar_subconjuntos(self.pool_A, kA, "A", max_candidatos=80)
-            subs_B = self._gerar_subconjuntos(self.pool_B, kB, "B", max_candidatos=80)
+            target_cands = max(120, cota * 25)
+            subs_A = self._gerar_subconjuntos(self.pool_A, kA, "A", max_candidatos=max(40, cota * 8))
+            subs_B = self._gerar_subconjuntos(self.pool_B, kB, "B", max_candidatos=max(40, cota * 8))
 
             if not subs_A and kA > 0:
                 continue
             if not subs_B and kB > 0:
                 continue
 
+            set_comb = set()
+
             if kA == 0:
-                for sB in subs_B[:cota * 5]:
-                    cand = sB["sub"]
+                for sB in subs_B:
+                    cand = sorted(sB["sub"])
+                    tup = tuple(cand)
+                    if tup in set_comb:
+                        continue
+                    if self.fixos and not all(f in cand for f in self.fixos):
+                        continue
+                    if self.proibidos and any(p in cand for p in self.proibidos):
+                        continue
                     res = self.calcular_score_jogo(cand, (kA, kB))
                     if res["valido"]:
-                        candidatos_gerais.append({"jogo": cand, **res})
-                continue
-            if kB == 0:
-                for sA in subs_A[:cota * 5]:
-                    cand = sA["sub"]
+                        set_comb.add(tup)
+                        candidatos_por_modelo[(kA, kB)].append({"jogo": cand, **res})
+                    if len(candidatos_por_modelo[(kA, kB)]) >= target_cands:
+                        break
+            elif kB == 0:
+                for sA in subs_A:
+                    cand = sorted(sA["sub"])
+                    tup = tuple(cand)
+                    if tup in set_comb:
+                        continue
+                    if self.fixos and not all(f in cand for f in self.fixos):
+                        continue
+                    if self.proibidos and any(p in cand for p in self.proibidos):
+                        continue
                     res = self.calcular_score_jogo(cand, (kA, kB))
                     if res["valido"]:
-                        candidatos_gerais.append({"jogo": cand, **res})
-                continue
+                        set_comb.add(tup)
+                        candidatos_por_modelo[(kA, kB)].append({"jogo": cand, **res})
+                    if len(candidatos_por_modelo[(kA, kB)]) >= target_cands:
+                        break
+            else:
+                lenA = len(subs_A)
+                lenB = len(subs_B)
+                for offset in range(max(lenA, lenB)):
+                    for i in range(lenA):
+                        j = (i + offset) % lenB
+                        itemA = subs_A[i]
+                        itemB = subs_B[j]
+                        jogo_comb = sorted(itemA["sub"] + itemB["sub"])
+                        if len(jogo_comb) != 6 or len(set(jogo_comb)) != 6:
+                            continue
+                        tup = tuple(jogo_comb)
+                        if tup in set_comb:
+                            continue
+                        if self.fixos and not all(f in jogo_comb for f in self.fixos):
+                            continue
+                        if self.proibidos and any(p in jogo_comb for p in self.proibidos):
+                            continue
 
-            confrontos = []
-            for itemA in subs_A[:40]:
-                for itemB in subs_B[:40]:
-                    jogo_comb = sorted(itemA["sub"] + itemB["sub"])
-                    if self.fixos and not all(f in jogo_comb for f in self.fixos):
-                        continue
-                    if self.proibidos and any(p in jogo_comb for p in self.proibidos):
-                        continue
+                        eval_res = self.calcular_score_jogo(jogo_comb, (kA, kB))
+                        if eval_res["valido"]:
+                            set_comb.add(tup)
+                            candidatos_por_modelo[(kA, kB)].append({
+                                "jogo": jogo_comb,
+                                **eval_res
+                            })
+                        if len(candidatos_por_modelo[(kA, kB)]) >= target_cands:
+                            break
+                    if len(candidatos_por_modelo[(kA, kB)]) >= target_cands:
+                        break
 
-                    eval_res = self.calcular_score_jogo(jogo_comb, (kA, kB))
-                    if eval_res["valido"]:
-                        confrontos.append({
-                            "jogo": jogo_comb,
-                            **eval_res
-                        })
+            # Amostragem complementar para modelos com pool reduzido
+            tentativas_amostra = 0
+            pool_livre_A = [n for n in self.pool_A if n not in self.fixos_A and n not in self.proibidos]
+            pool_livre_B = [n for n in self.pool_B if n not in self.fixos_B and n not in self.proibidos]
+            need_A = kA - len(self.fixos_A)
+            need_B = kB - len(self.fixos_B)
 
-            confrontos.sort(key=lambda x: x["score"], reverse=True)
-            candidatos_gerais.extend(confrontos[:max(cota * 4, 30)])
+            while len(candidatos_por_modelo[(kA, kB)]) < max(30, cota * 3) and tentativas_amostra < 500:
+                tentativas_amostra += 1
+                if len(pool_livre_A) < need_A or len(pool_livre_B) < need_B:
+                    break
 
-        candidatos_gerais.sort(key=lambda x: x["score"], reverse=True)
+                sample_A = random.sample(pool_livre_A, need_A) if need_A > 0 else []
+                sample_B = random.sample(pool_livre_B, need_B) if need_B > 0 else []
+                cand = sorted(list(self.fixos_A) + sample_A + list(self.fixos_B) + sample_B)
 
+                if len(cand) != 6 or len(set(cand)) != 6:
+                    continue
+                if not self.validar_consecutivos(cand):
+                    continue
+                tup = tuple(cand)
+                if tup in set_comb:
+                    continue
+
+                eval_res = self.calcular_score_jogo(cand, (kA, kB))
+                if eval_res["valido"]:
+                    set_comb.add(tup)
+                    candidatos_por_modelo[(kA, kB)].append({
+                        "jogo": cand,
+                        **eval_res
+                    })
+
+            candidatos_por_modelo[(kA, kB)].sort(key=lambda x: x["score"], reverse=True)
+
+        # Seleção com Diversificação por Jaccard e Tetos Rígidos Anti-Canibalismo (Pares, Trios e Quadras)
         def jaccard(a: List[int], b: List[int]) -> float:
             sa, sb = set(a), set(b)
             return len(sa.intersection(sb)) / len(sa.union(sb))
 
-        limiar = 0.50 if qtd <= 20 else (0.65 if qtd <= 50 else 0.85)
+        is_coocorrencia = self.estrategia in ["sniper", "pares_trios", "coocorrencia_lift_zscore"]
+        is_recente = self.estrategia in ["frequencia_recente", "tendencia"]
+        is_atrasos = self.estrategia in ["atrasos_recuperacoes", "ciclos_atraso", "anti_inercia"]
+
+        if is_coocorrencia:
+            limiar = 0.60
+            teto_numero = max(6, math.ceil(qtd * 0.25))
+            teto_par = max(4, math.ceil(qtd * 0.12))
+            teto_trio = max(2, math.ceil(qtd * 0.04))
+            teto_quadra = max(1, math.ceil(qtd * 0.02))
+        elif is_recente:
+            limiar = 0.58
+            teto_numero = max(6, math.ceil(qtd * 0.24))
+            teto_par = max(4, math.ceil(qtd * 0.11))
+            teto_trio = max(2, math.ceil(qtd * 0.035))
+            teto_quadra = max(1, math.ceil(qtd * 0.02))
+        elif is_atrasos:
+            limiar = 0.55
+            teto_numero = max(5, math.ceil(qtd * 0.20))
+            teto_par = max(3, math.ceil(qtd * 0.09))
+            teto_trio = max(2, math.ceil(qtd * 0.03))
+            teto_quadra = max(1, math.ceil(qtd * 0.015))
+        else:
+            limiar = 0.52
+            teto_numero = max(5, math.ceil(qtd * 0.18))
+            teto_par = max(3, math.ceil(qtd * 0.08))
+            teto_trio = max(2, math.ceil(qtd * 0.03))
+            teto_quadra = max(1, math.ceil(qtd * 0.015))
 
         jogos_selecionados = []
         jogos_set = set()
+        freq_selecionados = collections.defaultdict(int)
+        freq_pares = collections.defaultdict(int)
+        freq_trios = collections.defaultdict(int)
+        freq_quadras = collections.defaultdict(int)
+        cotas_restantes = dict(cotas)
 
-        for cand in candidatos_gerais:
-            tup = tuple(cand["jogo"])
+        def tentar_adicionar(cand: Dict[str, Any], max_jaccard: float, max_num: int, max_par: int, max_trio: int = 3, max_quadra: int = 1) -> bool:
+            jogo = cand["jogo"]
+            tup = tuple(jogo)
             if tup in jogos_set:
-                continue
+                return False
 
-            muito_similar = False
+            if any(freq_selecionados[n] >= max_num for n in jogo if n not in self.fixos):
+                return False
+
+            # Teto de pares não-fixos
+            for i in range(len(jogo)):
+                for j in range(i + 1, len(jogo)):
+                    u, v = jogo[i], jogo[j]
+                    if u not in self.fixos or v not in self.fixos:
+                        if freq_pares[(u, v)] >= max_par:
+                            return False
+
+            # Teto de trios não-fixos
+            for i in range(len(jogo)):
+                for j in range(i + 1, len(jogo)):
+                    for k in range(j + 1, len(jogo)):
+                        u, v, w = jogo[i], jogo[j], jogo[k]
+                        if freq_trios[(u, v, w)] >= max_trio:
+                            return False
+
+            # Teto de quadras não-fixas
+            for a in range(len(jogo)):
+                for b in range(a + 1, len(jogo)):
+                    for c in range(b + 1, len(jogo)):
+                        for d in range(c + 1, len(jogo)):
+                            q = (jogo[a], jogo[b], jogo[c], jogo[d])
+                            if freq_quadras[q] >= max_quadra:
+                                return False
+
             for sel in jogos_selecionados:
-                if jaccard(cand["jogo"], sel["jogo"]) > limiar:
-                    muito_similar = True
-                    break
+                if jaccard(jogo, sel["jogo"]) > max_jaccard:
+                    return False
 
-            if not muito_similar:
-                jogos_selecionados.append(cand)
-                jogos_set.add(tup)
+            jogos_selecionados.append(cand)
+            jogos_set.add(tup)
+            for n in jogo:
+                freq_selecionados[n] += 1
+            for i in range(len(jogo)):
+                for j in range(i + 1, len(jogo)):
+                    freq_pares[(jogo[i], jogo[j])] += 1
+                    for k in range(j + 1, len(jogo)):
+                        freq_trios[(jogo[i], jogo[j], jogo[k])] += 1
+                        for d in range(k + 1, len(jogo)):
+                            freq_quadras[(jogo[i], jogo[j], jogo[k], jogo[d])] += 1
+            return True
+
+        # Pass 1: Seleção por cotas com especialização por estratégia
+        for (kA, kB) in cotas:
+            lista = candidatos_por_modelo.get((kA, kB), [])
+            if is_coocorrencia:
+                lista.sort(key=lambda x: x["score"] + (x.get("pares_qualificados", 0) * 12) + (x.get("lift_medio", 0) * 15), reverse=True)
+            elif is_recente:
+                lista.sort(key=lambda x: x["score"] + (x.get("fatores_transparencia", {}).get("frequencia_recente", 0) * 0.5), reverse=True)
+            elif is_atrasos:
+                lista.sort(key=lambda x: x["score"] + (x.get("fatores_transparencia", {}).get("atraso_e_recuperacao", 0) * 0.5), reverse=True)
+            elif self.estrategia == "auto_pesos":
+                lista.sort(key=lambda x: x["score"], reverse=True)
+            else:
+                lista.sort(key=lambda x: x["score"] + sum(20 for n in x["jogo"] if freq_selecionados[n] == 0), reverse=True)
+
+            for cand in lista:
+                if cotas_restantes[(kA, kB)] <= 0:
+                    break
                 if len(jogos_selecionados) >= qtd:
                     break
+                if tentar_adicionar(cand, limiar, teto_numero, teto_par, teto_trio, teto_quadra):
+                    cotas_restantes[(kA, kB)] -= 1
 
-        if len(jogos_selecionados) < qtd:
-            for cand in candidatos_gerais:
-                tup = tuple(cand["jogo"])
-                if tup not in jogos_set:
-                    jogos_selecionados.append(cand)
-                    jogos_set.add(tup)
-                    if len(jogos_selecionados) >= qtd:
-                        break
+        # Pass 2: Relaxamento controlado para cotas pendentes
+        for (kA, kB) in cotas:
+            if cotas_restantes[(kA, kB)] <= 0:
+                continue
+            lista = candidatos_por_modelo.get((kA, kB), [])
+            for cand in lista:
+                if cotas_restantes[(kA, kB)] <= 0:
+                    break
+                if len(jogos_selecionados) >= qtd:
+                    break
+                if tentar_adicionar(cand, limiar + 0.12, teto_numero + 2, teto_par + 1, teto_trio + 1, teto_quadra + 1):
+                    cotas_restantes[(kA, kB)] -= 1
 
-        tentativas_extras = 0
-        while len(jogos_selecionados) < qtd and tentativas_extras < 500:
-            tentativas_extras += 1
-            kA, kB = (3, 3)
-            sA = random.sample(self.pool_A, min(kA, len(self.pool_A)))
-            sB = random.sample(self.pool_B, min(kB, len(self.pool_B)))
-            extra = sorted(sA + sB)
-            if len(extra) == 6 and self.validar_consecutivos(extra):
-                tup = tuple(extra)
-                if tup not in jogos_set:
-                    ev = self.calcular_score_jogo(extra, (len(sA), len(sB)))
+        # Pass 3: Preenchimento das cotas restantes de cada modelo com amostragem balanceada
+        for (kA, kB) in cotas:
+            tentativas_pass3 = 0
+            need_A = kA - len(self.fixos_A)
+            need_B = kB - len(self.fixos_B)
+            pool_livre_A = [n for n in self.pool_A if n not in self.fixos_A and n not in self.proibidos]
+            pool_livre_B = [n for n in self.pool_B if n not in self.fixos_B and n not in self.proibidos]
+
+            while cotas_restantes[(kA, kB)] > 0 and len(jogos_selecionados) < qtd and tentativas_pass3 < 800:
+                tentativas_pass3 += 1
+                if len(pool_livre_A) < need_A or len(pool_livre_B) < need_B:
+                    break
+
+                sort_A = sorted(pool_livre_A, key=lambda n: freq_selecionados[n])
+                sort_B = sorted(pool_livre_B, key=lambda n: freq_selecionados[n])
+                top_A = sort_A[:max(need_A + 8, int(len(pool_livre_A) * 0.7))]
+                top_B = sort_B[:max(need_B + 8, int(len(pool_livre_B) * 0.7))]
+
+                sA = sorted(list(self.fixos_A) + (random.sample(top_A, need_A) if need_A > 0 else []))
+                sB = sorted(list(self.fixos_B) + (random.sample(top_B, need_B) if need_B > 0 else []))
+                comb = sorted(sA + sB)
+
+                if len(comb) == 6 and len(set(comb)) == 6 and self.validar_consecutivos(comb):
+                    if self.fixos and not all(f in comb for f in self.fixos):
+                        continue
+                    if self.proibidos and any(p in comb for p in self.proibidos):
+                        continue
+
+                    ev = self.calcular_score_jogo(comb, (kA, kB))
                     if ev["valido"]:
-                        jogos_selecionados.append({"jogo": extra, **ev})
-                        jogos_set.add(tup)
+                        if tentar_adicionar({"jogo": comb, **ev}, limiar + 0.15, teto_numero + 4, teto_par + 2, teto_trio + 2, teto_quadra + 1):
+                            cotas_restantes[(kA, kB)] -= 1
 
-        jogos_selecionados.sort(key=lambda x: x["score"], reverse=True)
+        # Pass 4: Fallback de amostragem extra respeitando fixos, proibidos e regras mandatórias
+        tentativas_extras = 0
+        while len(jogos_selecionados) < qtd and tentativas_extras < 1500:
+            tentativas_extras += 1
+            modelos_com_cota = [m for m in modelos_viaveis if cotas_restantes[(m[0], m[1])] > 0]
+            mv = modelos_com_cota[tentativas_extras % len(modelos_com_cota)] if modelos_com_cota else modelos_viaveis[tentativas_extras % len(modelos_viaveis)]
+            kA_fb, kB_fb = mv[0], mv[1]
+
+            need_A = kA_fb - len(self.fixos_A)
+            need_B = kB_fb - len(self.fixos_B)
+            pool_livre_A = [n for n in self.pool_A if n not in self.fixos_A and n not in self.proibidos]
+            pool_livre_B = [n for n in self.pool_B if n not in self.fixos_B and n not in self.proibidos]
+
+            if len(pool_livre_A) < need_A or len(pool_livre_B) < need_B:
+                continue
+
+            sA = sorted(list(self.fixos_A) + (random.sample(pool_livre_A, need_A) if need_A > 0 else []))
+            sB = sorted(list(self.fixos_B) + (random.sample(pool_livre_B, need_B) if need_B > 0 else []))
+            extra = sorted(sA + sB)
+
+            if len(extra) == 6 and len(set(extra)) == 6 and self.validar_consecutivos(extra):
+                if self.fixos and not all(f in extra for f in self.fixos):
+                    continue
+                if self.proibidos and any(p in extra for p in self.proibidos):
+                    continue
+
+                ev = self.calcular_score_jogo(extra, (kA_fb, kB_fb))
+                if ev["valido"]:
+                    tentar_adicionar({"jogo": extra, **ev}, 0.85, qtd, qtd)
+                    if cotas_restantes[(kA_fb, kB_fb)] > 0:
+                        cotas_restantes[(kA_fb, kB_fb)] -= 1
+
+        # Intercalamento Harmônico Proporcional (Bresenham-Stride)
+        # Mantém ordenação interna decrescente por score em cada modelo e distribui
+        # homogeneamente pela carteira para que QUALQUER subconjunto (ex: 20, 50, 100 jogos)
+        # preserve rigorosamente a proporção canônica multimodel.
+        por_modelo = collections.defaultdict(list)
+        for j in jogos_selecionados:
+            por_modelo[j["modelo"]].append(j)
+        for arr in por_modelo.values():
+            arr.sort(key=lambda x: x["score"], reverse=True)
+
+        fila_harmonica = []
+        total_sel = len(jogos_selecionados)
+        for m_key, arr in por_modelo.items():
+            stride = total_sel / len(arr)
+            fila_harmonica.append({"m": m_key, "arr": arr, "idx": 0, "nextPos": stride * 0.5, "stride": stride})
+
+        jogos_harmonicos = []
+        while len(jogos_harmonicos) < total_sel and fila_harmonica:
+            fila_harmonica.sort(key=lambda x: x["nextPos"])
+            item = fila_harmonica[0]
+            jogos_harmonicos.append(item["arr"][item["idx"]])
+            item["idx"] += 1
+            if item["idx"] >= len(item["arr"]):
+                fila_harmonica.pop(0)
+            else:
+                item["nextPos"] += item["stride"]
+
+        jogos_selecionados = jogos_harmonicos
 
         checks_passed = self._executar_10_checks(jogos_selecionados, qtd)
 
@@ -748,6 +1062,8 @@ class MotorMegaSenaB2B:
                 "soma": j["soma"],
                 "media": j["media"],
                 "max_consecutivo": j["max_consecutivo"],
+                "pares_qualificados": j.get("pares_qualificados", 0),
+                "lift_medio": j.get("lift_medio", 1.0),
                 "fatores_transparencia": j["fatores_transparencia"],
                 "justificativa": (
                     f"Modelo {j['modelo']}, Soma {j['soma']}, {j['pares_impares']}, "
@@ -796,8 +1112,17 @@ class MotorMegaSenaB2B:
         c2 = all(all(1 <= n <= 60 for n in j["jogo"]) for j in jogos)
         c3 = all(len(set(j["jogo"])) == 6 for j in jogos)
         c4 = all(self.validar_consecutivos(j["jogo"]) for j in jogos)
-        c5 = all(all(n in self.set_pool for n in j["jogo"]) for j in jogos)
-        c6 = all(j.get("modelo") in ["3/3", "2/4", "4/2", "1/5", "5/1", "0/6", "6/0"] for j in jogos)
+        
+        c5_pool = all(all(n in self.set_pool for n in j["jogo"]) for j in jogos)
+        c5_proib = all(not any(p in j["jogo"] for p in self.proibidos) for j in jogos) if self.proibidos else True
+        c5_fixos = all(all(f in j["jogo"] for f in self.fixos) for j in jogos) if self.fixos else True
+        c5 = (c5_pool and c5_proib and c5_fixos)
+
+        if self.modelo_preferencial:
+            pref = str(self.modelo_preferencial).strip().replace(" ", "").replace("+", "/")
+            c6 = all(j.get("modelo") == pref for j in jogos)
+        else:
+            c6 = all(j.get("modelo") in ["3/3", "2/4", "4/2", "1/5", "5/1", "0/6", "6/0"] for j in jogos)
         
         jogos_str = ["-".join(map(str, j["jogo"])) for j in jogos]
         c7 = (len(jogos_str) == len(set(jogos_str)))
@@ -818,6 +1143,8 @@ class MotorMegaSenaB2B:
             "check10_todos_classificados": c10,
             "aprovacao_integral_10_de_10": all([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10])
         }
+
+
 
     def gerar_relatorio_pre_geracao(self) -> Dict[str, Any]:
         W = self.total_analisado
@@ -924,11 +1251,26 @@ class MotorMegaSenaB2B:
             })
 
         media_geral = round(statistics.mean(scores_medios), 2) if scores_medios else 0.0
+        total_jogos = qtd_testes * quantidade_jogos
+        preco_jogo = 5.00
+        custo_total = total_jogos * preco_jogo
+        retorno = (
+            acertos_globais[6] * 35000000.0 +
+            acertos_globais[5] * 45000.0 +
+            acertos_globais[4] * 1100.0
+        )
+        lucro = retorno - custo_total
+        roi_pct = round((lucro / custo_total) * 100, 2) if custo_total > 0 else 0.0
 
         return {
             "sucesso": True,
             "concursos_testados": qtd_testes,
             "jogos_por_concurso": quantidade_jogos,
+            "total_jogos_simulados": total_jogos,
+            "custo_total": custo_total,
+            "retorno_total_estimado": retorno,
+            "lucro_estimado": lucro,
+            "roi_estimado_pct": roi_pct,
             "estrategia": self.estrategia,
             "janela_treino": self.limite_historico,
             "totais_por_faixa": {

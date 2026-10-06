@@ -157,8 +157,9 @@ def obter_historico_caixa(nome_loteria: str) -> List[List[int]]:
         sorted_keys = sorted(data.keys(), key=lambda x: int(x))
         historico = []
         for key in sorted_keys:
-            draw = [int(x) for x in data[key][:7]]
-            historico.append(draw)
+            draw = [int(x) for x in data[key] if str(x).isdigit()]
+            if draw:
+                historico.append(draw)
         return historico
     except Exception as e:
         print(f"Erro ao processar dados de {loteria_key}: {e}")
