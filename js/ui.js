@@ -5158,51 +5158,191 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             label.style.fontWeight = 'bold';
             label.style.color = '#F59E0B';
             label.style.fontSize = '0.85rem';
-            label.textContent = `Concurso ${item.drawNumber}`;
+            if (item.date) {
+                label.innerHTML = `Concurso ${item.drawNumber} <span style="font-size:0.75rem;color:#94A3B8;font-weight:normal;margin-left:6px;">(${item.date})</span>`;
+            } else {
+                label.textContent = `Concurso ${item.drawNumber}`;
+            }
             row.appendChild(label);
 
-            // Função auxiliar para criar linha de bolas
-            function createBallsRow(numbers, labelText) {
-                if (labelText) {
-                    const sortLabel = document.createElement('span');
-                    sortLabel.style.fontSize = '0.7rem';
-                    sortLabel.style.color = '#94A3B8';
-                    sortLabel.style.fontWeight = '600';
-                    sortLabel.style.marginTop = '2px';
-                    sortLabel.textContent = labelText;
-                    row.appendChild(sortLabel);
-                }
-                const numbersDiv = document.createElement('div');
-                numbersDiv.className = 'recent-numbers';
-                numbersDiv.style.display = 'flex';
-                numbersDiv.style.gap = '4px';
-                numbersDiv.style.flexWrap = 'wrap';
+            // ── FORMATO ESPECIAL: SUPER SETE (7 COLUNAS C1 a C7) ──
+            if (self.currentGameKey === 'supersete') {
+                const colsDiv = document.createElement('div');
+                colsDiv.className = 'recent-supersete-cols';
+                colsDiv.style.display = 'grid';
+                colsDiv.style.gridTemplateColumns = 'repeat(7, 1fr)';
+                colsDiv.style.gap = '4px';
+                colsDiv.style.marginTop = '3px';
 
-                numbers.forEach(num => {
-                    const ball = document.createElement('span');
-                    ball.className = 'mini-ball';
-                    ball.textContent = num.toString().padStart(2, '0');
-                    ball.style.display = 'inline-flex';
-                    ball.style.alignItems = 'center';
-                    ball.style.justifyContent = 'center';
-                    ball.style.width = '20px';
-                    ball.style.height = '20px';
-                    ball.style.borderRadius = '50%';
-                    ball.style.backgroundColor = 'var(--bg-main)';
-                    ball.style.border = '1px solid var(--border-color)';
-                    ball.style.fontSize = '0.75rem';
-                    ball.style.color = 'var(--text-primary)';
-                    numbersDiv.appendChild(ball);
+                (item.numbers || []).slice(0, 7).forEach((num, colIdx) => {
+                    const colBox = document.createElement('div');
+                    colBox.style.display = 'flex';
+                    colBox.style.flexDirection = 'column';
+                    colBox.style.alignItems = 'center';
+                    colBox.style.justifyContent = 'center';
+                    colBox.style.background = 'rgba(2, 132, 199, 0.15)';
+                    colBox.style.border = '1px solid rgba(56, 189, 248, 0.35)';
+                    colBox.style.borderRadius = '6px';
+                    colBox.style.padding = '3px 2px';
+
+                    const cTag = document.createElement('span');
+                    cTag.style.fontSize = '0.62rem';
+                    cTag.style.color = '#38bdf8';
+                    cTag.style.fontWeight = '800';
+                    cTag.textContent = `C${colIdx + 1}`;
+
+                    const cVal = document.createElement('span');
+                    cVal.style.fontSize = '1.05rem';
+                    cVal.style.color = '#ffffff';
+                    cVal.style.fontWeight = '900';
+                    cVal.style.lineHeight = '1.1';
+                    cVal.textContent = num;
+
+                    colBox.appendChild(cTag);
+                    colBox.appendChild(cVal);
+                    colsDiv.appendChild(colBox);
                 });
-                row.appendChild(numbersDiv);
+                row.appendChild(colsDiv);
             }
+            // ── FORMATO ESPECIAL: LOTECA (14 JOGOS) ──
+            else if (self.currentGameKey === 'loteca') {
+                const colsDiv = document.createElement('div');
+                colsDiv.style.display = 'grid';
+                colsDiv.style.gridTemplateColumns = 'repeat(7, 1fr)';
+                colsDiv.style.gap = '3px';
+                colsDiv.style.marginTop = '3px';
 
-            // Dupla Sena: exibir Sorteio 1 e Sorteio 2 separados
-            if (item.numbers2 && item.numbers2.length > 0) {
-                createBallsRow(item.numbers, '1º Sorteio');
-                createBallsRow(item.numbers2, '2º Sorteio');
-            } else {
-                createBallsRow(item.numbers, null);
+                (item.numbers || []).forEach((res, idx) => {
+                    const jBox = document.createElement('div');
+                    jBox.style.display = 'flex';
+                    jBox.style.flexDirection = 'column';
+                    jBox.style.alignItems = 'center';
+                    jBox.style.justifyContent = 'center';
+                    jBox.style.background = 'rgba(234, 179, 8, 0.12)';
+                    jBox.style.border = '1px solid rgba(234, 179, 8, 0.3)';
+                    jBox.style.borderRadius = '4px';
+                    jBox.style.padding = '2px 0';
+
+                    const jNum = document.createElement('span');
+                    jNum.style.fontSize = '0.58rem';
+                    jNum.style.color = '#94a3b8';
+                    jNum.style.fontWeight = '600';
+                    jNum.textContent = `J${idx + 1}`;
+
+                    const jRes = document.createElement('span');
+                    jRes.style.fontSize = '0.85rem';
+                    jRes.style.color = '#fbbf24';
+                    jRes.style.fontWeight = '800';
+                    jRes.textContent = res;
+
+                    jBox.appendChild(jNum);
+                    jBox.appendChild(jRes);
+                    colsDiv.appendChild(jBox);
+                });
+                row.appendChild(colsDiv);
+            }
+            // ── FORMATO COM BOLAS PADRÃO OU COMBINADO ──
+            else {
+                // Função auxiliar para criar linha de bolas
+                function createBallsRow(numbers, labelText) {
+                    if (labelText) {
+                        const sortLabel = document.createElement('span');
+                        sortLabel.style.fontSize = '0.7rem';
+                        sortLabel.style.color = '#94A3B8';
+                        sortLabel.style.fontWeight = '600';
+                        sortLabel.style.marginTop = '2px';
+                        sortLabel.textContent = labelText;
+                        row.appendChild(sortLabel);
+                    }
+                    const numbersDiv = document.createElement('div');
+                    numbersDiv.className = 'recent-numbers';
+                    numbersDiv.style.display = 'flex';
+                    numbersDiv.style.gap = '4px';
+                    numbersDiv.style.flexWrap = 'wrap';
+
+                    numbers.forEach(num => {
+                        const ball = document.createElement('span');
+                        ball.className = 'mini-ball';
+                        ball.textContent = String(num).padStart(2, '0');
+                        ball.style.display = 'inline-flex';
+                        ball.style.alignItems = 'center';
+                        ball.style.justifyContent = 'center';
+                        ball.style.width = '22px';
+                        ball.style.height = '22px';
+                        ball.style.borderRadius = '50%';
+                        ball.style.backgroundColor = 'var(--bg-main)';
+                        ball.style.border = '1px solid var(--border-color)';
+                        ball.style.fontSize = '0.75rem';
+                        ball.style.color = 'var(--text-primary)';
+                        numbersDiv.appendChild(ball);
+                    });
+                    row.appendChild(numbersDiv);
+                }
+
+                // Dupla Sena: exibir Sorteio 1 e Sorteio 2 separados
+                if (item.numbers2 && item.numbers2.length > 0) {
+                    createBallsRow(item.numbers, '1º Sorteio');
+                    createBallsRow(item.numbers2, '2º Sorteio');
+                } else {
+                    createBallsRow(item.numbers || [], null);
+                }
+
+                // +Milionária: exibir Trevos oficiais
+                if (self.currentGameKey === 'milionaria' && item.trevos && item.trevos.length > 0) {
+                    const trevosDiv = document.createElement('div');
+                    trevosDiv.style.display = 'flex';
+                    trevosDiv.style.alignItems = 'center';
+                    trevosDiv.style.gap = '5px';
+                    trevosDiv.style.marginTop = '4px';
+
+                    const trLabel = document.createElement('span');
+                    trLabel.style.fontSize = '0.72rem';
+                    trLabel.style.color = '#34d399';
+                    trLabel.style.fontWeight = '700';
+                    trLabel.textContent = '🍀 Trevos:';
+                    trevosDiv.appendChild(trLabel);
+
+                    item.trevos.forEach(t => {
+                        const trBall = document.createElement('span');
+                        trBall.className = 'mini-ball trevo';
+                        trBall.textContent = t;
+                        trBall.style.display = 'inline-flex';
+                        trBall.style.alignItems = 'center';
+                        trBall.style.justifyContent = 'center';
+                        trBall.style.width = '20px';
+                        trBall.style.height = '20px';
+                        trBall.style.borderRadius = '50%';
+                        trBall.style.backgroundColor = '#047857';
+                        trBall.style.border = '1px solid #34d399';
+                        trBall.style.fontSize = '0.75rem';
+                        trBall.style.fontWeight = '800';
+                        trBall.style.color = '#ffffff';
+                        trevosDiv.appendChild(trBall);
+                    });
+                    row.appendChild(trevosDiv);
+                }
+
+                // Dia de Sorte: exibir Mês da Sorte
+                if (self.currentGameKey === 'diadesorte' && item.mesSorte) {
+                    const mesDiv = document.createElement('div');
+                    mesDiv.style.fontSize = '0.75rem';
+                    mesDiv.style.color = '#f59e0b';
+                    mesDiv.style.fontWeight = '700';
+                    mesDiv.style.marginTop = '3px';
+                    mesDiv.innerHTML = `📅 Mês da Sorte: <span style="color:#fde68a;">${item.mesSorte}</span>`;
+                    row.appendChild(mesDiv);
+                }
+
+                // Timemania: exibir Time do Coração
+                if (self.currentGameKey === 'timemania' && item.timeCoracao) {
+                    const timeDiv = document.createElement('div');
+                    timeDiv.style.fontSize = '0.75rem';
+                    timeDiv.style.color = '#22c55e';
+                    timeDiv.style.fontWeight = '700';
+                    timeDiv.style.marginTop = '3px';
+                    timeDiv.innerHTML = `⚽ Time do Coração: <span style="color:#bbf7d0;">${item.timeCoracao}</span>`;
+                    row.appendChild(timeDiv);
+                }
             }
 
             this.recentResultsContainer.appendChild(row);

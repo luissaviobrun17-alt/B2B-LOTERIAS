@@ -162,7 +162,7 @@ class StatsService {
     }
 
     static async _fetchPreviousDraws(gameType, latestDraw, count) {
-        var promises = [];
+        var missingDraws = [];
         for (var i = 1; i <= count; i++) {
             var drawNum = latestDraw - i;
             var exists = false;
@@ -173,21 +173,22 @@ class StatsService {
                 }
             }
             if (!exists) {
-                promises.push(this._fetchSingleDraw(gameType, drawNum));
+                missingDraws.push(drawNum);
             }
         }
 
+        // Buscar em pequenos lotes de 5 para estabilidade e evitar timeouts da API
         var self = this;
-        var wrappedPromises = [];
-        for (var p = 0; p < promises.length; p++) {
-            wrappedPromises.push(
-                promises[p].then(function(val) { return val; }).catch(function() { return null; })
-            );
-        }
-        var results = await Promise.all(wrappedPromises);
-        for (var r = 0; r < results.length; r++) {
-            if (results[r]) {
-                self.historyStore[gameType].push(results[r]);
+        for (var b = 0; b < missingDraws.length; b += 5) {
+            var batch = missingDraws.slice(b, b + 5);
+            var batchPromises = batch.map(function(num) {
+                return self._fetchSingleDraw(gameType, num).catch(function() { return null; });
+            });
+            var batchResults = await Promise.all(batchPromises);
+            for (var r = 0; r < batchResults.length; r++) {
+                if (batchResults[r]) {
+                    self.historyStore[gameType].push(batchResults[r]);
+                }
             }
         }
     }
@@ -306,15 +307,25 @@ class StatsService {
             return result;
         }
 
-        // ★ v10.9 FIX: Preservar dados extras da API (Mês da Sorte / Time do Coração)
-        if (data.mesSorte) {
-            result.mesSorte = data.mesSorte; // ex: "Maio"
-        }
-        if (data.nomeTimeCoracaoMesSorte) {
-            result.timeCoracao = data.nomeTimeCoracaoMesSorte; // ex: "Corinthians/SP"
+        // Data do sorteio para todas as loterias
+        if (data.dataApuracao) {
+            result.date = data.dataApuracao;
+        } else if (data.data) {
+            result.date = data.data;
         }
 
-        if (gameType === 'duplasena') {
+        // ★ Preservar dados extras da API (Mês da Sorte / Time do Coração)
+        if (data.nomeTimeCoracaoMesSorte || data.mesSorte) {
+            result.mesSorte = data.nomeTimeCoracaoMesSorte || data.mesSorte;
+        }
+        if (data.nomeTimeCoracaoMesSorte || data.timeCoracao) {
+            result.timeCoracao = (data.nomeTimeCoracaoMesSorte || data.timeCoracao || '').trim();
+        }
+
+        if (gameType === 'supersete' || (data.tipoJogo && String(data.tipoJogo).toUpperCase().includes('SUPER_SETE'))) {
+            // Super Sete: exatamente 7 colunas (C1 a C7) na ordem oficial, dígitos de 0 a 9 com repetições permitidas!
+            result.numbers = rawNumbers.slice(0, 7);
+        } else if (gameType === 'duplasena') {
             // Dupla Sena: pode vir como 12 números juntos, ou em dezenas + dezenas2 separados
             if (data.dezenas2 && data.dezenas2.length > 0) {
                 // Formato com dezenas2 separado (algumas APIs)
@@ -351,8 +362,11 @@ class StatsService {
         }
 
         // Salvar trevos para +Milionaria
-        if (gameType === 'milionaria' && data.trevosSorteados && data.trevosSorteados.length > 0) {
-            result.trevos = data.trevosSorteados.map(function(t) { return parseInt(t); }).sort(function(a,b){return a-b;});
+        if (gameType === 'milionaria') {
+            var rawTrevos = data.trevosSorteados || data.listaDezenasSegundoSorteio || data.trevos || [];
+            if (rawTrevos && rawTrevos.length > 0) {
+                result.trevos = rawTrevos.map(function(t) { return parseInt(t); }).sort(function(a,b){return a-b;});
+            }
         }
 
         return result;
