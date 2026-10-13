@@ -13,35 +13,45 @@ const PORT = 8777;
 const ROOT = __dirname;
 
 // ══════════════════════════════════════════════
-// Detecção de TODOS os diretórios de Desktop no computador
-// Garante gravação tanto no Desktop local quanto no OneDrive Desktop
+// Detecção da Área de Trabalho (Desktop) real e ativa do usuário
 // ══════════════════════════════════════════════
-function getAllDesktopPaths() {
-    const candidatos = [
-        path.join(os.homedir(), 'Desktop'),
-        path.join(os.homedir(), 'OneDrive', 'Desktop'),
-        path.join(os.homedir(), 'OneDrive', 'Área de Trabalho'),
-        path.join(os.homedir(), 'Área de Trabalho'),
-        path.join(os.homedir(), 'OneDrive', 'Documents', 'OneDrive', 'Desktop'),
-    ];
-    const existentes = [];
-    for (const p of candidatos) {
+function getActiveDesktopPath() {
+    if (process.platform === 'win32') {
         try {
-            if (fs.existsSync(p) && !existentes.includes(p)) {
-                existentes.push(p);
+            const { execSync } = require('child_process');
+            const regOut = execSync('reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders" /v Desktop', { encoding: 'utf8' });
+            const match = regOut.match(/Desktop\s+REG_(?:SZ|EXPAND_SZ)\s+([^\r\n]+)/i);
+            if (match && match[1]) {
+                let p = match[1].trim();
+                p = p.replace(/%USERPROFILE%/i, os.homedir());
+                if (fs.existsSync(p)) return p;
             }
         } catch (e) {}
     }
-    if (existentes.length === 0) {
-        existentes.push(path.join(os.homedir(), 'Desktop'));
-    }
-    return existentes;
+    const localDesktop = path.join(os.homedir(), 'Desktop');
+    if (fs.existsSync(localDesktop)) return localDesktop;
+    return path.join(os.homedir(), 'Desktop');
 }
 
-const DESKTOP_PATHS = getAllDesktopPaths();
-const DESKTOP = DESKTOP_PATHS[0];
+// Pastas de Desktop secundárias/antigas (usadas apenas para expurgo definitivo quando o usuário deletar)
+function getLegacyDesktopPaths() {
+    const candidates = [
+        path.join(os.homedir(), 'OneDrive', 'Desktop'),
+        path.join(os.homedir(), 'OneDrive', 'Área de Trabalho'),
+        path.join(os.homedir(), 'Área de Trabalho'),
+    ];
+    const active = getActiveDesktopPath();
+    const legacy = [];
+    for (const c of candidates) {
+        if (fs.existsSync(c) && c !== active && !legacy.includes(c)) {
+            legacy.push(c);
+        }
+    }
+    return legacy;
+}
+
+const DESKTOP = getActiveDesktopPath();
 const JOGOS_DIR = path.join(DESKTOP, 'LOTERIAS JOGOS SALVOS L99');
-const ALL_JOGOS_DIRS = DESKTOP_PATHS.map(d => path.join(d, 'LOTERIAS JOGOS SALVOS L99'));
 
 // Mapeamento gameKey → nome EXATO da subpasta
 const PASTA_POR_JOGO = {
@@ -74,56 +84,22 @@ function getCandidateSubPastas(gameKey) {
     return primary ? [primary] : [];
 }
 
-// Garantir que a pasta base e subpastas existem em todos os desktops
+// Garantir que a pasta base e subpastas existem no Desktop ativo
 function ensureDirs() {
-    for (const baseDir of ALL_JOGOS_DIRS) {
-        try {
-            if (!fs.existsSync(baseDir)) {
-                fs.mkdirSync(baseDir, { recursive: true });
-            }
-            for (const subPasta of Object.values(PASTA_POR_JOGO)) {
-                const sp = path.join(baseDir, subPasta);
-                if (!fs.existsSync(sp)) {
-                    fs.mkdirSync(sp, { recursive: true });
-                }
-            }
-        } catch (e) {}
-    }
-}
-ensureDirs();
-
-// Sincronizar arquivos existentes entre todas as pastas de Desktop
-function syncAllDesktopDirs() {
     try {
-        if (ALL_JOGOS_DIRS.length <= 1) return;
-        const subPastasSet = new Set(Object.values(PASTA_POR_JOGO));
-        subPastasSet.add('+MILIONARIA');
-        for (const subPasta of subPastasSet) {
-            for (let i = 0; i < ALL_JOGOS_DIRS.length; i++) {
-                const srcDir = path.join(ALL_JOGOS_DIRS[i], subPasta);
-                if (!fs.existsSync(srcDir)) continue;
-                const files = fs.readdirSync(srcDir);
-                for (const f of files) {
-                    const srcFile = path.join(srcDir, f);
-                    try {
-                        const stat = fs.statSync(srcFile);
-                        if (!stat.isFile()) continue;
-                        for (let j = 0; j < ALL_JOGOS_DIRS.length; j++) {
-                            if (i === j) continue;
-                            const dstDir = path.join(ALL_JOGOS_DIRS[j], subPasta);
-                            if (!fs.existsSync(dstDir)) fs.mkdirSync(dstDir, { recursive: true });
-                            const dstFile = path.join(dstDir, f);
-                            if (!fs.existsSync(dstFile)) {
-                                fs.copyFileSync(srcFile, dstFile);
-                            }
-                        }
-                    } catch (err) {}
-                }
+        if (!fs.existsSync(JOGOS_DIR)) {
+            fs.mkdirSync(JOGOS_DIR, { recursive: true });
+        }
+        for (const subPasta of Object.values(PASTA_POR_JOGO)) {
+            const sp = path.join(JOGOS_DIR, subPasta);
+            if (!fs.existsSync(sp)) {
+                fs.mkdirSync(sp, { recursive: true });
             }
         }
     } catch (e) {}
 }
-syncAllDesktopDirs();
+ensureDirs();
+
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -254,18 +230,15 @@ function handleSalvar(req, res) {
             const nameWithoutExt = safeFileName.replace(/\.txt$/i, '');
 
             while (true) {
+                const testPath = path.join(JOGOS_DIR, subPasta, finalFileName);
                 let collisionFound = false;
-                for (const baseDir of ALL_JOGOS_DIRS) {
-                    const testPath = path.join(baseDir, subPasta, finalFileName);
-                    if (fs.existsSync(testPath)) {
-                        try {
-                            const existing = fs.readFileSync(testPath, 'utf8');
-                            if (existing.trim() !== content.trim()) {
-                                collisionFound = true;
-                                break;
-                            }
-                        } catch (e) {}
-                    }
+                if (fs.existsSync(testPath)) {
+                    try {
+                        const existing = fs.readFileSync(testPath, 'utf8');
+                        if (existing.trim() !== content.trim()) {
+                            collisionFound = true;
+                        }
+                    } catch (e) {}
                 }
                 if (collisionFound) {
                     finalFileName = `${nameWithoutExt}_${counter}.txt`;
@@ -275,20 +248,13 @@ function handleSalvar(req, res) {
                 }
             }
 
-            // Grava em TODOS os diretórios de Desktop detectados
-            let primaryFilePath = path.join(JOGOS_DIR, subPasta, finalFileName);
-            for (const baseDir of ALL_JOGOS_DIRS) {
-                try {
-                    const gameDir = path.join(baseDir, subPasta);
-                    if (!fs.existsSync(gameDir)) {
-                        fs.mkdirSync(gameDir, { recursive: true });
-                    }
-                    const filePath = path.join(gameDir, finalFileName);
-                    fs.writeFileSync(filePath, content, 'utf8');
-                } catch (e) {
-                    console.error('[B2B] Erro ao gravar em:', baseDir, e.message);
-                }
+            // Grava no Desktop ativo
+            const gameDir = path.join(JOGOS_DIR, subPasta);
+            if (!fs.existsSync(gameDir)) {
+                fs.mkdirSync(gameDir, { recursive: true });
             }
+            const primaryFilePath = path.join(gameDir, finalFileName);
+            fs.writeFileSync(primaryFilePath, content, 'utf8');
 
             console.log(`[B2B] ✅ Jogo salvo com sucesso: ${primaryFilePath}`);
 
@@ -322,7 +288,7 @@ function handlePastaJogos(req, res) {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
     });
-    res.end(JSON.stringify({ path: JOGOS_DIR, allPaths: ALL_JOGOS_DIRS }));
+    res.end(JSON.stringify({ path: JOGOS_DIR, allPaths: [JOGOS_DIR] }));
 }
 
 // ══════════════════════════════════════════════
@@ -352,32 +318,28 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ── Rota GET /listar-jogos — Lista arquivos unificados de todas as pastas de jogos salvos ──
+    // ── Rota GET /listar-jogos — Lista arquivos unificados da pasta de jogos salvos ──
     if (req.method === 'GET' && req.url.startsWith('/listar-jogos')) {
         const params = new URL(req.url, `http://localhost:${PORT}`).searchParams;
         const gameKey = params.get('gameKey') || '';
         const candidateSubPastas = getCandidateSubPastas(gameKey);
         const primarySubPasta = PASTA_POR_JOGO[gameKey] || candidateSubPastas[0] || (gameKey ? gameKey.toUpperCase() : '');
         try {
-            syncAllDesktopDirs();
             const fileMap = new Map();
-
-            for (const baseDir of ALL_JOGOS_DIRS) {
-                const subPastasToScan = candidateSubPastas.length > 0 ? candidateSubPastas : [''];
-                for (const subP of subPastasToScan) {
-                    const targetDir = subP ? path.join(baseDir, subP) : baseDir;
-                    if (fs.existsSync(targetDir)) {
-                        const files = fs.readdirSync(targetDir);
-                        for (const f of files) {
-                            if (f.endsWith('.txt')) {
-                                const fullP = path.join(targetDir, f);
-                                try {
-                                    const stat = fs.statSync(fullP);
-                                    if (!fileMap.has(f) || stat.mtime > fileMap.get(f).modified) {
-                                        fileMap.set(f, { name: f, size: stat.size, modified: stat.mtime });
-                                    }
-                                } catch (e) {}
-                            }
+            const subPastasToScan = candidateSubPastas.length > 0 ? candidateSubPastas : [''];
+            for (const subP of subPastasToScan) {
+                const targetDir = subP ? path.join(JOGOS_DIR, subP) : JOGOS_DIR;
+                if (fs.existsSync(targetDir)) {
+                    const files = fs.readdirSync(targetDir);
+                    for (const f of files) {
+                        if (f.endsWith('.txt')) {
+                            const fullP = path.join(targetDir, f);
+                            try {
+                                const stat = fs.statSync(fullP);
+                                if (!fileMap.has(f) || stat.mtime > fileMap.get(f).modified) {
+                                    fileMap.set(f, { name: f, size: stat.size, modified: stat.mtime });
+                                }
+                            } catch (e) {}
                         }
                     }
                 }
@@ -410,16 +372,13 @@ const server = http.createServer((req, res) => {
                 const subPastasToSearch = candidateSubPastas.length > 0 ? candidateSubPastas : [''];
                 
                 let content = null;
-                for (const baseDir of ALL_JOGOS_DIRS) {
-                    for (const subP of subPastasToSearch) {
-                        const targetDir = subP ? path.join(baseDir, subP) : baseDir;
-                        const filePath = path.join(targetDir, safeFileName);
-                        if (fs.existsSync(filePath)) {
-                            content = fs.readFileSync(filePath, 'utf8');
-                            break;
-                        }
+                for (const subP of subPastasToSearch) {
+                    const targetDir = subP ? path.join(JOGOS_DIR, subP) : JOGOS_DIR;
+                    const filePath = path.join(targetDir, safeFileName);
+                    if (fs.existsSync(filePath)) {
+                        content = fs.readFileSync(filePath, 'utf8');
+                        break;
                     }
-                    if (content !== null) break;
                 }
 
                 if (content === null) {
@@ -454,22 +413,18 @@ const server = http.createServer((req, res) => {
                 const pad = n => String(n).padStart(2, '0');
                 const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
                 const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
-                const fileName = `✅CONFERIDO_${(subPasta || gameKey).toUpperCase()}_Concurso_${concurso}_${dateStr}_${timeStr}.txt`;
+                const fileName = `CONFERIDO_${(subPasta || gameKey).toUpperCase()}_Concurso_${concurso}_${dateStr}_${timeStr}.txt`;
                 
-                let primaryPath = '';
-                for (const baseDir of ALL_JOGOS_DIRS) {
-                    const targetDir = subPasta ? path.join(baseDir, subPasta) : baseDir;
-                    if (!fs.existsSync(targetDir)) {
-                        fs.mkdirSync(targetDir, { recursive: true });
-                    }
-                    const filePath = path.join(targetDir, fileName);
-                    fs.writeFileSync(filePath, content, 'utf8');
-                    if (!primaryPath) primaryPath = filePath;
+                const targetDir = subPasta ? path.join(JOGOS_DIR, subPasta) : JOGOS_DIR;
+                if (!fs.existsSync(targetDir)) {
+                    fs.mkdirSync(targetDir, { recursive: true });
                 }
+                const filePath = path.join(targetDir, fileName);
+                fs.writeFileSync(filePath, content, 'utf8');
                 
-                console.log(`[B2B] ✅ Conferência salva: ${primaryPath}`);
+                console.log(`[B2B] ✅ Conferência salva: ${filePath}`);
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-                res.end(JSON.stringify({ ok: true, path: primaryPath, fileName }));
+                res.end(JSON.stringify({ ok: true, path: filePath, fileName }));
             } catch (err) {
                 res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
                 res.end(JSON.stringify({ ok: false, error: err.message }));
@@ -478,7 +433,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ── Rota POST /marcar-conferido — Renomeia arquivo original com ✅ ──
+    // ── Rota POST /marcar-conferido — Renomeia arquivo original com CONFERIDO_ ──
     if (req.method === 'POST' && req.url === '/marcar-conferido') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -498,14 +453,12 @@ const server = http.createServer((req, res) => {
                 }
                 
                 const newName = 'CONFERIDO_' + safeFileName;
-                for (const baseDir of ALL_JOGOS_DIRS) {
-                    for (const subP of subPastasToSearch) {
-                        const targetDir = subP ? path.join(baseDir, subP) : baseDir;
-                        const oldPath = path.join(targetDir, safeFileName);
-                        const newPath = path.join(targetDir, newName);
-                        if (fs.existsSync(oldPath)) {
-                            fs.renameSync(oldPath, newPath);
-                        }
+                for (const subP of subPastasToSearch) {
+                    const targetDir = subP ? path.join(JOGOS_DIR, subP) : JOGOS_DIR;
+                    const oldPath = path.join(targetDir, safeFileName);
+                    const newPath = path.join(targetDir, newName);
+                    if (fs.existsSync(oldPath)) {
+                        fs.renameSync(oldPath, newPath);
                     }
                 }
                 
@@ -540,14 +493,12 @@ const server = http.createServer((req, res) => {
                     return;
                 }
                 
-                for (const baseDir of ALL_JOGOS_DIRS) {
-                    for (const subP of subPastasToSearch) {
-                        const targetDir = subP ? path.join(baseDir, subP) : baseDir;
-                        const oldPath = path.join(targetDir, safeFileName);
-                        const newPath = path.join(targetDir, newName);
-                        if (fs.existsSync(oldPath)) {
-                            fs.renameSync(oldPath, newPath);
-                        }
+                for (const subP of subPastasToSearch) {
+                    const targetDir = subP ? path.join(JOGOS_DIR, subP) : JOGOS_DIR;
+                    const oldPath = path.join(targetDir, safeFileName);
+                    const newPath = path.join(targetDir, newName);
+                    if (fs.existsSync(oldPath)) {
+                        fs.renameSync(oldPath, newPath);
                     }
                 }
                 
@@ -562,7 +513,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ── Rota POST /excluir-arquivo — Exclui arquivo salvo ──
+    // ── Rota POST /excluir-arquivo — Exclui arquivo salvo no Desktop e purga em legados ──
     if (req.method === 'POST' && req.url === '/excluir-arquivo') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -575,23 +526,117 @@ const server = http.createServer((req, res) => {
                 const candidateSubPastas = getCandidateSubPastas(gameKey);
                 const subPastasToSearch = candidateSubPastas.length > 0 ? candidateSubPastas : [''];
                 
+                const allCheckDirs = [JOGOS_DIR];
+                for (const leg of getLegacyDesktopPaths()) {
+                    allCheckDirs.push(path.join(leg, 'LOTERIAS JOGOS SALVOS L99'));
+                }
+
+                const namesToDelete = [safeFileName];
+                if (!safeFileName.includes('CONFERIDO_')) {
+                    namesToDelete.push('CONFERIDO_' + safeFileName);
+                } else {
+                    namesToDelete.push(safeFileName.replace(/^.*?CONFERIDO_/, ''));
+                }
+
                 let deletedCount = 0;
-                for (const baseDir of ALL_JOGOS_DIRS) {
+                for (const baseDir of allCheckDirs) {
                     for (const subP of subPastasToSearch) {
                         const targetDir = subP ? path.join(baseDir, subP) : baseDir;
-                        const filePath = path.join(targetDir, safeFileName);
-                        if (fs.existsSync(filePath)) {
-                            try {
-                                fs.unlinkSync(filePath);
-                                deletedCount++;
-                            } catch (e) {}
+                        for (const fn of namesToDelete) {
+                            const filePath = path.join(targetDir, fn);
+                            if (fs.existsSync(filePath)) {
+                                try {
+                                    fs.unlinkSync(filePath);
+                                    deletedCount++;
+                                } catch (e) {}
+                            }
                         }
                     }
                 }
                 
-                console.log(`[B2B] 🗑️ Arquivo excluído: ${safeFileName} (${deletedCount} locais)`);
+                console.log(`[B2B] 🗑️ Arquivo excluído: ${safeFileName} (${deletedCount} cópias removidas)`);
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
                 res.end(JSON.stringify({ ok: true, deleted: safeFileName, count: deletedCount }));
+            } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+                res.end(JSON.stringify({ ok: false, error: err.message }));
+            }
+        });
+        return;
+    }
+
+    // ── Rota POST /excluir-todos — Exclui todos os arquivos da loteria especificada ──
+    if (req.method === 'POST' && req.url === '/excluir-todos') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const gameKey = data.gameKey || '';
+                const tipo = data.tipo || 'all';
+                const candidateSubPastas = getCandidateSubPastas(gameKey);
+                const subPastasToSearch = candidateSubPastas.length > 0 ? candidateSubPastas : [''];
+                
+                const allCheckDirs = [JOGOS_DIR];
+                for (const leg of getLegacyDesktopPaths()) {
+                    allCheckDirs.push(path.join(leg, 'LOTERIAS JOGOS SALVOS L99'));
+                }
+
+                let deletedCount = 0;
+                for (const baseDir of allCheckDirs) {
+                    for (const subP of subPastasToSearch) {
+                        const targetDir = subP ? path.join(baseDir, subP) : baseDir;
+                        if (fs.existsSync(targetDir)) {
+                            const files = fs.readdirSync(targetDir);
+                            for (const f of files) {
+                                if (f.endsWith('.txt')) {
+                                    const isChecked = f.includes('CONFERIDO');
+                                    const shouldDelete = (tipo === 'all') || (tipo === 'checked' && isChecked) || (tipo === 'pending' && !isChecked);
+                                    if (shouldDelete) {
+                                        const filePath = path.join(targetDir, f);
+                                        try {
+                                            fs.unlinkSync(filePath);
+                                            deletedCount++;
+                                        } catch (e) {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                console.log(`[B2B] 🗑️ Exclusão em massa: ${deletedCount} arquivos de ${gameKey} removidos.`);
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+                res.end(JSON.stringify({ ok: true, count: deletedCount }));
+            } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+                res.end(JSON.stringify({ ok: false, error: err.message }));
+            }
+        });
+        return;
+    }
+
+    // ── Rota POST /abrir-pasta — Abre a pasta física no Windows Explorer ──
+    if (req.method === 'POST' && req.url === '/abrir-pasta') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const gameKey = data.gameKey || '';
+                const candidateSubPastas = getCandidateSubPastas(gameKey);
+                const primarySubPasta = PASTA_POR_JOGO[gameKey] || candidateSubPastas[0] || '';
+                const targetDir = primarySubPasta ? path.join(JOGOS_DIR, primarySubPasta) : JOGOS_DIR;
+                
+                if (!fs.existsSync(targetDir)) {
+                    fs.mkdirSync(targetDir, { recursive: true });
+                }
+                if (process.platform === 'win32') {
+                    const { exec } = require('child_process');
+                    exec(`start "" "${targetDir}"`);
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+                res.end(JSON.stringify({ ok: true, path: targetDir }));
             } catch (err) {
                 res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
                 res.end(JSON.stringify({ ok: false, error: err.message }));
@@ -614,13 +659,11 @@ const server = http.createServer((req, res) => {
                 const candidateSubPastas = getCandidateSubPastas(gameKey);
                 const subPastasToSearch = candidateSubPastas.length > 0 ? candidateSubPastas : [''];
                 
-                for (const baseDir of ALL_JOGOS_DIRS) {
-                    for (const subP of subPastasToSearch) {
-                        const targetDir = subP ? path.join(baseDir, subP) : baseDir;
-                        const filePath = path.join(targetDir, safeFileName);
-                        if (fs.existsSync(filePath)) {
-                            fs.writeFileSync(filePath, content, 'utf8');
-                        }
+                for (const subP of subPastasToSearch) {
+                    const targetDir = subP ? path.join(JOGOS_DIR, subP) : JOGOS_DIR;
+                    const filePath = path.join(targetDir, safeFileName);
+                    if (fs.existsSync(filePath)) {
+                        fs.writeFileSync(filePath, content, 'utf8');
                     }
                 }
                 

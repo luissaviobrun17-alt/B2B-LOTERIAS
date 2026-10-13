@@ -524,7 +524,8 @@
                                 <div>
                                     <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia do Motor:</label>
                                     <select id="select-estrategia-supersete" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                        <option value="modelo_planilha" selected>⭐ 1 — Modelo Planilha B2B (Matriz Especial 1.000 Jogos)</option>
+                                        <option value="maximin" selected>💎 0 — Cobertura Hiperdimensional (Maximin Hamming Covering)</option>
+                                        <option value="modelo_planilha">⭐ 1 — Modelo Planilha B2B (Matriz Especial 1.000 Jogos)</option>
                                         <option value="equilibrada">2 — Equilibrada (Padrão Multicritério)</option>
                                         <option value="sniper">3 — 🎯 Modo Sniper (Alta Seletividade)</option>
                                         <option value="frequencia_historica">4 — Frequência Histórica</option>
@@ -2150,13 +2151,16 @@
                     <span id="badge-pending-files" style="padding: 4px 10px; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b40; border-radius: 6px; color: #fbbf24; font-weight: 700;">⏳ 0 não conferidos</span>
                 </div>
 
-                <!-- Filters & Refresh -->
-                <div style="display: flex; gap: 6px; align-items: center;">
+                <!-- Filters & Actions -->
+                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                     <button class="central-filter-btn active" data-filter="all" style="padding: 5px 12px; background: #0284c7; color: #fff; border: 1px solid #38bdf8; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" title="Exibir todos os arquivos salvos desta loteria">📋 Todos</button>
                     <button class="central-filter-btn" data-filter="pending" style="padding: 5px 12px; background: rgba(255,255,255,0.05); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" title="Exibir apenas os jogos que ainda NÃO foram conferidos">⏳ Não Conferidos</button>
                     <button class="central-filter-btn" data-filter="checked" style="padding: 5px 12px; background: rgba(255,255,255,0.05); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" title="Exibir apenas os jogos que JÁ foram conferidos">✅ Já Conferidos</button>
                     <button id="btn-central-refresh" style="padding: 5px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; font-size: 0.75rem; cursor: pointer;" title="Recarregar os arquivos da pasta L99">🔄 Atualizar</button>
+                    <button id="btn-central-open-folder" style="padding: 5px 12px; background: rgba(59,130,246,0.15); border: 1px solid #3b82f6; color: #60a5fa; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;" title="Abrir pasta física desta loteria no Windows Explorer">📂 Abrir Pasta</button>
+                    <button id="btn-central-delete-all" style="padding: 5px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;" title="Excluir todos os arquivos exibidos desta loteria">🗑️ Excluir Todos</button>
                 </div>
+
             </div>
 
             <!-- Main File List Area -->

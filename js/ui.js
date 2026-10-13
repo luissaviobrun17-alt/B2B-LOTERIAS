@@ -175,7 +175,7 @@ class UI {
                     const elSS = document.getElementById('input-qtd-supersete');
                     if (elSS && this.gamesQuantityInput) elSS.value = this.gamesQuantityInput.value;
                     const selEstrat = document.getElementById('select-estrategia-supersete');
-                    if (selEstrat) selEstrat.value = 'modelo_planilha';
+                    if (selEstrat && !selEstrat.value) selEstrat.value = 'maximin';
                     const btnExec = document.getElementById('btn-executar-motor-supersete');
                     if (btnExec) btnExec.click();
                     return;
@@ -708,7 +708,7 @@ class UI {
                 if (elGQ) elGQ.value = qty;
                 if (this.gamesQuantityInput) this.gamesQuantityInput.value = qty;
                 const historicoLimite = parseInt(document.getElementById('select-historico-supersete')?.value || '30') || 30;
-                const estrategia = document.getElementById('select-estrategia-supersete')?.value || 'modelo_planilha';
+                const estrategia = document.getElementById('select-estrategia-supersete')?.value || 'maximin';
                 const bloco = document.getElementById('select-bloco-supersete')?.value || 'todos';
                 const maxConsecutivos = parseInt(document.getElementById('select-consecutivos-supersete')?.value || '3') || 3;
                 const hammingMinimo = parseInt(document.getElementById('select-hamming-supersete')?.value || '4') || 4;
@@ -716,7 +716,8 @@ class UI {
                 const origText = btnExecutarSuperSete.innerHTML;
                 btnExecutarSuperSete.disabled = true;
                 btnExecutarSuperSete.innerHTML = '⏳ Executando Motor Super Sete B2B...';
-                this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Executando Motor Super Sete B2B (' + (estrategia === 'modelo_planilha' ? '⭐ Matriz Planilha B2B 1.000 Jogos' : '7 Modelos de Colunas, Lift Regularizado, Centróide μ=31.5') + ', Hamming dH≥' + hammingMinimo + ')...</div></div>';
+                const estratNome = estrategia === 'maximin' ? '💎 Cobertura Hiperdimensional (Maximin Hamming)' : (estrategia === 'modelo_planilha' ? '⭐ Matriz Planilha B2B 1.000 Jogos' : '7 Modelos de Colunas, Lift Regularizado, Centróide μ=31.5');
+                this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Executando Motor Super Sete B2B (' + estratNome + ', Hamming dH≥' + hammingMinimo + ')...</div></div>';
 
                 try {
                     const data = await MotorSuperSeteB2BEngine.gerarCarteira(qty, {
@@ -3111,6 +3112,53 @@ class UI {
         }
         const refreshCentralBtn = document.getElementById('btn-central-refresh');
         if (refreshCentralBtn) refreshCentralBtn.onclick = () => this.loadCentralFiles(this.currentCentralLotteryKey);
+
+        const openFolderBtn = document.getElementById('btn-central-open-folder');
+        if (openFolderBtn) {
+            openFolderBtn.onclick = async () => {
+                try {
+                    await this._callServerApi('/abrir-pasta', {
+                        method: 'POST',
+                        body: { gameKey: this.currentCentralLotteryKey }
+                    });
+                } catch (e) {
+                    alert('Erro ao abrir pasta: ' + e.message);
+                }
+            };
+        }
+
+        const deleteAllBtn = document.getElementById('btn-central-delete-all');
+        if (deleteAllBtn) {
+            deleteAllBtn.onclick = async () => {
+                const game = (typeof GAMES !== 'undefined' && GAMES[this.currentCentralLotteryKey]) ? GAMES[this.currentCentralLotteryKey] : { name: this.currentCentralLotteryKey };
+                const count = this._centralFiles ? this._centralFiles.length : 0;
+                if (count === 0) {
+                    alert(`Não há arquivos salvos de ${game.name} para excluir.`);
+                    return;
+                }
+                const filterDesc = this.currentCentralFilter === 'pending' ? 'NÃO CONFERIDOS' : (this.currentCentralFilter === 'checked' ? 'JÁ CONFERIDOS' : 'TODOS os');
+                const ok = confirm(`⚠️ Confirmação de Exclusão em Massa\n\nTem certeza que deseja excluir ${filterDesc} arquivos de "${game.name}" no seu computador?\n\nEsta ação é definitiva e removerá os arquivos da pasta física.`);
+                if (!ok) return;
+
+                try {
+                    const res = await this._callServerApi('/excluir-todos', {
+                        method: 'POST',
+                        body: { gameKey: this.currentCentralLotteryKey, tipo: this.currentCentralFilter || 'all' }
+                    });
+                    if (res && res.ok) {
+                        if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                            Guardian.toast(`🗑️ ${res.count || 0} arquivos de ${game.name} excluídos com sucesso!`, 'info', 4000);
+                        }
+                        await this.loadCentralFiles(this.currentCentralLotteryKey);
+                    } else {
+                        alert('Erro ao excluir arquivos: ' + ((res && res.error) || 'Erro no servidor'));
+                    }
+                } catch (e) {
+                    alert('Erro ao conectar ao servidor: ' + e.message);
+                }
+            };
+        }
+
 
         // Filtros da Central de Jogos (Todos / Não Conferidos / Conferidos)
         document.querySelectorAll('.central-filter-btn').forEach(btn => {
