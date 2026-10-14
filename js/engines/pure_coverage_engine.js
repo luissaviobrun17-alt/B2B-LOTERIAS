@@ -541,6 +541,21 @@ class PureCoverageEngine {
             }
         }
 
+        // Garantir que números fixos estejam em todos os jogos gerados
+        const generalFixed = Array.from(new Set(opts.fixedNumbers || opts.fixed || []));
+        if (generalFixed.length > 0 && gameKey !== 'lotomania') {
+            for (let i = 0; i < games.length; i++) {
+                let g = games[i];
+                const gSet = new Set(g);
+                const missing = generalFixed.filter(f => !gSet.has(f));
+                if (missing.length > 0) {
+                    const nonFixedInG = g.filter(n => !generalFixed.includes(n));
+                    const toKeep = nonFixedInG.slice(0, Math.max(0, nonFixedInG.length - missing.length));
+                    games[i] = [...generalFixed, ...toKeep].sort((a, b) => a - b);
+                }
+            }
+        }
+
         // ── 6. Análise completa ──
         const elapsed = Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0);
         const analysis = this._buildAnalysis(games, cfg, pool, coveredPairs, coveredTriples, numberUsage, numGames, elapsed);

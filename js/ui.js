@@ -159,27 +159,69 @@ class UI {
         // Delega TODA lógica ao motor. Zero lógica inline.
         if (this.generateBtn) {
             this.generateBtn.onclick = () => {
-                // +Milionaria usa motor B2B exclusivo — redirecionar
-                if (this.currentGameKey === 'milionaria') {
-                    this._executarGeracaoMilionaria(0);
-                    return;
-                }
                 // Loteca usa motor B2B exclusivo — redirecionar
                 if (this.currentGameKey === 'loteca') {
                     const btnExec = document.getElementById('btn-executar-motor-loteca');
                     if (btnExec) btnExec.click();
                     return;
                 }
-                // Super Sete usa motor B2B exclusivo — redirecionar
+
+                // Super Sete: usar MotorFechamentoManual.generateSuperSete com pool do apostador
                 if (this.currentGameKey === 'supersete') {
-                    const elSS = document.getElementById('input-qtd-supersete');
-                    if (elSS && this.gamesQuantityInput) elSS.value = this.gamesQuantityInput.value;
-                    const selEstrat = document.getElementById('select-estrategia-supersete');
-                    if (selEstrat && !selEstrat.value) selEstrat.value = 'maximin';
-                    const btnExec = document.getElementById('btn-executar-motor-supersete');
-                    if (btnExec) btnExec.click();
+                    const qty = parseInt(this.gamesQuantityInput.value) || 10;
+                    const ssSelected = Array.from(this.selectedNumbers).filter(n => n >= 0 && n <= 9);
+                    const ssFixed = Array.from(this.fixedNumbers).filter(n => n >= 0 && n <= 9);
+                    const ssPoolSet = new Set([...ssSelected, ...ssFixed]);
+                    let ssPool = Array.from(ssPoolSet).sort((a, b) => a - b);
+
+                    if (ssPool.length < 2) {
+                        const msg = ssPool.length === 0
+                            ? '⚠️ <strong>Selecione seus dígitos!</strong><br>O botão Manual usa SOMENTE os dígitos que VOCÊ escolhe.<br>Selecione pelo menos <strong>2</strong> dígitos (de 0 a 9) no grid acima.'
+                            : '⚠️ <strong>Seleção insuficiente!</strong><br>Você selecionou apenas <strong>1</strong> dígito.<br>Selecione pelo menos <strong>2</strong> dígitos (de 0 a 9) no grid para permitir variação entre colunas.';
+                        this.gamesContainer.innerHTML = '<div style="text-align:center;padding:30px 20px;color:#FCD34D;font-size:0.9rem;line-height:1.6;">' + msg + '</div>';
+                        return;
+                    }
+
+                    this._lastGenerationMode = 'manual';
+                    localStorage.setItem('l99_lastMode', 'manual');
+                    document.body.setAttribute('data-l99-mode', 'manual');
+
+                    if (typeof MotorFechamentoManual === 'undefined') {
+                        this.gamesContainer.innerHTML = '<div class="empty-state" style="color:#EF4444;">MotorFechamentoManual não carregado. Recarregue (Ctrl+Shift+R).</div>';
+                        return;
+                    }
+
+                    const ssResult = MotorFechamentoManual.generateSuperSete(ssPool, ssFixed, qty);
+                    const games = (ssResult && ssResult.games) || [];
+                    if (games.length === 0) {
+                        this.gamesContainer.innerHTML = '<div class="empty-state" style="color:#F59E0B;">Nenhum jogo gerado para Super Sete.</div>';
+                        return;
+                    }
+
+                    const a = (ssResult && ssResult.analysis) || {};
+                    let bannerMsg = '🎲 <strong>MANUAL (SUPER SETE)</strong> — ' + games.length + ' jogos com seus ' + ssPool.length + ' dígitos [' + ssPool.join(', ') + ']';
+                    if (ssFixed.length > 0) bannerMsg += ' (fixos: ' + ssFixed.join(', ') + ')';
+                    bannerMsg += '<br>📊 Combinações possíveis: <strong>' + (a.totalPossible || '—') + '</strong> | Investimento: <strong>R$ ' + ((games.length * 2.50).toFixed(2)) + '</strong>';
+                    bannerMsg += '<br>✅ 100% dos dígitos pertencem estritamente ao seu pool!';
+
+                    this.currentGeneratedGames = games;
+                    this._lastGeneratedGames = games;
+                    if (typeof ComparisonEngine !== 'undefined') ComparisonEngine.saveResult('manual', games, ssResult.analysis, 'supersete');
+                    this.renderGames({ pool: ssPool, games: games, smartAnalysis: null }, 'supersete');
+
+                    setTimeout(() => {
+                        var b = document.createElement('div');
+                        b.className = 'smart-gen-analysis';
+                        b.style.cssText = 'margin-top:8px;margin-bottom:8px;padding:12px 16px;border-radius:10px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);font-size:0.8rem;color:#FCD34D;';
+                        b.innerHTML = bannerMsg;
+                        var old = this.gamesContainer.parentNode.querySelector('.smart-gen-analysis');
+                        if (old) old.remove();
+                        this.gamesContainer.parentNode.insertBefore(b, this.gamesContainer);
+                    }, 50);
+                    setTimeout(() => { if (this.gamesContainer) this.gamesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
                     return;
                 }
+
                 const game = GAMES[this.currentGameKey];
                 if (!game) return;
                 const qty = parseInt(this.gamesQuantityInput.value) || 10;
@@ -188,8 +230,21 @@ class UI {
                 const drawSize = (customDrawSize && customDrawSize >= game.minBet) ? customDrawSize : game.minBet;
 
                 // Coletar escolhas do apostador
-                const selectedArr = Array.from(this.selectedNumbers).filter(n => n >= game.range[0] && n <= game.range[1]);
+                let selectedArr = Array.from(this.selectedNumbers).filter(n => n >= game.range[0] && n <= game.range[1]);
                 const fixedArr = Array.from(this.fixedNumbers).filter(n => n >= game.range[0] && n <= game.range[1]);
+
+                // Se o volante estiver vazio, verificar se o apostador selecionou um grupo/pool nos seletores de painel
+                if (selectedArr.length === 0 && fixedArr.length === 0) {
+                    if (this.currentGameKey === 'quina') {
+                        const pType = document.getElementById('select-pool-quina')?.value;
+                        if (pType === 'grupo_a') selectedArr = Array.from({length: 40}, (_, i) => i + 1);
+                        else if (pType === 'grupo_b') selectedArr = Array.from({length: 40}, (_, i) => i + 41);
+                    } else if (this.currentGameKey === 'duplasena') {
+                        const pType = document.getElementById('select-pool-duplasena')?.value;
+                        if (pType === 'grupo_a') selectedArr = Array.from({length: 25}, (_, i) => i + 1);
+                        else if (pType === 'grupo_b') selectedArr = Array.from({length: 25}, (_, i) => i + 26);
+                    }
+                }
 
                 // Pool = todos os números escolhidos (selecionados + fixos)
                 const poolSet = new Set([...selectedArr, ...fixedArr]);
@@ -215,6 +270,27 @@ class UI {
                     this.gamesContainer.innerHTML = '<div style="text-align:center;padding:30px 20px;color:#FCD34D;font-size:0.9rem;line-height:1.6;">' + msg + '</div>';
                     return;
                 }
+
+                // Helper para trevos da +Milionária
+                const _assignMilionariaTrevos = (gamesCount) => {
+                    if (this.currentGameKey === 'milionaria') {
+                        const trevoStrategy = document.getElementById('select-estrategia-trevo-milionaria')?.value || 'cobertura_equilibrada';
+                        const trevoPairs = [
+                            [1,2],[1,3],[1,4],[1,5],[1,6],
+                            [2,3],[2,4],[2,5],[2,6],
+                            [3,4],[3,5],[3,6],
+                            [4,5],[4,6],[5,6]
+                        ];
+                        let fixedTrevo = null;
+                        if (trevoStrategy.startsWith('fixo_')) {
+                            const parts = trevoStrategy.replace('fixo_', '').split('_').map(Number);
+                            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                                fixedTrevo = parts;
+                            }
+                        }
+                        this.currentGeneratedExtras = Array.from({length: gamesCount}, (_, idx) => fixedTrevo || trevoPairs[idx % trevoPairs.length]);
+                    }
+                };
 
                 // ═══ Apostador selecionou números suficientes ═══
                 const closingVal = this.closingSelect ? this.closingSelect.value : '';
@@ -243,6 +319,7 @@ class UI {
                         bannerMsg += 'Investimento: <strong>R$ ' + result.cost.toFixed(2) + '</strong> | Ordenado por Sinergia IA 🔥';
                         
                         const games = result.games || [];
+                        _assignMilionariaTrevos(games.length);
                         this.currentGeneratedGames = games;
                         this._lastGeneratedGames = games;
                         this.renderGames({ pool: pool, games: games, smartAnalysis: null }, this.currentGameKey);
@@ -275,6 +352,7 @@ class UI {
                             }
                             const a = result.analysis || {};
                             const games = result.games || [];
+                            _assignMilionariaTrevos(games.length);
                             const poolSize = (a.poolSize !== undefined && a.poolSize !== null) ? a.poolSize : pool.length;
                             let asyncBanner = '🎲 <strong>MANUAL</strong> — ' + games.length + ' jogos dos seus ' + poolSize + ' números';
                             if (a.fixedCount > 0 && Array.isArray(a.fixedNumbers) && a.fixedNumbers.length > 0) {
@@ -318,6 +396,7 @@ class UI {
                         this.gamesContainer.innerHTML = '<div class="empty-state" style="color:#F59E0B;">' + ((result && result.error) || 'Nenhum jogo gerado.') + '</div>';
                         return;
                     }
+                    _assignMilionariaTrevos(games.length);
                     const a = (result && result.analysis) || {};
                     const poolSize = (a.poolSize !== undefined && a.poolSize !== null) ? a.poolSize : pool.length;
                     bannerMsg = '🎲 <strong>MANUAL</strong> — ' + games.length + ' jogos dos seus ' + poolSize + ' números';
@@ -4896,7 +4975,22 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         this.updateCurrentCostDisplay();
         this._updateClosingPreview();
 
-        // v12: Wheel System removido — substituído por MotorFechamentoManual
+        // Sincronizar seletores de pool para 'personalizado' quando apostador marca números no volante
+        if (count > 0) {
+            const poolSelects = [
+                'select-pool-megasena',
+                'select-pool-quina',
+                'select-pool-duplasena',
+                'select-pool-diadesorte'
+            ];
+            poolSelects.forEach(id => {
+                const sel = document.getElementById(id);
+                if (sel && sel.value !== 'personalizado') {
+                    const hasOption = Array.from(sel.options).some(o => o.value === 'personalizado');
+                    if (hasOption) sel.value = 'personalizado';
+                }
+            });
+        }
     }
 
     
@@ -5673,9 +5767,18 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             if (!this.currentGeneratedExtras || this.currentGeneratedExtras.length !== result.games.length) {
                 this.currentGeneratedExtras = this._generateExtras(gameKey, result.games.length);
             }
-        } else if (gameKey !== 'milionaria') {
-            // Para +Milionária, os trevos já foram definidos ANTES de renderGames ser chamado
-            // e devem ser preservados. Para as demais loterias, limpar.
+        } else if (gameKey === 'milionaria') {
+            if (!this.currentGeneratedExtras || this.currentGeneratedExtras.length !== result.games.length) {
+                const trevoPairs = [
+                    [1,2],[1,3],[1,4],[1,5],[1,6],
+                    [2,3],[2,4],[2,5],[2,6],
+                    [3,4],[3,5],[3,6],
+                    [4,5],[4,6],[5,6]
+                ];
+                this.currentGeneratedExtras = result.games.map((_, i) => trevoPairs[i % trevoPairs.length]);
+            }
+        } else {
+            // Para as demais loterias, limpar extras
             this.currentGeneratedExtras = null;
         }
 

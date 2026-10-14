@@ -125,23 +125,15 @@ class AsyncGenerator {
         var game = typeof GAMES !== 'undefined' ? GAMES[gameKey] : null;
         var name = game ? game.name : gameKey;
 
-        // Delegação oficial para Super Sete B2B
-        if (gameKey === 'supersete' && typeof MotorSuperSeteB2BEngine !== 'undefined') {
-            const ssRes = MotorSuperSeteB2BEngine._gerarFallbackNativo(numGames, {});
-            const games = (ssRes && ssRes.jogos) ? ssRes.jogos.map(j => j.jogo) : [];
-            self._isRunning = false;
-            self._hideBar();
-            callback({
-                games,
-                analysis: {
-                    totalGames: games.length,
-                    poolSize: 10,
-                    avgHamming: ssRes.metricas_carteira?.hamming_medio || 5.2,
-                    coveragePct: ssRes.icm_global || 85,
-                    elapsed: '10ms'
-                }
-            }, false, null);
-            return;
+        // Delegação para Super Sete com pool do apostador
+        if (gameKey === 'supersete') {
+            if (typeof MotorFechamentoManual !== 'undefined') {
+                const ssRes = MotorFechamentoManual.generateSuperSete(pool, fixedNumbers, numGames);
+                self._isRunning = false;
+                self._hideBar();
+                callback(ssRes, false, null);
+                return;
+            }
         }
 
         // Barra indeterminada — motor processa tudo de uma vez
@@ -591,23 +583,31 @@ class AsyncGenerator {
         var game = typeof GAMES !== 'undefined' ? GAMES[gameKey] : null;
         var name = game ? game.name : gameKey;
 
-        // Delegação oficial para Super Sete B2B
-        if (gameKey === 'supersete' && typeof MotorSuperSeteB2BEngine !== 'undefined') {
-            const ssRes = MotorSuperSeteB2BEngine._gerarFallbackNativo(numGames, options);
-            const games = (ssRes && ssRes.jogos) ? ssRes.jogos.map(j => j.jogo) : [];
-            self._isRunning = false;
-            self._hideBar();
-            callback({
-                games,
-                analysis: {
-                    totalGames: games.length,
-                    poolSize: 10,
-                    avgHamming: ssRes.metricas_carteira?.hamming_medio || 5.2,
-                    coveragePct: ssRes.icm_global || 85,
-                    elapsed: '10ms'
-                }
-            }, false, null);
-            return;
+        // Delegação para Super Sete
+        if (gameKey === 'supersete') {
+            if (options && options.pool && typeof MotorFechamentoManual !== 'undefined') {
+                const ssRes = MotorFechamentoManual.generateSuperSete(options.pool, options.fixed, numGames);
+                self._isRunning = false;
+                self._hideBar();
+                callback(ssRes, false, null);
+                return;
+            } else if (typeof MotorSuperSeteB2BEngine !== 'undefined') {
+                const ssRes = MotorSuperSeteB2BEngine._gerarFallbackNativo(numGames, options);
+                const games = (ssRes && ssRes.jogos) ? ssRes.jogos.map(j => j.jogo) : [];
+                self._isRunning = false;
+                self._hideBar();
+                callback({
+                    games,
+                    analysis: {
+                        totalGames: games.length,
+                        poolSize: 10,
+                        avgHamming: ssRes.metricas_carteira?.hamming_medio || 5.2,
+                        coveragePct: ssRes.icm_global || 85,
+                        elapsed: '10ms'
+                    }
+                }, false, null);
+                return;
+            }
         }
 
         // Barra indeterminada — motor processa tudo de uma vez

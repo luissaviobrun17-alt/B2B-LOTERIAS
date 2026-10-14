@@ -33,7 +33,8 @@ class MotorFechamentoManual {
             duplasena:  { sumRange: [98, 208],  parityRange: [1, 5], maxConsecutive: 2, minZones: 3, zones: 5, zoneSize: 10, highLowBalance: [1, 5] },
             timemania:  { sumRange: [292, 518], parityRange: [3, 7], maxConsecutive: 3, minZones: 4, zones: 8, zoneSize: 10, highLowBalance: [3, 7] },
             diadesorte: { sumRange: [77, 147],  parityRange: [2, 5], maxConsecutive: 3, minZones: 3, zones: 4, zoneSize: 8, highLowBalance: [2, 5] },
-            lotomania:  { sumRange: [2236, 2714], parityRange: [21, 29], maxConsecutive: 5, minZones: 9, zones: 10, zoneSize: 10, highLowBalance: [21, 29] }
+            lotomania:  { sumRange: [2236, 2714], parityRange: [21, 29], maxConsecutive: 5, minZones: 9, zones: 10, zoneSize: 10, highLowBalance: [21, 29] },
+            milionaria: { sumRange: [95, 215],  parityRange: [1, 5], maxConsecutive: 2, minZones: 3, zones: 5, zoneSize: 10, highLowBalance: [1, 5] }
         };
     }
 
@@ -132,6 +133,117 @@ class MotorFechamentoManual {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    //  SUPER SETE — GERAÇÃO A PARTIR DO POOL DE DÍGITOS DO APOSTADOR
+    // ═══════════════════════════════════════════════════════════════
+    static generateSuperSete(pool, fixedDigits, numGames) {
+        var t0 = Date.now();
+        var validPool = Array.from(new Set((pool || []).filter(function(n) { return n >= 0 && n <= 9; }))).sort(function(a, b) { return a - b; });
+        if (validPool.length === 0) {
+            validPool = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        }
+
+        var games = [];
+        var gamesSet = new Set();
+        var digitUsage = {};
+        validPool.forEach(function(d) { digitUsage[d] = 0; });
+
+        var candidatesPerSlot = 300;
+
+        for (var g = 0; g < numGames; g++) {
+            var bestCandidate = null;
+            var bestScore = -Infinity;
+
+            for (var c = 0; c < candidatesPerSlot; c++) {
+                var cand = new Array(7);
+                for (var col = 0; col < 7; col++) {
+                    if (fixedDigits && fixedDigits[col] !== undefined && validPool.includes(fixedDigits[col])) {
+                        cand[col] = fixedDigits[col];
+                    } else {
+                        cand[col] = validPool[Math.floor(Math.random() * validPool.length)];
+                    }
+                }
+
+                var sig = cand.join('');
+                if (gamesSet.has(sig)) continue;
+
+                // Controle de dígitos consecutivos idênticos
+                var maxConsec = 1, curConsec = 1;
+                for (var i = 1; i < 7; i++) {
+                    if (cand[i] === cand[i - 1]) {
+                        curConsec++;
+                        if (curConsec > maxConsec) maxConsec = curConsec;
+                    } else {
+                        curConsec = 1;
+                    }
+                }
+                if (maxConsec > 3) continue;
+
+                var score = 0;
+                // Anti-concentração
+                for (var col = 0; col < 7; col++) {
+                    var u = digitUsage[cand[col]] || 0;
+                    score += 1.0 / (1.0 + u);
+                }
+
+                // Diversidade de Hamming contra jogos anteriores
+                if (games.length > 0) {
+                    var minDist = 7;
+                    for (var s = 0; s < games.length; s++) {
+                        var d = 0;
+                        for (var col = 0; col < 7; col++) {
+                            if (cand[col] !== games[s][col]) d++;
+                        }
+                        if (d < minDist) minDist = d;
+                    }
+                    score += minDist * 3;
+                }
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestCandidate = cand;
+                }
+            }
+
+            if (!bestCandidate) {
+                for (var attempt = 0; attempt < 500; attempt++) {
+                    var cand = new Array(7);
+                    for (var col = 0; col < 7; col++) {
+                        cand[col] = validPool[Math.floor(Math.random() * validPool.length)];
+                    }
+                    var sig = cand.join('');
+                    if (!gamesSet.has(sig)) {
+                        bestCandidate = cand;
+                        break;
+                    }
+                }
+            }
+
+            if (bestCandidate) {
+                games.push(bestCandidate);
+                gamesSet.add(bestCandidate.join(''));
+                for (var col = 0; col < 7; col++) {
+                    digitUsage[bestCandidate[col]] = (digitUsage[bestCandidate[col]] || 0) + 1;
+                }
+            }
+        }
+
+        var totalPoss = Math.pow(validPool.length, 7);
+        return {
+            games: games,
+            analysis: {
+                totalGames: games.length,
+                poolSize: validPool.length,
+                pool: validPool,
+                totalPossible: totalPoss > 500000 ? totalPoss.toLocaleString('pt-BR') : totalPoss,
+                investment: games.length * 2.50,
+                investimento: games.length * 2.50,
+                elapsed: Date.now() - t0,
+                digitUsage: digitUsage
+            }
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     //  GREEDY SET COVER — Maximiza cobertura de pares (e triplas)
     //  Todos os números do pool têm peso UNIFORME (1.0)
     // ═══════════════════════════════════════════════════════════════
@@ -157,11 +269,48 @@ class MotorFechamentoManual {
         var freqCeiling = Math.ceil(expectedFreq * tolerance);
         var softCeiling = Math.ceil(expectedFreq * (1 + (tolerance - 1) * 0.6));
 
-        // Distância Hamming mínima (25% do drawSize)
-        var hammingMin = Math.max(2, Math.floor(k * 0.25));
+        // Distância Hamming mínima adaptada dinamicamente ao tamanho do pool
+        var maxPossibleDiff = Math.min(k, pool.length - k);
+        var hammingMin = Math.max(1, Math.min(Math.max(2, Math.floor(k * 0.25)), maxPossibleDiff));
 
         // Obter filtros da loteria
-        var filters = this.FILTER_RANGES[gameKey] || null;
+        var filters = this.FILTER_RANGES[gameKey] ? Object.assign({}, this.FILTER_RANGES[gameKey]) : null;
+
+        // ── Recalibrar filtros para pool do apostador ──
+        // Se o pool é menor que o universo da loteria, recalcular ranges para os números reais do pool
+        if (filters && pool.length < cfg.totalNumbers) {
+            var poolMin = Math.min.apply(null, pool);
+            var poolMax = Math.max.apply(null, pool);
+            var poolSum = pool.reduce(function(a, b) { return a + b; }, 0);
+            var poolAvg = poolSum / pool.length;
+            var expectedSum = Math.round(poolAvg * k);
+            var margin = Math.round(expectedSum * 0.40);
+
+            var poolZones = new Set();
+            for (var p = 0; p < pool.length; p++) {
+                poolZones.add(Math.floor((pool[p] - cfg.range[0]) / (filters.zoneSize || 10)));
+            }
+            var maxZones = poolZones.size;
+            var minZones = Math.max(1, Math.min(filters.minZones || 1, maxZones - 1));
+
+            var evensCount = pool.filter(function(n) { return n % 2 === 0; }).length;
+            var oddsCount = pool.length - evensCount;
+
+            filters = {
+                sumRange: [Math.max(k * poolMin, expectedSum - margin), Math.min(k * poolMax, expectedSum + margin)],
+                parityRange: [Math.max(0, k - oddsCount), Math.min(k, evensCount)],
+                maxConsecutive: Math.max(filters.maxConsecutive || 2, 3),
+                minZones: minZones,
+                zones: maxZones,
+                zoneSize: filters.zoneSize || 10,
+                highLowBalance: null // Desativar restrição global de alto/baixo quando apostador tem pool próprio
+            };
+
+            // Se o pool é muito enxuto (ex: pool.length < k + 6), desativar filtros estruturais para focar 100% na combinação ótima
+            if (pool.length < k + 6) {
+                filters = null;
+            }
+        }
 
         // Conjunto de jogos gerados (detecção de duplicatas)
         var gamesSet = new Set();
@@ -191,7 +340,7 @@ class MotorFechamentoManual {
                     continue;
                 }
 
-                // ── Filtros estruturais P5-P95 ──
+                // ── Filtros estruturais P5-P95 (calibrados ao pool) ──
                 if (filters && !self._passesFilters(candidateNums, filters, cfg)) {
                     continue;
                 }
@@ -217,10 +366,13 @@ class MotorFechamentoManual {
                 }
             }
 
-            // Se nenhum candidato passou todos os filtros, relaxar e gerar um
+            // Se nenhum candidato passou todos os filtros estritos, NÃO fazer sorteio puramente aleatório!
+            // Otimizar o candidato relaxado usando Greedy Set Cover para máxima cobertura do pool!
             if (!bestCandidate) {
-                console.warn('[MOTOR-MANUAL] Slot ' + (g + 1) + ': relaxando filtros...');
-                bestCandidate = self._generateRelaxedCandidate(nonFixed, fixed, slotsNeeded, gamesSet);
+                bestCandidate = self._generateBestRelaxedCandidate(nonFixed, fixed, slotsNeeded, gamesSet, coveredPairs, coveredTriples, useTriples, results, k, aiSynergy);
+                if (!bestCandidate) {
+                    bestCandidate = self._generateRelaxedCandidate(nonFixed, fixed, slotsNeeded, gamesSet);
+                }
                 if (!bestCandidate) {
                     console.warn('[MOTOR-MANUAL] Impossível gerar mais jogos únicos. Total: ' + results.length);
                     break;
@@ -272,6 +424,29 @@ class MotorFechamentoManual {
         var candidate = fixed.concat(selected);
         candidate.sort(function(a, b) { return a - b; });
         return candidate;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  Gerar o MELHOR candidato relaxado com Greedy Score (fallback inteligente)
+    // ═══════════════════════════════════════════════════════════════
+    static _generateBestRelaxedCandidate(nonFixed, fixed, slotsNeeded, gamesSet, coveredPairs, coveredTriples, useTriples, results, k, aiSynergy) {
+        var bestRelaxed = null;
+        var bestRelaxedScore = -Infinity;
+        var relaxedAttempts = Math.min(500, Math.max(150, nonFixed.length * 20));
+
+        for (var rAttempt = 0; rAttempt < relaxedAttempts; rAttempt++) {
+            var candRelaxed = this._generateRandomCandidate(nonFixed, fixed, slotsNeeded);
+            if (!candRelaxed) continue;
+            var rSig = candRelaxed.join('-');
+            if (gamesSet.has(rSig)) continue;
+
+            var rScore = this._calcGreedyScore(candRelaxed, coveredPairs, coveredTriples, useTriples, results, k, aiSynergy);
+            if (rScore > bestRelaxedScore) {
+                bestRelaxedScore = rScore;
+                bestRelaxed = candRelaxed;
+            }
+        }
+        return bestRelaxed;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -330,7 +505,7 @@ class MotorFechamentoManual {
         if (zonesHit.size < filters.minZones) return false;
 
         // e) Alto/Baixo — Hipergeométrica exata (P5-P95)
-        if (filters.highLowBalance) {
+        if (filters.highLowBalance && Array.isArray(filters.highLowBalance)) {
             var midPoint = Math.floor((cfg.range[0] + cfg.range[1]) / 2);
             var baixos = 0;
             for (var i = 0; i < k; i++) {
