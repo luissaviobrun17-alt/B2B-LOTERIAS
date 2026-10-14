@@ -39,6 +39,18 @@ class CoverageEngine {
                 fibonacciRange: [3, 5],
                 multiplesOf3Range: [4, 6]
             },
+            milionaria: {
+                name: '+Milionária', drawSize: 6, lotteryDraw: 6,
+                range: [1, 50], totalNumbers: 50,
+                zones: 5, zoneSize: 10,
+                sumRange: [95, 215], parityRange: [1, 5],
+                maxConsecutive: 2, minZones: 3,
+                prizeThresholds: [2, 3, 4, 5, 6],
+                prizeLabels: ['2 ac.', '3 ac.', '4 ac.', '5 ac.', '6 ac.'],
+                candidatesPerSlot: 1000,
+                ticketPrice: 6.00,
+                highLowBalance: [1, 5]
+            },
             megasena: {
                 name: 'Mega Sena', drawSize: 6, lotteryDraw: 6,
                 range: [1, 60], totalNumbers: 60,

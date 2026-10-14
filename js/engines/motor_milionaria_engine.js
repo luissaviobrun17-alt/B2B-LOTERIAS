@@ -52,6 +52,17 @@ class MotorMilionariaB2BEngine {
     // Histórico em memória da sessão
     static _carteirasSalvas = [];
 
+    static _comb(n, k) {
+        if (k < 0 || k > n) return 0;
+        if (k === 0 || k === n) return 1;
+        if (k > n / 2) k = n - k;
+        let res = 1;
+        for (let i = 1; i <= k; i++) {
+            res = (res * (n - i + 1)) / i;
+        }
+        return Math.round(res);
+    }
+
     static async gerarCarteira(quantidadeJogos = 10, options = {}) {
         const qtd = parseInt(quantidadeJogos) || 10;
         const poolTamanho = parseInt(options.poolTamanho) || 50;
@@ -61,6 +72,26 @@ class MotorMilionariaB2BEngine {
         const bloquearConsecutivos = options.bloquearConsecutivos !== undefined ? options.bloquearConsecutivos : true;
         const estrategiaTrevo = options.estrategiaTrevo || 'cobertura_equilibrada';
         const trevosFixos = options.trevosFixos || null;
+
+        // Se o apostador forneceu pool próprio, rodar direto no motor JS autônomo
+        const pool = (options.pool && Array.isArray(options.pool) && options.pool.length >= 6) ? options.pool : null;
+        const fixedNumbers = options.fixedNumbers || options.fixed || null;
+
+        if (pool) {
+            const localData = MotorMilionariaB2BEngine._executarMotorLocalJS(qtd, {
+                pool,
+                fixedNumbers,
+                poolTamanho: pool.length,
+                estrategia,
+                janelaRecente,
+                sniper,
+                bloquearConsecutivos,
+                estrategiaTrevo,
+                trevosFixos
+            });
+            MotorMilionariaB2BEngine._salvarCarteiraSessao(localData);
+            return localData;
+        }
 
         // 1. Tentar API Python Local
         try {
@@ -238,25 +269,49 @@ class MotorMilionariaB2BEngine {
         if (opts.sniper === 'balanceado') poolSize = Math.min(poolSize, 25);
         if (opts.sniper === 'agressivo') poolSize = Math.min(poolSize, 20);
 
-        let poolEfetivo;
+        let poolEfetivo = null;
+        let isCustomPool = false;
         const poolSet = new Set();
         const ordenadosIFM = MotorMilionariaB2BEngine.TODOS_NUMEROS.slice().sort((a, b) => scoresIFM[b] - scoresIFM[a]);
 
-        if (poolSize >= 50) {
-            poolEfetivo = MotorMilionariaB2BEngine.TODOS_NUMEROS.slice();
-            poolEfetivo.forEach(n => poolSet.add(n));
-        } else {
-            // Garantir representantes das 5 faixas
-            Object.values(MotorMilionariaB2BEngine.FAIXAS).forEach(faixaNums => {
-                const topFaixa = faixaNums.slice().sort((a, b) => scoresIFM[b] - scoresIFM[a]).slice(0, 2);
-                topFaixa.forEach(n => poolSet.add(n));
-            });
-            for (const n of ordenadosIFM) {
-                if (poolSet.size >= poolSize) break;
-                poolSet.add(n);
+        // Prioridade MÁXIMA: se o apostador passou pool personalizado, respeitar 100%
+        if (opts.pool && Array.isArray(opts.pool) && opts.pool.length >= 6) {
+            const validPool = Array.from(new Set(opts.pool.filter(n => n >= 1 && n <= 50))).sort((a, b) => a - b);
+            if (validPool.length >= 6) {
+                poolEfetivo = validPool;
+                isCustomPool = true;
+                poolSize = poolEfetivo.length;
+                poolEfetivo.forEach(n => poolSet.add(n));
             }
-            poolEfetivo = Array.from(poolSet).sort((a, b) => a - b);
         }
+
+        if (!poolEfetivo) {
+            if (poolSize >= 50) {
+                poolEfetivo = MotorMilionariaB2BEngine.TODOS_NUMEROS.slice();
+                poolEfetivo.forEach(n => poolSet.add(n));
+            } else {
+                // Garantir representantes das 5 faixas
+                Object.values(MotorMilionariaB2BEngine.FAIXAS).forEach(faixaNums => {
+                    const topFaixa = faixaNums.slice().sort((a, b) => scoresIFM[b] - scoresIFM[a]).slice(0, 2);
+                    topFaixa.forEach(n => poolSet.add(n));
+                });
+                for (const n of ordenadosIFM) {
+                    if (poolSet.size >= poolSize) break;
+                    poolSet.add(n);
+                }
+                poolEfetivo = Array.from(poolSet).sort((a, b) => a - b);
+            }
+        }
+
+        // Números Fixos
+        const fixedRaw = Array.isArray(opts.fixedNumbers) ? opts.fixedNumbers
+            : (Array.isArray(opts.fixed) ? opts.fixed : []);
+        const fixedNums = fixedRaw.filter(n => poolEfetivo.includes(n));
+        const fixedSet = new Set(fixedNums);
+        const fixedArr = Array.from(fixedSet).sort((a, b) => a - b);
+        if (fixedArr.length > 6) fixedArr.length = 6;
+        const nonFixedPool = poolEfetivo.filter(n => !fixedSet.has(n));
+        const slotsNeeded = 6 - fixedArr.length;
 
         // 4. Estruturação dos Trevos C(6,2) = 15 pares
         const paresTrevos = MotorMilionariaB2BEngine.PARES_TREVOS_POSSIVEIS.slice();
@@ -268,6 +323,7 @@ class MotorMilionariaB2BEngine {
 
         // 5. Geração e Otimização Submodular com Equilíbrio Harmônico
         const jogos = [];
+        const gamesSet = new Set();
         const contagemNums = {};
         poolEfetivo.forEach(n => contagemNums[n] = 0);
         const contagemTrevos = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
@@ -280,14 +336,15 @@ class MotorMilionariaB2BEngine {
             tentativas++;
 
             // Amostragem combinatória ponderada por IFM + Balanceamento de Frequência
-            const poolDisponivel = poolEfetivo.slice();
-            const cand = [];
+            const poolDisponivel = nonFixedPool.slice();
+            const cand = fixedArr.slice();
 
-            // Seleção de 6 dezenas distintas sem reposição
-            for (let pick = 0; pick < 6; pick++) {
+            // Seleção de dezenas distintas sem reposição estritamente dentro do pool
+            for (let pick = 0; pick < slotsNeeded; pick++) {
+                if (poolDisponivel.length === 0) break;
                 let totalPeso = 0;
                 const pesos = poolDisponivel.map(n => {
-                    const ifmWeight = scoresIFM[n] / 50.0;
+                    const ifmWeight = (scoresIFM[n] || 50) / 50.0;
                     // Fator de balanceamento harmônico: dá mais chance para dezenas abaixo da média na carteira
                     const deficit = targetFreq - (contagemNums[n] || 0);
                     const balWeight = Math.max(0.20, 1.0 + deficit / (targetFreq * 0.45 + 1.0));
@@ -313,39 +370,58 @@ class MotorMilionariaB2BEngine {
             if (cand.length !== 6) continue;
             cand.sort((a, b) => a - b);
 
-            // Filtro de Consecutivos (Bloquear > 2 ou > 3 consecutivos conforme opção)
-            if (opts.bloquearConsecutivos) {
-                let maxCons = 1, curCons = 1;
-                for (let i = 1; i < cand.length; i++) {
-                    if (cand[i] === cand[i - 1] + 1) {
-                        curCons++;
-                        if (curCons > maxCons) maxCons = curCons;
-                    } else curCons = 1;
+            const sig = cand.join('-');
+            if (gamesSet.has(sig)) continue;
+
+            // Filtros estruturais calibrados:
+            if (!isCustomPool) {
+                // Filtro de Consecutivos (Bloquear > 2 ou > 3 consecutivos conforme opção)
+                if (opts.bloquearConsecutivos) {
+                    let maxCons = 1, curCons = 1;
+                    for (let i = 1; i < cand.length; i++) {
+                        if (cand[i] === cand[i - 1] + 1) {
+                            curCons++;
+                            if (curCons > maxCons) maxCons = curCons;
+                        } else curCons = 1;
+                    }
+                    if (maxCons > 2) continue; // Padrão seguro para loteria de 50 dezenas
                 }
-                if (maxCons > 2) continue; // Padrão seguro para loteria de 50 dezenas
+
+                // Filtro de Paridade (evitar 0P e 6P - 98% dos sorteios têm entre 1P e 5P)
+                const pares = cand.filter(n => n % 2 === 0).length;
+                if (pares === 0 || pares === 6) continue;
+
+                // Filtro de Soma Envelope (100 a 205 cobre 95% de todos os concursos)
+                const soma = cand.reduce((a, b) => a + b, 0);
+                if (soma < 100 || soma > 205) continue;
+
+                // Filtro de Faixas (máximo 3 dezenas na mesma faixa de 10)
+                const faixasCount = {};
+                cand.forEach(n => {
+                    const f = Math.floor((n - 1) / 10) + 1;
+                    faixasCount[f] = (faixasCount[f] || 0) + 1;
+                });
+                if (Object.values(faixasCount).some(c => c > 3)) continue;
+            } else {
+                // Pool do apostador: adaptar restrições para não violar a seleção do apostador
+                if (opts.bloquearConsecutivos && poolEfetivo.length >= 15) {
+                    let maxCons = 1, curCons = 1;
+                    for (let i = 1; i < cand.length; i++) {
+                        if (cand[i] === cand[i - 1] + 1) {
+                            curCons++;
+                            if (curCons > maxCons) maxCons = curCons;
+                        } else curCons = 1;
+                    }
+                    if (maxCons > 3) continue;
+                }
             }
-
-            // Filtro de Paridade (evitar 0P e 6P - 98% dos sorteios têm entre 1P e 5P)
-            const pares = cand.filter(n => n % 2 === 0).length;
-            if (pares === 0 || pares === 6) continue;
-
-            // Filtro de Soma Envelope (100 a 205 cobre 95% de todos os concursos)
-            const soma = cand.reduce((a, b) => a + b, 0);
-            if (soma < 100 || soma > 205) continue;
-
-            // Filtro de Faixas (máximo 3 dezenas na mesma faixa de 10)
-            const faixasCount = {};
-            cand.forEach(n => {
-                const f = Math.floor((n - 1) / 10) + 1;
-                faixasCount[f] = (faixasCount[f] || 0) + 1;
-            });
-            if (Object.values(faixasCount).some(c => c > 3)) continue;
 
             // Filtro de Distância Combinatória com jogos já existentes (evitar jogos quase duplicados)
             if (jogos.length > 0 && jogos.length < 300) {
                 const dists = jogos.map(j => MotorMilionariaB2BEngine.calcularDistancia(cand, j.dezenas));
                 const minDist = Math.min(...dists);
-                if (minDist < 0.50 && tentativas < maxTentativas * 0.85) continue;
+                const limitDist = isCustomPool ? (poolEfetivo.length <= 10 ? 0.15 : 0.30) : 0.50;
+                if (minDist < limitDist && tentativas < maxTentativas * 0.85) continue;
             }
 
             // Par de Trevos
@@ -356,9 +432,10 @@ class MotorMilionariaB2BEngine {
                 parTrevo = paresTrevos[jogos.length % paresTrevos.length];
             }
 
-            const scoreDez = cand.reduce((acc, n) => acc + scoresIFM[n], 0) / 6;
+            const scoreDez = cand.reduce((acc, n) => acc + (scoresIFM[n] || 50), 0) / 6;
             const scoreTotal = Math.round((scoreDez * 0.8 + 15) * 10) / 10;
 
+            gamesSet.add(sig);
             jogos.push({
                 indice: jogos.length + 1,
                 dezenas: cand,
@@ -370,6 +447,45 @@ class MotorMilionariaB2BEngine {
 
             cand.forEach(n => contagemNums[n] = (contagemNums[n] || 0) + 1);
             parTrevo.forEach(t => contagemTrevos[t] = (contagemTrevos[t] || 0) + 1);
+        }
+
+        // Se ainda faltarem jogos para atingir qtd (ex: pool enxuto ou restrições rígidas),
+        // gerar combinações únicas adicionais estritamente dentro do pool do apostador
+        if (jogos.length < qtd && slotsNeeded > 0) {
+            const maxComb = MotorMilionariaB2BEngine._comb(nonFixedPool.length, slotsNeeded);
+            const targetCount = maxComb > 0 ? Math.min(qtd, maxComb) : qtd;
+            let fbAttempts = 0;
+            while (jogos.length < targetCount && fbAttempts < 2000) {
+                fbAttempts++;
+                const poolDisp = nonFixedPool.slice();
+                for (let i = poolDisp.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [poolDisp[i], poolDisp[j]] = [poolDisp[j], poolDisp[i]];
+                }
+                const cand = fixedArr.concat(poolDisp.slice(0, slotsNeeded)).sort((a, b) => a - b);
+                const sig = cand.join('-');
+                if (!gamesSet.has(sig)) {
+                    gamesSet.add(sig);
+                    let parTrevo;
+                    if (opts.estrategiaTrevo === 'fixo' && opts.trevosFixos && opts.trevosFixos.length === 2) {
+                        parTrevo = opts.trevosFixos.slice().sort((a, b) => a - b);
+                    } else {
+                        parTrevo = paresTrevos[jogos.length % paresTrevos.length];
+                    }
+                    const scoreDez = cand.reduce((acc, n) => acc + (scoresIFM[n] || 50), 0) / 6;
+                    const scoreTotal = Math.round((scoreDez * 0.8 + 15) * 10) / 10;
+                    jogos.push({
+                        indice: jogos.length + 1,
+                        dezenas: cand,
+                        trevos: parTrevo,
+                        score: scoreTotal,
+                        dezenas_formatadas: cand.map(d => MotorMilionariaB2BEngine.fmt(d)).join(' '),
+                        trevos_formatados: `🍀 ${MotorMilionariaB2BEngine.fmt(parTrevo[0])} ${MotorMilionariaB2BEngine.fmt(parTrevo[1])}`
+                    });
+                    cand.forEach(n => contagemNums[n] = (contagemNums[n] || 0) + 1);
+                    parTrevo.forEach(t => contagemTrevos[t] = (contagemTrevos[t] || 0) + 1);
+                }
+            }
         }
 
         // Métricas da Carteira
@@ -424,8 +540,10 @@ class MotorMilionariaB2BEngine {
             quantidade_jogos: jogos.length,
             pool_tamanho: poolEfetivo.length,
             pool: poolEfetivo,
-            estrategia: opts.estrategia,
-            sniper: opts.sniper,
+            pool_tipo: isCustomPool ? 'personalizado' : (poolSize >= 50 ? 'universo_completo' : 'otimizado_ifm'),
+            fixed_numbers: fixedArr,
+            estrategia: opts.estrategia || 'equilibrada',
+            sniper: opts.sniper || 'desativado',
             jogos: jogos,
             ranking: ranking,
             relatorio: {

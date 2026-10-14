@@ -135,7 +135,8 @@ class GameBuilderEngine {
             duplasena:  { startNum: 1,  endNum: 50, drawSize: 6,  zones: 5 },
             lotomania:  { startNum: 0,  endNum: 99, drawSize: 20, zones: 10 },
             timemania:  { startNum: 1,  endNum: 80, drawSize: 7,  zones: 8 },
-            diadesorte: { startNum: 1,  endNum: 31, drawSize: 7,  zones: 4 }
+            diadesorte: { startNum: 1,  endNum: 31, drawSize: 7,  zones: 4 },
+            milionaria: { startNum: 1,  endNum: 50, drawSize: 6,  zones: 5 }
         };
         return profiles[gameKey] || profiles.megasena;
     }

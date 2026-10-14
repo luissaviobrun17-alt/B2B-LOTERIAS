@@ -243,6 +243,19 @@ class UI {
                         const pType = document.getElementById('select-pool-duplasena')?.value;
                         if (pType === 'grupo_a') selectedArr = Array.from({length: 25}, (_, i) => i + 1);
                         else if (pType === 'grupo_b') selectedArr = Array.from({length: 25}, (_, i) => i + 26);
+                    } else if (this.currentGameKey === 'milionaria') {
+                        const pVal = document.getElementById('select-pool-milionaria')?.value;
+                        const pSize = parseInt(pVal);
+                        if (pSize && pSize >= 6 && pSize < 50 && typeof MotorMilionariaB2BEngine !== 'undefined') {
+                            const histData = MotorMilionariaB2BEngine._obterHistoricoLocal();
+                            const dezenasHist = (histData && histData.dezenas) || [];
+                            const freqs = {};
+                            MotorMilionariaB2BEngine.TODOS_NUMEROS.forEach(n => freqs[n] = 0);
+                            dezenasHist.forEach(d => d.forEach(n => freqs[n]++));
+                            selectedArr = MotorMilionariaB2BEngine.TODOS_NUMEROS.slice()
+                                .sort((a, b) => (freqs[b] || 0) - (freqs[a] || 0))
+                                .slice(0, pSize);
+                        }
                     }
                 }
 
@@ -4981,7 +4994,8 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 'select-pool-megasena',
                 'select-pool-quina',
                 'select-pool-duplasena',
-                'select-pool-diadesorte'
+                'select-pool-diadesorte',
+                'select-pool-milionaria'
             ];
             poolSelects.forEach(id => {
                 const sel = document.getElementById(id);
@@ -6228,7 +6242,9 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
 
         const btnExecutar = document.getElementById('btn-executar-motor-milionaria');
         const qty = parseInt(document.getElementById('games-quantity')?.value || '10') || 10;
-        const poolTamanho = parseInt(document.getElementById('select-pool-milionaria')?.value || '50') || 50;
+        const poolSelectElem = document.getElementById('select-pool-milionaria');
+        const poolSelectVal = poolSelectElem?.value || '50';
+        const poolTamanho = parseInt(poolSelectVal) || 50;
         const historicoLimite = parseInt(document.getElementById('select-historico-milionaria')?.value || '0') || null;
         const estrategia = document.getElementById('select-estrategia-milionaria')?.value || 'equilibrada';
         const janelaRecente = parseInt(document.getElementById('select-janela-recente-milionaria')?.value || '10') || 10;
@@ -6244,6 +6260,25 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             estrategiaTrevo = 'fixo';
         }
 
+        // Coletar números escolhidos pelo apostador no volante
+        const selectedArr = (this.selectedNumbers && this.selectedNumbers.size > 0)
+            ? Array.from(this.selectedNumbers).filter(n => n >= 1 && n <= 50)
+            : [];
+        const fixedArr = (this.fixedNumbers && this.fixedNumbers.size > 0)
+            ? Array.from(this.fixedNumbers).filter(n => n >= 1 && n <= 50)
+            : [];
+        const customPool = Array.from(new Set([...selectedArr, ...fixedArr])).sort((a, b) => a - b);
+
+        if (poolSelectVal === 'personalizado' && customPool.length < 6) {
+            this.gamesContainer.innerHTML = '<div style="text-align:center;padding:30px 20px;color:#FCD34D;font-size:0.9rem;line-height:1.6;">⚠️ <strong>Selecione seus números no volante!</strong><br>Você escolheu o Pool Personalizado, mas selecionou apenas <strong>' + customPool.length + '</strong> dezenas.<br>Selecione pelo menos <strong>6</strong> dezenas no grid da +Milionária.</div>';
+            return;
+        }
+
+        let userPool = null;
+        if (customPool.length >= 6) {
+            userPool = customPool;
+        }
+
         const origText = btnExecutar ? btnExecutar.innerHTML : '';
         if (btnExecutar) {
             btnExecutar.disabled = true;
@@ -6254,7 +6289,10 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
 
         try {
             const data = await MotorMilionariaB2BEngine.gerarCarteira(qty, {
-                poolTamanho, historicoLimite, estrategia, janelaRecente, sniper, bloquearConsecutivos, estrategiaTrevo, trevosFixos, seedOffset
+                pool: userPool,
+                fixedNumbers: fixedArr,
+                poolTamanho: userPool ? userPool.length : poolTamanho,
+                historicoLimite, estrategia, janelaRecente, sniper, bloquearConsecutivos, estrategiaTrevo, trevosFixos, seedOffset
             });
 
             if (data && data.jogos && data.jogos.length > 0) {
@@ -6266,14 +6304,14 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 this.currentGeneratedExtras = rawTrevos;
                 this._milionariaLastData = data;
 
-                this.renderGames({ pool: data.pool || Array.from({ length: 50 }, (_, i) => i + 1), games: rawGames, smartAnalysis: null }, 'milionaria');
+                this.renderGames({ pool: data.pool || userPool || Array.from({ length: 50 }, (_, i) => i + 1), games: rawGames, smartAnalysis: null }, 'milionaria');
 
                 const rel = data.relatorio || {};
                 const aud = data.auditoria_10_filtros || {};
 
                 const bannerMsg = `
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                        <span style="color:#34D399; font-weight:800; font-size:1.05rem;">🍀 MOTOR +MILIONÁRIA (B2B LOTERIAS) — ${data.jogos.length} JOGOS</span>
+                        <span style="color:#34D399; font-weight:800; font-size:1.05rem;">🍀 MOTOR +MILIONÁRIA (B2B LOTERIAS) — ${data.jogos.length} JOGOS${userPool ? ` [POOL DO APOSTADOR: ${userPool.length} NÚMEROS]` : ''}</span>
                         <span style="background:rgba(16,185,129,0.2); color:#A7F3D0; padding:3px 10px; border-radius:6px; font-weight:700; font-size:0.78rem; border: 1px solid rgba(52,211,153,0.4);">
                             ${aud.status_geral || 'AUDITORIA 10/10 APROVADA'} | SCORE MÉDIO: ${rel.score_medio_carteira || 65}/100
                         </span>
@@ -6281,11 +6319,11 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
 
                     <div style="margin-top:10px; padding:10px 14px; background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid rgba(52,211,153,0.2); font-size:0.82rem; color:#E2E8F0; line-height:1.6;">
                         <strong style="color:#FCD34D;">📐 1. ESTRUTURA DO POOL & DEZENAS PRINCIPAIS:</strong><br>
-                        • <strong>Pool Selecionado:</strong> ${data.pool_tamanho} números (trabalho 100% exclusivo no pool)<br>
-                        • <strong>Estratégia:</strong> ${data.estrategia.toUpperCase()} | <strong>Modo Sniper:</strong> ${data.sniper.toUpperCase()}<br>
+                        • <strong>Pool Selecionado:</strong> ${data.pool_tamanho} números (trabalho 100% exclusivo no pool)${userPool ? '<br>• <strong style="color:#34D399;">✅ 100% das dezenas geradas pertencem estritamente ao seu pool:</strong> [' + userPool.join(', ') + ']' : ''}${fixedArr.length > 0 ? '<br>• <strong>Fixos:</strong> [' + fixedArr.join(', ') + ']' : ''}<br>
+                        • <strong>Estratégia:</strong> ${(data.estrategia || estrategia).toUpperCase()} | <strong>Modo Sniper:</strong> ${(data.sniper || sniper).toUpperCase()}<br>
                         • <strong>Bloqueio de > 3 Consecutivos:</strong> ${bloquearConsecutivos ? '✅ ATIVADO (Filtro Combinatório)' : 'DESATIVADO'} | 
                         <strong>Cobertura do Pool:</strong> <strong style="color:#34D399;">${rel.cobertura_pool_pct}%</strong> (${rel.dezenas_cobertas}/${data.pool_tamanho} dezenas ativas)<br>
-                        • <strong>Distância Média Combinatória:</strong> <strong>${rel.distancia_media}</strong> (Repetição média: ${rel.repeticao_media} dezenas/jogo)
+                        • <strong>Distância Média Combinatória:</strong> <strong>${rel.distancia_media}</strong> (Repetição média: ${rel.repeticao_media || 0} dezenas/jogo)
                     </div>
 
                     <div style="margin-top:8px; padding:10px 14px; background:rgba(16,185,129,0.08); border-radius:8px; border:1px solid rgba(16,185,129,0.3); font-size:0.82rem; color:#D1FAE5; line-height:1.6;">
