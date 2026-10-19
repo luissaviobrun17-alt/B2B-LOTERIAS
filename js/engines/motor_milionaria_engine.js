@@ -314,11 +314,53 @@ class MotorMilionariaB2BEngine {
         const slotsNeeded = 6 - fixedArr.length;
 
         // 4. Estruturação dos Trevos C(6,2) = 15 pares
-        const paresTrevos = MotorMilionariaB2BEngine.PARES_TREVOS_POSSIVEIS.slice();
-        // Embaralhar para rotação não-determinística, mas 100% equilibrada
-        for (let i = paresTrevos.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [paresTrevos[i], paresTrevos[j]] = [paresTrevos[j], paresTrevos[i]];
+        // 4.1 Cálculo estatístico e IFM dos Trevos (1 a 6)
+        const trevoStats = {};
+        const trevoFreqs = [];
+        [1, 2, 3, 4, 5, 6].forEach(t => {
+            const ocorr = [];
+            trevosHist.forEach((tr, idx) => { if (tr.includes(t)) ocorr.push(idx); });
+            const freqAbs = ocorr.length;
+            const freqRel = freqAbs / T;
+            trevoFreqs.push(freqRel);
+            const recVal = trevosHist.slice(-recCampo).filter(tr => tr.includes(t)).length;
+            trevoStats[t] = {
+                numero: t,
+                freq_abs: freqAbs,
+                freq_rel: freqRel,
+                recencia: recVal
+            };
+        });
+        const minTF = Math.min(...trevoFreqs);
+        const maxTF = Math.max(...trevoFreqs);
+        const spanTF = Math.max(0.001, maxTF - minTF);
+        const trevoScoresIFM = {};
+        [1, 2, 3, 4, 5, 6].forEach(t => {
+            const st = trevoStats[t];
+            const normF = (st.freq_rel - minTF) / spanTF;
+            const normR = Math.min(1.0, st.recencia / 3.0);
+            trevoScoresIFM[t] = normF * 0.55 + normR * 0.45;
+        });
+
+        let paresTrevos = MotorMilionariaB2BEngine.PARES_TREVOS_POSSIVEIS.slice();
+        if (opts.estrategiaTrevo === 'maior_ifm') {
+            // Ordenar pares decrescentemente por força combinada (IFM componentes + coocorrência histórica)
+            const parFreq = {};
+            paresTrevos.forEach(p => {
+                const k = `${p[0]}-${p[1]}`;
+                parFreq[k] = trevosHist.filter(tr => tr.includes(p[0]) && tr.includes(p[1])).length;
+            });
+            paresTrevos.sort((p1, p2) => {
+                const score1 = (trevoScoresIFM[p1[0]] + trevoScoresIFM[p1[1]]) + ((parFreq[`${p1[0]}-${p1[1]}`] || 0) / T);
+                const score2 = (trevoScoresIFM[p2[0]] + trevoScoresIFM[p2[1]]) + ((parFreq[`${p2[0]}-${p2[1]}`] || 0) / T);
+                return score2 - score1;
+            });
+        } else {
+            // Embaralhar para rotação não-determinística, mas 100% equilibrada
+            for (let i = paresTrevos.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [paresTrevos[i], paresTrevos[j]] = [paresTrevos[j], paresTrevos[i]];
+            }
         }
 
         // 5. Geração e Otimização Submodular com Equilíbrio Harmônico
@@ -558,7 +600,7 @@ class MotorMilionariaB2BEngine {
             auditoria_10_filtros: {
                 status_geral: "APROVADO (10/10)",
                 consecutivos: opts.bloquearConsecutivos ? "BLOQUEIO <= 3 ATIVO" : "DESATIVADO",
-                trevos_cobertura: "15 PARES C(6,2) DISTRIBUÍDOS"
+                trevos_cobertura: opts.estrategiaTrevo === 'maior_ifm' ? "TOP FORÇA IFM (TREVOS QUENTES)" : (opts.estrategiaTrevo === 'fixo' ? "TREVOS FIXOS" : "15 PARES C(6,2) DISTRIBUÍDOS")
             },
             declaracao_honestidade: MotorMilionariaB2BEngine.DECLARACAO_HONESTIDADE
         };

@@ -63,67 +63,35 @@ Write-Host "   Google Fonts substituido por fontes locais" -ForegroundColor Gree
 
 # 4. Substituir CSS externos por inline
 Write-Host "[4/7] Embutindo CSS..." -ForegroundColor Yellow
-$cssFiles = @(
-    "styles/main.css",
-    "styles/components.css",
-    "styles/lottery.css",
-    "styles/responsive.css"
-)
-
-foreach ($cssFile in $cssFiles) {
-    $cssPath = Join-Path $baseDir $cssFile
-    if (Test-Path $cssPath) {
-        $cssContent = Get-Content -Path $cssPath -Raw -Encoding UTF8
-        # Remover referências a imagens externas
+$cssPattern = '<link\b[^>]*href="([^"]+)"[^>]*>'
+$cssMatches = [regex]::Matches($htmlContent, $cssPattern)
+foreach ($m in $cssMatches) {
+    $fullTag = $m.Value
+    $href = $m.Groups[1].Value.Split('?')[0]
+    $path = Join-Path $baseDir $href.Replace('/', '\')
+    if (Test-Path $path) {
+        $cssContent = Get-Content -Path $path -Raw -Encoding UTF8
         $cssContent = $cssContent -replace "url\('\.\./img/header-studio-bg\.png'\)", "url('')"
         $cssContent = $cssContent -replace 'url\("\.\./img/header-studio-bg\.png"\)', "url('')"
-        
-        $styleBlock = "<style>/* $cssFile */`n$cssContent</style>"
-        $basename = [System.IO.Path]::GetFileName($cssFile)
-        $htmlContent = $htmlContent -replace "<link[^>]*$basename[^>]*>", $styleBlock
-        
-        Write-Host "   Embutido: $cssFile" -ForegroundColor Green
-    } else {
-        Write-Host "   Nao encontrado: $cssFile" -ForegroundColor Red
+        $styleBlock = "<style>/* $href */`n$cssContent`n</style>"
+        $htmlContent = $htmlContent.Replace($fullTag, $styleBlock)
+        Write-Host "   Embutido CSS: $href" -ForegroundColor Green
     }
 }
 
-# 5. Substituir JS externos por inline (INCLUI smart_bets.js!)
+# 5. Substituir JS externos por inline
 Write-Host "[5/7] Embutindo JavaScript..." -ForegroundColor Yellow
-$jsFiles = @(
-    @{ path = "js/engines/games.js"; pattern = 'games\.js' },
-    @{ path = "js/data/history_db.js"; pattern = 'history_db\.js' },
-    @{ path = "js/stats.js"; pattern = 'stats\.js' },
-    @{ path = "js/engines/combinations.js"; pattern = 'combinations\.js' },
-    @{ path = "js/engines/quantum.js"; pattern = 'quantum\.js"' },
-    @{ path = "js/engines/quantum_god_mode.js"; pattern = 'quantum_god_mode\.js' },
-    @{ path = "js/engines/smart_bets.js"; pattern = 'smart_bets\.js' },
-    @{ path = "js/engines/motor_megasena_engine.js"; pattern = 'motor_megasena_engine\.js' },
-    @{ path = "js/engines/motor_supersete_engine.js"; pattern = 'motor_supersete_engine\.js' },
-    @{ path = "js/engines/motor_duplasena_engine.js"; pattern = 'motor_duplasena_engine\.js' },
-@{ path = "js/engines/motor_quina_engine.js"; pattern = 'motor_quina_engine\.js' },
-    @{ path = "js/engines/motor_lotofacil_engine.js"; pattern = 'motor_lotofacil_engine\.js' },
-    @{ path = "js/engines/motor_lotomania_engine.js"; pattern = 'motor_lotomania_engine\.js' },
-    @{ path = "js/engines/motor_diadesorte_engine.js"; pattern = 'motor_diadesorte_engine\.js' },
-    @{ path = "js/engines/motor_timemania_engine.js"; pattern = 'motor_timemania_engine\.js' },
-    @{ path = "js/engines/motor_milionaria_engine.js"; pattern = 'motor_milionaria_engine\.js' },
-    @{ path = "js/engines/motor_loteca_engine.js"; pattern = 'motor_loteca_engine\.js' },
-    @{ path = "js/ui.js"; pattern = 'ui\.js' },
-    @{ path = "js/main.js"; pattern = 'main\.js' },
-    @{ path = "js/license.js"; pattern = 'license\.js' }
-)
-
-foreach ($jsInfo in $jsFiles) {
-    $jsPath = Join-Path $baseDir $jsInfo.path
-    if (Test-Path $jsPath) {
-        $jsContent = Get-Content -Path $jsPath -Raw -Encoding UTF8
-        $scriptBlock = "<script>/* $($jsInfo.path) */`n$jsContent</script>"
-        
-        $htmlContent = $htmlContent -replace "<script[^>]*$($jsInfo.pattern)[^>]*></script>", $scriptBlock
-        
-        Write-Host "   Embutido: $($jsInfo.path)" -ForegroundColor Green
-    } else {
-        Write-Host "   Nao encontrado: $($jsInfo.path)" -ForegroundColor Red
+$scriptPattern = '<script\b[^>]*src="([^"]+)"[^>]*>\s*</script>'
+$scriptMatches = [regex]::Matches($htmlContent, $scriptPattern)
+foreach ($m in $scriptMatches) {
+    $fullTag = $m.Value
+    $src = $m.Groups[1].Value.Split('?')[0]
+    $path = Join-Path $baseDir $src.Replace('/', '\')
+    if (Test-Path $path) {
+        $jsContent = Get-Content -Path $path -Raw -Encoding UTF8
+        $scriptBlock = "<script>/* $src */`n$jsContent`n</script>"
+        $htmlContent = $htmlContent.Replace($fullTag, $scriptBlock)
+        Write-Host "   Embutido JS: $src" -ForegroundColor Green
     }
 }
 
