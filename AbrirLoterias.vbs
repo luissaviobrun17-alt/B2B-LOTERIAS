@@ -71,29 +71,29 @@ If Not ServidorAtivo() Then
         On Error Resume Next
         Dim wmi, proc, res
         Set wmi = GetObject("winmgmts:\\.\root\cimv2:Win32_Process")
-        res = wmi.Create("powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & psScript & """", Null, Null, proc)
+        res = wmi.Create("powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & psScript & """", APP_DIR, Null, proc)
         If Err.Number <> 0 Or res <> 0 Then
             sh.Run "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & psScript & """", 0, False
         End If
         On Error GoTo 0
         Dim w
-        For w = 1 To 50
+        For w = 1 To 25
             WScript.Sleep 300
             If ServidorAtivo() Then Exit For
         Next
     End If
 End If
 
-' ── 4. DELAY DE SEGURANCA + ABRIR CHROME ──
-WScript.Sleep 800
+' ── 4. DELAY DE SEGURANCA + ABRIR NAVEGADOR EM MODO APP ──
+WScript.Sleep 500
 
-Dim cr
-cr = AcharEdge()
+Dim nav
+nav = AcharNavegador()
 On Error Resume Next
-If cr <> "" Then
-    sh.Run """" & cr & """ --app=""http://localhost:" & PORTA & "/""", 1, False
+If nav <> "" Then
+    sh.Run """" & nav & """ --app=""http://localhost:" & PORTA & "/""", 1, False
 Else
-    ' Edge nao encontrado — abre no Edge pelo protocolo mesmo assim
+    ' Fallback padrao
     sh.Run "cmd /c start msedge ""http://localhost:" & PORTA & "/""", 0, False
 End If
 On Error GoTo 0
@@ -109,7 +109,7 @@ Function ServidorAtivo()
     Dim h
     On Error Resume Next
     Set h = CreateObject("MSXML2.ServerXMLHTTP.6.0")
-    h.setTimeouts 2000, 2000, 2000, 2000
+    h.setTimeouts 500, 500, 500, 1000
     h.Open "GET", "http://localhost:" & PORTA & "/", False
     h.Send
     If Err.Number = 0 Then
@@ -120,36 +120,19 @@ Function ServidorAtivo()
     On Error GoTo 0
 End Function
 
-Function AcharNode()
-    AcharNode = ""
-    Dim localNode
-    localNode = APP_DIR & "\node.exe"
-    If fso.FileExists(localNode) Then
-        AcharNode = """" & localNode & """"
-        Exit Function
-    End If
-    Dim caminhos, p
-    caminhos = Array( _
-        "C:\Program Files\nodejs\node.exe", _
-        sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\nodejs\node.exe"))
-    For Each p In caminhos
-        If fso.FileExists(p) Then
-            AcharNode = """" & p & """"
-            Exit Function
-        End If
-    Next
-    AcharNode = "node.exe"
-End Function
-
-Function AcharEdge()
-    AcharEdge = ""
+Function AcharNavegador()
+    AcharNavegador = ""
     Dim caminhos, p
     caminhos = Array( _
         "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe", _
-        "C:\Program Files\Microsoft\Edge\Application\msedge.exe")
+        "C:\Program Files\Microsoft\Edge\Application\msedge.exe", _
+        sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Microsoft\Edge\Application\msedge.exe"), _
+        "C:\Program Files\Google\Chrome\Application\chrome.exe", _
+        "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe", _
+        sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"))
     For Each p In caminhos
         If fso.FileExists(p) Then
-            AcharEdge = p
+            AcharNavegador = p
             Exit Function
         End If
     Next
