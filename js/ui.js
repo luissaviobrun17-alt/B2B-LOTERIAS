@@ -451,6 +451,14 @@ class UI {
         // === BOTÃO MOTOR LOTOFÁCIL (B2B) ===
         
         // === BOTÃO MOTOR +MILIONÁRIA (B2B) ===
+        const btnQuickMilionaria = document.getElementById('btn-quick-motor-milionaria');
+        if (btnQuickMilionaria) {
+            btnQuickMilionaria.onclick = () => {
+                const mainBtn = document.getElementById('btn-motor-milionaria');
+                if (mainBtn) mainBtn.click();
+            };
+        }
+
         const btnMotorMilionaria = document.getElementById('btn-motor-milionaria');
         if (btnMotorMilionaria) {
             btnMotorMilionaria.onclick = () => {
@@ -461,16 +469,7 @@ class UI {
                 }
                 if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
                 if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
-                const panel = document.getElementById('motor-milionaria-panel');
-                if (panel) {
-                    const isOpening = panel.style.display === 'none' || !panel.style.display;
-                    ['motor-megasena-panel', 'motor-lotofacil-panel', 'motor-duplasena-panel', 'motor-lotomania-panel', 'motor-diadesorte-panel', 'motor-timemania-panel'].forEach(id => {
-                        const p = document.getElementById(id);
-                        if (p) p.style.display = 'none';
-                    });
-                    panel.style.display = isOpening ? 'block' : 'none';
-                    if (isOpening) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                this.toggleMotorPanel('motor-milionaria-panel');
             };
         }
         this._initMilionariaMotorEvents();
@@ -498,16 +497,7 @@ class UI {
                 }
                 if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
                 if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
-                const panel = document.getElementById('motor-megasena-panel');
-                if (panel) {
-                    const isOpening = panel.style.display === 'none' || !panel.style.display;
-                    ['motor-megasena-panel', 'motor-duplasena-panel', 'motor-lotofacil-panel', 'motor-lotomania-panel', 'motor-timemania-panel', 'motor-milionaria-panel'].forEach(id => {
-                        const p = document.getElementById(id);
-                        if (p) p.style.display = 'none';
-                    });
-                    panel.style.display = isOpening ? 'block' : 'none';
-                    if (isOpening) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                this.toggleMotorPanel('motor-megasena-panel');
             };
         }
 
@@ -760,15 +750,12 @@ class UI {
                 }
                 if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
                 if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
-                const panel = document.getElementById('motor-supersete-panel');
-                if (panel) {
-                    const isOpening = panel.style.display === 'none' || !panel.style.display;
-                    ['motor-megasena-panel', 'motor-supersete-panel', 'motor-duplasena-panel', 'motor-lotofacil-panel', 'motor-quina-panel', 'motor-lotomania-panel', 'motor-diadesorte-panel', 'motor-timemania-panel', 'motor-milionaria-panel', 'motor-loteca-panel'].forEach(id => {
-                        const p = document.getElementById(id);
-                        if (p) p.style.display = 'none';
-                    });
-                    panel.style.display = isOpening ? 'block' : 'none';
-                    if (isOpening) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const opened = this.toggleMotorPanel('motor-supersete-panel');
+                if (opened) {
+                    const ssInput = document.getElementById('input-qtd-supersete');
+                    if (ssInput && this.gamesQuantityInput) {
+                        ssInput.value = this.gamesQuantityInput.value || '10';
+                    }
                 }
             };
         }
@@ -1061,16 +1048,7 @@ class UI {
                 }
                 if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
                 if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
-                const panel = document.getElementById('motor-duplasena-panel');
-                if (panel) {
-                    const isOpening = panel.style.display === 'none' || !panel.style.display;
-                    ['motor-megasena-panel', 'motor-lotofacil-panel', 'motor-quina-panel', 'motor-lotomania-panel', 'motor-diadesorte-panel', 'motor-timemania-panel', 'motor-milionaria-panel'].forEach(id => {
-                        const p = document.getElementById(id);
-                        if (p) p.style.display = 'none';
-                    });
-                    panel.style.display = isOpening ? 'block' : 'none';
-                    if (isOpening) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                this.toggleMotorPanel('motor-duplasena-panel');
             };
         }
 
@@ -1322,16 +1300,7 @@ class UI {
                 }
                 if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
                 if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
-                const panel = document.getElementById('motor-quina-panel');
-                if (panel) {
-                    const isOpening = panel.style.display === 'none' || !panel.style.display;
-                    ['motor-megasena-panel', 'motor-lotofacil-panel', 'motor-duplasena-panel', 'motor-lotomania-panel', 'motor-diadesorte-panel', 'motor-timemania-panel', 'motor-milionaria-panel'].forEach(id => {
-                        const p = document.getElementById(id);
-                        if (p) p.style.display = 'none';
-                    });
-                    panel.style.display = isOpening ? 'block' : 'none';
-                    if (isOpening) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                this.toggleMotorPanel('motor-quina-panel');
             };
         }
 
@@ -1596,16 +1565,7 @@ class UI {
                 }
                 if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
                 if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
-                const panel = document.getElementById('motor-lotofacil-panel');
-                if (panel) {
-                    const isOpening = panel.style.display === 'none' || !panel.style.display;
-                    ['motor-megasena-panel', 'motor-quina-panel', 'motor-duplasena-panel', 'motor-lotomania-panel', 'motor-diadesorte-panel', 'motor-timemania-panel', 'motor-milionaria-panel'].forEach(id => {
-                        const p = document.getElementById(id);
-                        if (p) p.style.display = 'none';
-                    });
-                    panel.style.display = isOpening ? 'block' : 'none';
-                    if (isOpening) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                this.toggleMotorPanel('motor-lotofacil-panel');
             };
         }
 
@@ -1767,6 +1727,14 @@ class UI {
         }
 
         // === BOTÃO MOTOR LOTOMANIA (B2B) ===
+        const btnQuickLotomania = document.getElementById('btn-quick-motor-lotomania');
+        if (btnQuickLotomania) {
+            btnQuickLotomania.onclick = () => {
+                const mainBtn = document.getElementById('btn-motor-lotomania');
+                if (mainBtn) mainBtn.click();
+            };
+        }
+
         const btnMotorLotomania = document.getElementById('btn-motor-lotomania');
         if (btnMotorLotomania) {
             btnMotorLotomania.onclick = () => {
@@ -1777,11 +1745,7 @@ class UI {
                 }
                 if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
                 if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
-                const panel = document.getElementById('motor-lotomania-panel');
-                if (panel) {
-                    panel.style.display = 'block';
-                    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                this.toggleMotorPanel('motor-lotomania-panel');
             };
         }
 
@@ -1843,6 +1807,15 @@ class UI {
         }
 
         // === BOTÃO MOTOR DIA DE SORTE (B2B) ===
+        // === BOTÃO MOTOR DIA DE SORTE (B2B) ===
+        const btnQuickDiaDeSorte = document.getElementById('btn-quick-motor-diadesorte');
+        if (btnQuickDiaDeSorte) {
+            btnQuickDiaDeSorte.onclick = () => {
+                const mainBtn = document.getElementById('btn-motor-diadesorte');
+                if (mainBtn) mainBtn.click();
+            };
+        }
+
         const btnMotorDiaDeSorte = document.getElementById('btn-motor-diadesorte');
         if (btnMotorDiaDeSorte) {
             btnMotorDiaDeSorte.onclick = () => {
@@ -1857,16 +1830,7 @@ class UI {
                 }
                 if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
                 if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
-                const panel = document.getElementById('motor-diadesorte-panel');
-                if (panel) {
-                    const isOpening = panel.style.display === 'none' || !panel.style.display;
-                    ['motor-lotofacil-panel', 'motor-lotomania-panel', 'motor-timemania-panel', 'motor-milionaria-panel'].forEach(id => {
-                        const p = document.getElementById(id);
-                        if (p) p.style.display = 'none';
-                    });
-                    panel.style.display = isOpening ? 'block' : 'none';
-                    if (isOpening) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                this.toggleMotorPanel('motor-diadesorte-panel');
             };
         }
 
@@ -1934,6 +1898,14 @@ class UI {
         }
 
         // === BOTÃO MOTOR TIMEMANIA (B2B) ===
+        const btnQuickTimemania = document.getElementById('btn-quick-motor-timemania');
+        if (btnQuickTimemania) {
+            btnQuickTimemania.onclick = () => {
+                const mainBtn = document.getElementById('btn-motor-timemania');
+                if (mainBtn) mainBtn.click();
+            };
+        }
+
         const btnMotorTimemania = document.getElementById('btn-motor-timemania');
         if (btnMotorTimemania) {
             btnMotorTimemania.onclick = () => {
@@ -1944,11 +1916,7 @@ class UI {
                 }
                 if (typeof this.updateInvestmentPanel === 'function') this.updateInvestmentPanel();
                 if (typeof this.updateCurrentCostDisplay === 'function') this.updateCurrentCostDisplay();
-                const panel = document.getElementById('motor-timemania-panel');
-                if (panel) {
-                    panel.style.display = panel.style.display === 'none' ? 'block' : (panel.style.display === 'block' ? 'none' : 'block');
-                    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                this.toggleMotorPanel('motor-timemania-panel');
             };
         }
 
@@ -2101,26 +2069,21 @@ class UI {
                     const navBtn = document.querySelector(`.nav-btn[data-game="loteca"]`);
                     if (navBtn) navBtn.click();
                     else this.updateGameInfo('loteca');
+                    return;
                 }
                 const panel = document.getElementById('motor-loteca-panel');
-                if (panel) {
-                    const isOpening = panel.style.display === 'none' || !panel.style.display;
-                    ['motor-megasena-panel', 'motor-lotofacil-panel', 'motor-quina-panel', 'motor-duplasena-panel', 'motor-lotomania-panel', 'motor-diadesorte-panel', 'motor-timemania-panel', 'motor-milionaria-panel'].forEach(id => {
-                        const p = document.getElementById(id);
-                        if (p) p.style.display = 'none';
-                    });
-                    panel.style.display = isOpening ? 'block' : 'none';
-                    if (isOpening) {
-                        panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        if (typeof renderLotecaInteractiveMatchesEditor === 'function') {
-                            renderLotecaInteractiveMatchesEditor();
-                        }
-                        const resDiv = document.getElementById('loteca-results-container');
-                        if (resDiv && (!resDiv.innerHTML || resDiv.innerHTML.trim() === '')) {
-                            const btnExec = document.getElementById('btn-executar-motor-loteca');
-                            if (btnExec) btnExec.click();
-                        }
-                    }
+                if (!panel || panel.style.display === 'none') {
+                    this.toggleMotorPanel('motor-loteca-panel');
+                } else {
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (typeof renderLotecaInteractiveMatchesEditor === 'function') {
+                    renderLotecaInteractiveMatchesEditor();
+                }
+                const resDiv = document.getElementById('loteca-results-container');
+                if (resDiv && (!resDiv.innerHTML || resDiv.innerHTML.trim() === '')) {
+                    const btnExec = document.getElementById('btn-executar-motor-loteca');
+                    if (btnExec) btnExec.click();
                 }
             };
         }
@@ -4545,6 +4508,43 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         this.root.style.setProperty('--primary-accent', color);
     }
 
+    hideAllMotorPanels(exceptPanelId = null) {
+        const panelIds = [
+            'motor-megasena-panel',
+            'motor-lotofacil-panel',
+            'motor-quina-panel',
+            'motor-duplasena-panel',
+            'motor-lotomania-panel',
+            'motor-timemania-panel',
+            'motor-diadesorte-panel',
+            'motor-milionaria-panel',
+            'motor-supersete-panel',
+            'motor-loteca-panel'
+        ];
+        panelIds.forEach(id => {
+            if (id !== exceptPanelId) {
+                const p = document.getElementById(id);
+                if (p) p.style.display = 'none';
+            }
+        });
+    }
+
+    toggleMotorPanel(panelId, options = {}) {
+        const panel = document.getElementById(panelId);
+        if (!panel) return false;
+        const isOpening = panel.style.display === 'none' || !panel.style.display;
+        this.hideAllMotorPanels();
+        if (isOpening) {
+            panel.style.display = 'block';
+            setTimeout(() => {
+                panel.scrollIntoView({ behavior: 'smooth', block: options.block || 'center' });
+            }, 60);
+        } else {
+            panel.style.display = 'none';
+        }
+        return isOpening;
+    }
+
     updateGameInfo(gameKey) {
         this.currentGameKey = gameKey;
         const game = typeof GAMES !== 'undefined' ? GAMES[gameKey] : null;
@@ -4590,41 +4590,36 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         if (dualContainer) dualContainer.innerHTML = '';
 
         // ━━ BOTÕES DE ATALHO RÁPIDO DO MOTOR POR LOTERIA (SELECTION HEADER) ━━
-        const btnQuickQuina = document.getElementById('btn-quick-motor-quina');
-        if (btnQuickQuina) {
-            btnQuickQuina.style.display = (gameKey === 'quina') ? 'inline-block' : 'none';
-        }
-        const btnQuickMega = document.getElementById('btn-quick-motor-megasena');
-        if (btnQuickMega) {
-            btnQuickMega.style.display = (gameKey === 'megasena') ? 'inline-block' : 'none';
-        }
-        const btnQuickLotofacil = document.getElementById('btn-quick-motor-lotofacil');
-        if (btnQuickLotofacil) {
-            btnQuickLotofacil.style.display = (gameKey === 'lotofacil') ? 'inline-block' : 'none';
-        }
-        const btnQuickDupla = document.getElementById('btn-quick-motor-duplasena');
-        if (btnQuickDupla) {
-            btnQuickDupla.style.display = (gameKey === 'duplasena') ? 'inline-block' : 'none';
-        }
-        const btnQuickLoteca = document.getElementById('btn-quick-motor-loteca');
-        if (btnQuickLoteca) {
-            btnQuickLoteca.style.display = (gameKey === 'loteca') ? 'inline-block' : 'none';
-        }
-        const btnQuickSuperSete = document.getElementById('btn-quick-motor-supersete');
-        if (btnQuickSuperSete) {
-            btnQuickSuperSete.style.display = (gameKey === 'supersete') ? 'inline-block' : 'none';
-        }
+        const allQuickMotors = {
+            'megasena': 'btn-quick-motor-megasena',
+            'lotofacil': 'btn-quick-motor-lotofacil',
+            'quina': 'btn-quick-motor-quina',
+            'duplasena': 'btn-quick-motor-duplasena',
+            'lotomania': 'btn-quick-motor-lotomania',
+            'timemania': 'btn-quick-motor-timemania',
+            'diadesorte': 'btn-quick-motor-diadesorte',
+            'milionaria': 'btn-quick-motor-milionaria',
+            'supersete': 'btn-quick-motor-supersete',
+            'loteca': 'btn-quick-motor-loteca'
+        };
+        Object.entries(allQuickMotors).forEach(([k, btnId]) => {
+            const qBtn = document.getElementById(btnId);
+            if (qBtn) {
+                qBtn.style.display = (gameKey === k) ? 'inline-block' : 'none';
+            }
+        });
+
         // ━━ DESTAQUE VISUAL DOS 10 MOTORES EM B2B-MOTORS-ROW CONFORME A LOTERIA SELECIONADA ━━
         const motorKeyMap = {
             'megasena': 'btn-motor-megasena',
-            'supersete': 'btn-motor-supersete',
             'lotofacil': 'btn-motor-lotofacil',
             'quina': 'btn-motor-quina',
             'duplasena': 'btn-motor-duplasena',
-            'milionaria': 'btn-motor-milionaria',
             'lotomania': 'btn-motor-lotomania',
-            'diadesorte': 'btn-motor-diadesorte',
             'timemania': 'btn-motor-timemania',
+            'diadesorte': 'btn-motor-diadesorte',
+            'milionaria': 'btn-motor-milionaria',
+            'supersete': 'btn-motor-supersete',
             'loteca': 'btn-motor-loteca'
         };
 
@@ -4642,6 +4637,9 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             }
         });
 
+        // Ocultar todos os painéis de motores anteriores para não sobrepor telas
+        this.hideAllMotorPanels(gameKey === 'loteca' ? 'motor-loteca-panel' : null);
+
         if (gameKey === 'loteca') {
             const lotecaPanel = document.getElementById('motor-loteca-panel');
             if (lotecaPanel) {
@@ -4653,28 +4651,6 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                         const btnCarregar = document.getElementById('btn-carregar-grade-caixa');
                         if (btnCarregar) btnCarregar.click();
                     }
-                }, 100);
-            }
-        }
-        if (gameKey === 'supersete') {
-            const ssPanel = document.getElementById('motor-supersete-panel');
-            if (ssPanel) {
-                ssPanel.style.display = 'block';
-                setTimeout(() => {
-                    ssPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
-            }
-            const ssInput = document.getElementById('input-qtd-supersete');
-            if (ssInput && this.gamesQuantityInput) {
-                ssInput.value = this.gamesQuantityInput.value || '10';
-            }
-        }
-        if (gameKey === 'timemania') {
-            const timePanel = document.getElementById('motor-timemania-panel');
-            if (timePanel) {
-                timePanel.style.display = 'block';
-                setTimeout(() => {
-                    timePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
             }
         }
