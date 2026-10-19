@@ -6629,6 +6629,9 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 </div>
             </div>
         `;
+        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     _exibirModalAnalitico(cfg = {}) {
         const modalId = 'modal-analitico-b2b';
         let modal = document.getElementById(modalId);
