@@ -766,4 +766,197 @@ if (typeof window !== 'undefined') {
 }
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = MotorLotofacilB2BEngine;
+
+    // =========================================================================
+    // MOTOR DE FECHAMENTO POR GRUPOS DO JOGADOR (LOTOFACIL B2B)
+    // =========================================================================
+    static MATRIZ_PLANILHA_48 = [
+        [1, 2, 3, 4, 5], [1, 2, 3, 4, 6], [1, 2, 3, 4, 7], [1, 2, 3, 4, 8],
+        [1, 2, 3, 5, 6], [1, 2, 3, 5, 7], [1, 2, 3, 5, 8], [1, 2, 4, 5, 6],
+        [1, 2, 4, 5, 7], [1, 2, 4, 5, 8], [1, 2, 4, 6, 7], [1, 2, 4, 6, 8],
+        [1, 2, 4, 7, 8], [1, 2, 5, 6, 7], [1, 2, 5, 6, 8], [1, 2, 5, 7, 8],
+        [1, 2, 6, 7, 8], [1, 3, 4, 5, 6], [1, 3, 4, 5, 7], [1, 3, 4, 5, 8],
+        [1, 3, 4, 6, 7], [1, 3, 4, 6, 8], [1, 3, 4, 7, 8], [1, 3, 5, 6, 7],
+        [1, 3, 5, 6, 8], [1, 3, 5, 7, 8], [1, 4, 5, 6, 7], [1, 4, 5, 6, 8],
+        [1, 4, 5, 7, 8], [1, 4, 6, 7, 8], [1, 5, 6, 7, 8], [2, 3, 4, 5, 6],
+        [2, 3, 4, 6, 7], [2, 3, 4, 7, 8], [2, 3, 4, 5, 6], [2, 3, 5, 6, 7],
+        [2, 3, 5, 7, 8], [2, 3, 5, 6, 7], [2, 4, 5, 6, 8], [2, 4, 5, 7, 8],
+        [2, 4, 6, 7, 8], [2, 5, 6, 7, 8], [3, 4, 5, 6, 7], [3, 4, 5, 6, 8],
+        [3, 4, 5, 7, 8], [3, 4, 6, 7, 8], [3, 5, 6, 7, 8], [4, 5, 6, 7, 8]
+    ];
+
+    static GRUPOS_EXEMPLO_PADRAO = {
+        1: [3, 13, 19],
+        2: [7, 8, 14],
+        3: [1, 12, 20],
+        4: [5, 16, 23],
+        5: [6, 15, 18],
+        6: [4, 10, 17],
+        7: [9, 11, 25],
+        8: [2, 21, 24]
+    };
+
+    static async gerarJogosPorGrupos(grupos, options = {}) {
+        // 1. Tentar API Python local se estiver ativa
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+            const res = await fetch('http://127.0.0.1:8000/api/v1/motor-lotofacil/grupos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    grupos: grupos,
+                    combinacoes: options.combinacoes || null,
+                    qtd_grupos_por_jogo: options.qtdGruposPorJogo || 5,
+                    eliminar_duplicados: options.eliminarDuplicados || false,
+                    ordenar_dezenas: options.ordenarDezenas !== undefined ? options.ordenarDezenas : true,
+                    fixas: options.fixas || [],
+                    excluidas: options.excluidas || []
+                })
+            });
+            clearTimeout(timeoutId);
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.sucesso && data.jogos) {
+                    console.log('[B2B] Motor Lotofacil por Grupos executado via API Python.');
+                    return data;
+                }
+            }
+        } catch (e) {
+            console.log('[B2B] API Python offline, executando Motor Lotofacil por Grupos em JavaScript nativo.');
+        }
+
+        // 2. Motor Nativo Local em JavaScript
+        return this.gerarJogosPorGruposLocal(grupos, options);
+    }
+
+    static gerarJogosPorGruposLocal(grupos, options = {}) {
+        const normGrupos = {};
+        if (grupos && typeof grupos === 'object') {
+            for (const [k, v] of Object.entries(grupos)) {
+                const gid = parseInt(k);
+                if (!isNaN(gid) && Array.isArray(v)) {
+                    normGrupos[gid] = Array.from(new Set(v.map(Number).filter(n => n >= 1 && n <= 25))).sort((a, b) => a - b);
+                }
+            }
+        }
+
+        const groupKeys = Object.keys(normGrupos).map(Number).sort((a, b) => a - b);
+        if (groupKeys.length === 0) {
+            return { sucesso: false, erro: 'Nenhum grupo valido fornecido. Defina os grupos com dezenas entre 1 e 25.' };
+        }
+
+        const k = Math.min(groupKeys.length, Math.max(1, parseInt(options.qtdGruposPorJogo) || 5));
+        const eliminarDuplicados = !!options.eliminarDuplicados;
+        const ordenarDezenas = options.ordenarDezenas !== false;
+        const fixasSet = new Set((options.fixas || []).map(Number).filter(n => n >= 1 && n <= 25));
+        const excluidasSet = new Set((options.excluidas || []).map(Number).filter(n => n >= 1 && n <= 25));
+
+        let combos = [];
+        if (options.combinacoes && Array.isArray(options.combinacoes) && options.combinacoes.length > 0) {
+            combos = options.combinacoes.map(c => c.map(Number));
+        } else if (options.modo === 'planilha_48') {
+            combos = this.MATRIZ_PLANILHA_48;
+        } else {
+            function getCombinations(arr, size) {
+                const result = [];
+                function combine(prefix, start) {
+                    if (prefix.length === size) {
+                        result.push(prefix.slice());
+                        return;
+                    }
+                    for (let i = start; i < arr.length; i++) {
+                        prefix.push(arr[i]);
+                        combine(prefix, i + 1);
+                        prefix.pop();
+                    }
+                }
+                combine([], 0);
+                return result;
+            }
+            combos = getCombinations(groupKeys, k);
+        }
+
+        const jogos = [];
+        const vistos = new Map();
+        const freqDezenas = {};
+        const todasDezenasUsadas = new Set();
+
+        const primosSet = new Set(this.PRIMOS);
+        const molduraSet = new Set(this.MOLDURA);
+
+        combos.forEach((combo, idx) => {
+            const numSet = new Set(fixasSet);
+            combo.forEach(gid => {
+                if (normGrupos[gid]) {
+                    normGrupos[gid].forEach(n => numSet.add(n));
+                }
+            });
+
+            excluidasSet.forEach(n => numSet.delete(n));
+
+            let listaNums = Array.from(numSet);
+            if (ordenarDezenas) {
+                listaNums.sort((a, b) => a - b);
+            }
+
+            const sig = listaNums.slice().sort((a, b) => a - b).join('-');
+            const duplicadoDe = vistos.has(sig) ? vistos.get(sig) : null;
+
+            if (!duplicadoDe) {
+                vistos.set(sig, idx + 1);
+            } else if (eliminarDuplicados) {
+                return;
+            }
+
+            listaNums.forEach(n => {
+                freqDezenas[n] = (freqDezenas[n] || 0) + 1;
+                todasDezenasUsadas.add(n);
+            });
+
+            const soma = listaNums.reduce((a, b) => a + b, 0);
+            const pares = listaNums.filter(n => n % 2 === 0).length;
+            const impares = listaNums.length - pares;
+            const primos = listaNums.filter(n => primosSet.has(n)).length;
+            const moldura = listaNums.filter(n => molduraSet.has(n)).length;
+
+            jogos.push({
+                indice: jogos.length + 1,
+                indice_original: idx + 1,
+                grupos_combinados: combo,
+                numeros: listaNums,
+                total_dezenas: listaNums.length,
+                soma: soma,
+                pares: pares,
+                impares: impares,
+                primos: primos,
+                moldura: moldura,
+                duplicado_de: duplicadoDe
+            });
+        });
+
+        const dezenasAusentes = [];
+        for (let d = 1; d <= 25; d++) {
+            if (!todasDezenasUsadas.has(d)) dezenasAusentes.push(d);
+        }
+
+        return {
+            sucesso: true,
+            total_jogos: jogos.length,
+            jogos_unicos: vistos.size,
+            jogos_duplicados: jogos.filter(j => j.duplicado_de !== null).length,
+            total_grupos: groupKeys.length,
+            qtd_grupos_por_jogo: k,
+            dezenas_usadas: Array.from(todasDezenasUsadas).sort((a, b) => a - b),
+            dezenas_ausentes: dezenasAusentes,
+            frequencia_dezenas: freqDezenas,
+            custo_total_brl: +(jogos.length * 3.0).toFixed(2),
+            grupos_definidos: normGrupos,
+            jogos: jogos
+        };
+    }
+
 }

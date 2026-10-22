@@ -473,6 +473,7 @@ class UI {
             };
         }
         this._initMilionariaMotorEvents();
+        this._initLotofacilGruposEngine();
 
         // =========================================================================
         // === BOTÃO E EVENTOS DO MOTOR MEGA-SENA (B2B LOTERIAS) ===
@@ -10811,6 +10812,307 @@ if(pp){
             current.pop();
         }
     }
+
+    // =========================================================================
+    // MOTOR DE FECHAMENTO POR GRUPOS DA LOTOFACIL (O JOGADOR DEFINE OS GRUPOS)
+    // =========================================================================
+    _initLotofacilGruposEngine() {
+        const tabEstatistico = document.getElementById('tab-btn-lotofacil-estatistico');
+        const tabGrupos = document.getElementById('tab-btn-lotofacil-grupos');
+        const subEstatistico = document.getElementById('subpanel-lotofacil-estatistico');
+        const subGrupos = document.getElementById('subpanel-lotofacil-grupos');
+
+        if (tabEstatistico && tabGrupos && subEstatistico && subGrupos) {
+            tabEstatistico.onclick = () => {
+                subEstatistico.style.display = 'block';
+                subGrupos.style.display = 'none';
+                tabEstatistico.style.background = 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(168,85,247,0.3))';
+                tabEstatistico.style.borderColor = '#a855f7';
+                tabEstatistico.style.color = '#fff';
+                tabGrupos.style.background = 'rgba(15,23,42,0.6)';
+                tabGrupos.style.borderColor = 'rgba(245,158,11,0.3)';
+                tabGrupos.style.color = '#fde68a';
+            };
+
+            tabGrupos.onclick = () => {
+                subEstatistico.style.display = 'none';
+                subGrupos.style.display = 'block';
+                tabGrupos.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.35), rgba(217,119,6,0.25))';
+                tabGrupos.style.borderColor = '#f59e0b';
+                tabGrupos.style.color = '#fff';
+                tabEstatistico.style.background = 'rgba(15,23,42,0.6)';
+                tabEstatistico.style.borderColor = 'rgba(168,85,247,0.3)';
+                tabEstatistico.style.color = '#cbd5e1';
+                this._atualizarDiagnosticoGrupos();
+            };
+        }
+
+        for (let i = 1; i <= 8; i++) {
+            const input = document.getElementById(`input-grupo-${i}`);
+            if (input) {
+                input.addEventListener('input', () => {
+                    this._atualizarDiagnosticoGrupos();
+                });
+            }
+        }
+
+        const selModo = document.getElementById('select-modo-combinatorio-grupos');
+        const selK = document.getElementById('select-k-grupos-por-jogo');
+        if (selModo) selModo.addEventListener('change', () => this._atualizarDiagnosticoGrupos());
+        if (selK) selK.addEventListener('change', () => this._atualizarDiagnosticoGrupos());
+
+        const btnExemplo = document.getElementById('btn-carregar-exemplo-grupos');
+        if (btnExemplo) {
+            btnExemplo.onclick = () => {
+                const exemplo = {
+                    1: '3, 13, 19',
+                    2: '7, 8, 14',
+                    3: '1, 12, 20',
+                    4: '5, 16, 23',
+                    5: '6, 15, 18',
+                    6: '4, 10, 17',
+                    7: '9, 11, 25',
+                    8: '2, 21, 24'
+                };
+                for (let i = 1; i <= 8; i++) {
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) input.value = exemplo[i];
+                }
+                this._atualizarDiagnosticoGrupos();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast('Matriz de 8 grupos da planilha carregada!', 'success', 2500);
+                }
+            };
+        }
+
+        const btnDistribuir = document.getElementById('btn-distribuir-volante-grupos');
+        if (btnDistribuir) {
+            btnDistribuir.onclick = () => {
+                let pool = [];
+                if (this.selectedNumbers && this.selectedNumbers.size > 0) {
+                    pool = Array.from(this.selectedNumbers).sort((a, b) => a - b);
+                } else {
+                    pool = Array.from({length: 24}, (_, i) => i + 1);
+                }
+                const porGrupo = Math.ceil(pool.length / 8);
+                for (let i = 1; i <= 8; i++) {
+                    const pedaco = pool.slice((i - 1) * porGrupo, i * porGrupo);
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) input.value = pedaco.join(', ');
+                }
+                this._atualizarDiagnosticoGrupos();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`${pool.length} dezenas distribuídas nos 8 grupos!`, 'success', 2500);
+                }
+            };
+        }
+
+        const btnLimpar = document.getElementById('btn-limpar-todos-grupos');
+        if (btnLimpar) {
+            btnLimpar.onclick = () => {
+                for (let i = 1; i <= 8; i++) {
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) input.value = '';
+                }
+                this._atualizarDiagnosticoGrupos();
+            };
+        }
+
+        const btnExecutar = document.getElementById('btn-executar-motor-grupos');
+        if (btnExecutar) {
+            btnExecutar.onclick = async () => {
+                await this._executarGeracaoJogosPorGrupos();
+            };
+        }
+    }
+
+    _obterGruposDigitados() {
+        const grupos = {};
+        for (let i = 1; i <= 8; i++) {
+            const input = document.getElementById(`input-grupo-${i}`);
+            if (input && input.value.trim()) {
+                const nums = input.value
+                    .split(/[\s,;]+/)
+                    .map(x => parseInt(x.trim()))
+                    .filter(x => !isNaN(x) && x >= 1 && x <= 25);
+                grupos[i] = Array.from(new Set(nums)).sort((a, b) => a - b);
+            }
+        }
+        return grupos;
+    }
+
+    _atualizarDiagnosticoGrupos() {
+        const grupos = this._obterGruposDigitados();
+        const todasDezenas = new Set();
+        const duplicadas = new Set();
+        const freq = {};
+
+        for (let i = 1; i <= 8; i++) {
+            const badge = document.getElementById(`badge-count-grupo-${i}`);
+            const input = document.getElementById(`input-grupo-${i}`);
+            const nums = grupos[i] || [];
+            if (badge) {
+                badge.innerText = `${nums.length} dezena${nums.length === 1 ? '' : 's'}`;
+                badge.style.color = nums.length === 3 ? '#34d399' : (nums.length > 0 ? '#fde68a' : '#94a3b8');
+            }
+            nums.forEach(n => {
+                if (freq[n]) duplicadas.add(n);
+                freq[n] = (freq[n] || 0) + 1;
+                todasDezenas.add(n);
+            });
+        }
+
+        const diagAlocadas = document.getElementById('diag-dezenas-alocadas');
+        const diagAusentes = document.getElementById('diag-dezenas-ausentes');
+        const diagTotalJogos = document.getElementById('diag-total-jogos-est');
+        const diagCustoJogos = document.getElementById('diag-custo-jogos-est');
+
+        const totalAlocadas = todasDezenas.size;
+        if (diagAlocadas) {
+            diagAlocadas.innerText = `${totalAlocadas} / 25`;
+            diagAlocadas.style.color = totalAlocadas >= 24 ? '#34d399' : '#fde68a';
+        }
+
+        const ausentes = [];
+        for (let d = 1; d <= 25; d++) {
+            if (!todasDezenas.has(d)) ausentes.push(d);
+        }
+        if (diagAusentes) {
+            if (ausentes.length === 0) {
+                diagAusentes.innerText = 'Nenhuma (100% de dezenas)';
+                diagAusentes.style.color = '#34d399';
+            } else if (ausentes.length <= 5) {
+                diagAusentes.innerText = ausentes.map(n => n.toString().padStart(2, '0')).join(', ');
+                diagAusentes.style.color = '#fde68a';
+            } else {
+                diagAusentes.innerText = `${ausentes.length} dezenas`;
+                diagAusentes.style.color = '#fca5a5';
+            }
+        }
+
+        const modo = document.getElementById('select-modo-combinatorio-grupos')?.value || 'fechamento_total';
+        const k = parseInt(document.getElementById('select-k-grupos-por-jogo')?.value || '5') || 5;
+        const totalGrupos = Object.keys(grupos).length;
+
+        let totalEst = 0;
+        if (modo === 'planilha_48') {
+            totalEst = 48;
+        } else if (modo === 'sem_duplicatas') {
+            totalEst = 46;
+        } else {
+            function comb(n, r) {
+                if (r < 0 || r > n) return 0;
+                let c = 1;
+                for (let i = 1; i <= r; i++) {
+                    c = (c * (n - i + 1)) / i;
+                }
+                return Math.round(c);
+            }
+            totalEst = comb(totalGrupos >= k ? totalGrupos : 8, k);
+        }
+
+        if (diagTotalJogos) diagTotalJogos.innerText = `${totalEst} jogos`;
+        if (diagCustoJogos) diagCustoJogos.innerText = (totalEst * 3.0).toFixed(2).replace('.', ',');
+    }
+
+    async _executarGeracaoJogosPorGrupos() {
+        if (this.currentGameKey !== 'lotofacil') {
+            const navBtn = document.querySelector(`.nav-btn[data-game="lotofacil"]`);
+            if (navBtn) navBtn.click();
+            else this.updateGameInfo('lotofacil');
+        }
+
+        const grupos = this._obterGruposDigitados();
+        if (Object.keys(grupos).length === 0) {
+            alert('Por favor, preencha pelo menos alguns grupos ou clique em "Carregar Exemplo da Planilha"!');
+            return;
+        }
+
+        const btnExecutar = document.getElementById('btn-executar-motor-grupos');
+        const origText = btnExecutar ? btnExecutar.innerHTML : '';
+        if (btnExecutar) {
+            btnExecutar.disabled = true;
+            btnExecutar.innerHTML = '⏳ Gerando Jogos por Grupos...';
+        }
+
+        this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Combinando grupos e ordenando jogos...</div></div>';
+
+        try {
+            const modo = document.getElementById('select-modo-combinatorio-grupos')?.value || 'fechamento_total';
+            const k = parseInt(document.getElementById('select-k-grupos-por-jogo')?.value || '5') || 5;
+            const eliminarDuplicados = document.getElementById('check-eliminar-duplicados-grupos')?.checked || (modo === 'sem_duplicatas');
+
+            const res = await MotorLotofacilB2BEngine.gerarJogosPorGrupos(grupos, {
+                modo: modo === 'sem_duplicatas' ? 'planilha_48' : modo,
+                qtdGruposPorJogo: k,
+                eliminarDuplicados: eliminarDuplicados,
+                ordenarDezenas: true,
+                fixas: Array.from(this.fixedNumbers || []),
+                excluidas: Array.from(this.excludedNumbers || [])
+            });
+
+            if (res && res.sucesso && res.jogos && res.jogos.length > 0) {
+                const rawGames = res.jogos.map(j => j.numeros);
+                this.currentGeneratedGames = rawGames;
+                this._lastGeneratedGames = rawGames;
+
+                this.renderGames({
+                    pool: res.dezenas_usadas || Array.from({length: 25}, (_, i) => i + 1),
+                    games: rawGames,
+                    smartAnalysis: null
+                }, 'lotofacil');
+
+                setTimeout(() => {
+                    const b = document.createElement('div');
+                    b.className = 'smart-gen-analysis';
+                    b.style.cssText = 'margin-top:10px;margin-bottom:12px;padding:14px 18px;border-radius:10px;background:radial-gradient(circle at top left, rgba(245,158,11,0.2), rgba(15,23,42,0.95));border:1px solid #f59e0b;color:#fde68a;font-size:0.83rem;box-shadow:0 6px 20px rgba(0,0,0,0.4);';
+                    
+                    const ausentesStr = res.dezenas_ausentes && res.dezenas_ausentes.length > 0 
+                        ? res.dezenas_ausentes.map(n => n.toString().padStart(2, '0')).join(', ') 
+                        : 'Nenhuma (cobertura total 25/25)';
+
+                    b.innerHTML = `
+                        <div style="font-weight:800;font-size:0.95rem;color:#fbbf24;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+                            🎲 MOTOR DE FECHAMENTO POR GRUPOS CONCLUÍDO COM SUCESSO!
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:8px;line-height:1.6;color:#e2e8f0;">
+                            <div>• <strong>Total de Jogos Gerados:</strong> <span style="color:#34d399;">${res.total_jogos} jogos</span></div>
+                            <div>• <strong>Jogos Únicos:</strong> <span style="color:#38bdf8;">${res.jogos_unicos}</span> | <strong>Duplicados:</strong> <span style="color:${res.jogos_duplicados > 0 ? '#fca5a5' : '#34d399'};">${res.jogos_duplicados}</span></div>
+                            <div>• <strong>Grupos Utilizados:</strong> ${res.total_grupos} grupos combinados ${k} a ${k}</div>
+                            <div>• <strong>Dezenas Ausentes:</strong> <span style="color:#fde68a;">[${ausentesStr}]</span></div>
+                            <div>• <strong>Custo Total:</strong> R$ ${(res.total_jogos * 3.0).toFixed(2).replace('.', ',')}</div>
+                            <div>• <strong>Formato:</strong> 15 dezenas em ordem crescente por aposta</div>
+                        </div>
+                    `;
+
+                    const old = this.gamesContainer.parentNode.querySelector('.smart-gen-analysis');
+                    if (old) old.remove();
+                    this.gamesContainer.parentNode.insertBefore(b, this.gamesContainer);
+                }, 60);
+
+                setTimeout(() => {
+                    if (this.gamesContainer) {
+                        this.gamesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 150);
+
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`🎲 ${res.total_jogos} jogos gerados por grupos com sucesso!`, 'success', 3000);
+                }
+            } else {
+                alert('Erro ao gerar jogos por grupos: ' + ((res && res.erro) || 'Verifique se os grupos possuem dezenas suficientes.'));
+            }
+        } catch (e) {
+            console.error('Erro no motor por grupos:', e);
+            alert('Erro ao executar motor por grupos: ' + e.message);
+        } finally {
+            if (btnExecutar) {
+                btnExecutar.disabled = false;
+                btnExecutar.innerHTML = origText;
+            }
+        }
+    }
+
 }
 
 // Export removed for global script compatibility

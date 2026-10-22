@@ -1202,5 +1202,151 @@ class MotorLotofacilB2B:
         }
 
 
+
+    # =========================================================================
+    # MOTOR DE FECHAMENTO POR GRUPOS DO JOGADOR (LOTOFACIL B2B)
+    # =========================================================================
+    MATRIZ_PLANILHA_48 = [
+        [1, 2, 3, 4, 5], [1, 2, 3, 4, 6], [1, 2, 3, 4, 7], [1, 2, 3, 4, 8],
+        [1, 2, 3, 5, 6], [1, 2, 3, 5, 7], [1, 2, 3, 5, 8], [1, 2, 4, 5, 6],
+        [1, 2, 4, 5, 7], [1, 2, 4, 5, 8], [1, 2, 4, 6, 7], [1, 2, 4, 6, 8],
+        [1, 2, 4, 7, 8], [1, 2, 5, 6, 7], [1, 2, 5, 6, 8], [1, 2, 5, 7, 8],
+        [1, 2, 6, 7, 8], [1, 3, 4, 5, 6], [1, 3, 4, 5, 7], [1, 3, 4, 5, 8],
+        [1, 3, 4, 6, 7], [1, 3, 4, 6, 8], [1, 3, 4, 7, 8], [1, 3, 5, 6, 7],
+        [1, 3, 5, 6, 8], [1, 3, 5, 7, 8], [1, 4, 5, 6, 7], [1, 4, 5, 6, 8],
+        [1, 4, 5, 7, 8], [1, 4, 6, 7, 8], [1, 5, 6, 7, 8], [2, 3, 4, 5, 6],
+        [2, 3, 4, 6, 7], [2, 3, 4, 7, 8], [2, 3, 4, 5, 6], [2, 3, 5, 6, 7],
+        [2, 3, 5, 7, 8], [2, 3, 5, 6, 7], [2, 4, 5, 6, 8], [2, 4, 5, 7, 8],
+        [2, 4, 6, 7, 8], [2, 5, 6, 7, 8], [3, 4, 5, 6, 7], [3, 4, 5, 6, 8],
+        [3, 4, 5, 7, 8], [3, 4, 6, 7, 8], [3, 5, 6, 7, 8], [4, 5, 6, 7, 8]
+    ]
+
+    GRUPOS_EXEMPLO_PADRAO = {
+        1: [3, 13, 19],
+        2: [7, 8, 14],
+        3: [1, 12, 20],
+        4: [5, 16, 23],
+        5: [6, 15, 18],
+        6: [4, 10, 17],
+        7: [9, 11, 25],
+        8: [2, 21, 24]
+    }
+
+    @classmethod
+    def gerar_jogos_por_grupos(
+        cls,
+        grupos: Any,
+        combinacoes: Optional[List[List[int]]] = None,
+        qtd_grupos_por_jogo: int = 5,
+        eliminar_duplicados: bool = False,
+        ordenar_dezenas: bool = True,
+        fixas: Optional[List[int]] = None,
+        excluidas: Optional[List[int]] = None
+    ) -> Dict[str, Any]:
+        """
+        Motor de Fechamento por Grupos do Jogador (Lotofacil B2B).
+        O jogador define os grupos de dezenas e o motor une as combinacoes
+        de grupos para formar jogos completos de 15 dezenas em ordem crescente.
+        """
+        norm_grupos: Dict[int, List[int]] = {}
+        if isinstance(grupos, dict):
+            for k, v in grupos.items():
+                try:
+                    gid = int(k)
+                    nums = sorted(list(set(int(x) for x in v if 1 <= int(x) <= 25)))
+                    norm_grupos[gid] = nums
+                except (ValueError, TypeError):
+                    continue
+        elif isinstance(grupos, list):
+            for idx, v in enumerate(grupos, 1):
+                try:
+                    nums = sorted(list(set(int(x) for x in v if 1 <= int(x) <= 25)))
+                    norm_grupos[idx] = nums
+                except (ValueError, TypeError):
+                    continue
+
+        if not norm_grupos:
+            return {
+                "sucesso": False,
+                "erro": "Nenhum grupo valido fornecido. Defina os grupos com dezenas entre 1 e 25."
+            }
+
+        g_keys = sorted(norm_grupos.keys())
+        fixed_set = set(int(x) for x in (fixas or []) if 1 <= int(x) <= 25)
+        excluded_set = set(int(x) for x in (excluidas or []) if 1 <= int(x) <= 25)
+
+        if combinacoes:
+            combos = [[int(x) for x in c] for c in combinacoes]
+        else:
+            k = min(len(g_keys), max(1, int(qtd_grupos_por_jogo)))
+            combos = [list(c) for c in itertools.combinations(g_keys, k)]
+
+        jogos = []
+        vistos: Dict[Tuple[int, ...], int] = {}
+        freq_dezenas: collections.Counter = collections.Counter()
+        todas_dezenas_usadas: Set[int] = set()
+
+        for idx, combo in enumerate(combos, 1):
+            numeros = set(fixed_set)
+            for gid in combo:
+                if gid in norm_grupos:
+                    numeros.update(norm_grupos[gid])
+
+            numeros.difference_update(excluded_set)
+
+            lista_nums = list(numeros)
+            if ordenar_dezenas:
+                lista_nums.sort()
+
+            sig = tuple(sorted(lista_nums))
+            duplicado_de = vistos.get(sig, None)
+
+            if duplicado_de is None:
+                vistos[sig] = idx
+            elif eliminar_duplicados:
+                continue
+
+            for d in lista_nums:
+                freq_dezenas[d] += 1
+                todas_dezenas_usadas.add(d)
+
+            soma = sum(lista_nums)
+            pares = sum(1 for d in lista_nums if d % 2 == 0)
+            impares = len(lista_nums) - pares
+            primos = sum(1 for d in lista_nums if d in (2, 3, 5, 7, 11, 13, 17, 19, 23))
+            moldura = sum(1 for d in lista_nums if d in (1, 2, 3, 4, 5, 6, 10, 11, 15, 16, 20, 21, 22, 23, 24, 25))
+
+            jogos.append({
+                "indice": len(jogos) + 1,
+                "indice_original": idx,
+                "grupos_combinados": combo,
+                "numeros": lista_nums,
+                "total_dezenas": len(lista_nums),
+                "soma": soma,
+                "pares": pares,
+                "impares": impares,
+                "primos": primos,
+                "moldura": moldura,
+                "duplicado_de": duplicado_de
+            })
+
+        dezenas_ausentes = [d for d in range(1, 26) if d not in todas_dezenas_usadas]
+
+        return {
+            "sucesso": True,
+            "total_jogos": len(jogos),
+            "jogos_unicos": len(vistos),
+            "jogos_duplicados": sum(1 for j in jogos if j["duplicado_de"] is not None),
+            "total_grupos": len(norm_grupos),
+            "qtd_grupos_por_jogo": qtd_grupos_por_jogo,
+            "dezenas_usadas": sorted(list(todas_dezenas_usadas)),
+            "dezenas_ausentes": dezenas_ausentes,
+            "frequencia_dezenas": dict(freq_dezenas),
+            "custo_total_brl": round(len(jogos) * 3.0, 2),
+            "grupos_definidos": {str(k): v for k, v in norm_grupos.items()},
+            "jogos": jogos
+        }
+
+
 # Alias oficial para compatibilidade reversa absoluta
 MotorInteligenteLotofacilB2B = MotorLotofacilB2B

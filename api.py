@@ -73,6 +73,16 @@ class BacktestLotofacilRequest(BaseModel):
     estrategia: Optional[str] = "equilibrada"
     sniper: Optional[bool] = True
 
+class MotorLotofacilGruposRequest(BaseModel):
+    grupos: Dict[str, List[int]]
+    combinacoes: Optional[List[List[int]]] = None
+    qtd_grupos_por_jogo: Optional[int] = 5
+    eliminar_duplicados: Optional[bool] = False
+    ordenar_dezenas: Optional[bool] = True
+    fixas: Optional[List[int]] = None
+    excluidas: Optional[List[int]] = None
+
+
 class MotorTimemaniaRequest(BaseModel):
     quantidade_jogos: int
     historico_limite: Optional[int] = None
@@ -325,6 +335,30 @@ def endpoint_motor_lotofacil_backtest(request: BacktestLotofacilRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Erro no Backtest Lotofacil: {str(e)}")
+
+
+
+@app.post("/api/v1/motor-lotofacil/grupos")
+def endpoint_motor_lotofacil_grupos(request: MotorLotofacilGruposRequest):
+    """
+    Endpoint do MOTOR DE FECHAMENTO POR GRUPOS DA LOTOFACIL - B2B LOTERIAS.
+    O jogador define os grupos de dezenas e o motor une as combinacoes de grupos.
+    """
+    try:
+        resultado = MotorLotofacilB2B.gerar_jogos_por_grupos(
+            grupos=request.grupos,
+            combinacoes=request.combinacoes,
+            qtd_grupos_por_jogo=request.qtd_grupos_por_jogo or 5,
+            eliminar_duplicados=request.eliminar_duplicados or False,
+            ordenar_dezenas=request.ordenar_dezenas if request.ordenar_dezenas is not None else True,
+            fixas=request.fixas,
+            excluidas=request.excluidas
+        )
+        return resultado
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Motor Lotofacil por Grupos: {str(e)}")
 
 
 # =============================================================================

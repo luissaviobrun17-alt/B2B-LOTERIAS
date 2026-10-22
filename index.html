@@ -503,44 +503,196 @@
 
                         <!-- PAINEL MOTOR LOTOFÁCIL DO B2B LOTERIAS -->
                         <div id="motor-lotofacil-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(147, 51, 234, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #a855f7; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
-                                <div style="font-size: 1.05rem; font-weight: 800; color: #c084fc; display: flex; align-items: center; gap: 8px;">
-                                    ⚡ MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS
-                                </div>
-                                <span style="font-size: 0.75rem; background: rgba(192, 132, 252, 0.15); color: #e9d5ff; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(192, 132, 252, 0.3); font-weight: 700;">
-                                    Análise 10 Concursos • Divisão Dinâmica • Max Consecutivo ≤ 5
-                                </span>
-                            </div>
-                            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; margin: 0 0 12px 0;">
-                                Exploração combinatória profunda com divisões testadas dinamicamente (<strong style="color:#c084fc;">01-13/14-25, 01-12/13-25, 01-11/12-25</strong>), relações prioritárias (<strong style="color:#a7f3d0;">7/8, 8/7, 6/9, 9/6</strong>), filtro rígido de consecutividade (<strong>≤ 5</strong>), Score B2B multicritério e bloco obrigatório de Verdade Matemática.
-                            </p>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-                                <div>
-                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Janela de Análise:</label>
-                                    <select id="select-historico-lotofacil" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(192,132,252,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                        <option value="10" selected>Últimos 10 Concursos (Obrigatório / Padrão)</option>
-                                        <option value="20">Últimos 20 Concursos</option>
-                                        <option value="50">Últimos 50 Concursos</option>
-                                        <option value="100">Últimos 100 Concursos</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia Combinatória:</label>
-                                    <select id="select-estrategia-lotofacil" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(192,132,252,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                        <option value="equilibrada" selected>Equilibrada (Score B2B + Cobertura)</option>
-                                        <option value="exaustao_prioritaria">Exaustão da Estrutura Principal (7/8 ou 8/7)</option>
-                                        <option value="ampla_cobertura">Ampla Cobertura (Diversificação Máxima)</option>
-                                        <option value="frequencia_pura">Foco em Duplas & Trios Fortes</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button id="btn-executar-motor-lotofacil" style="flex: 2; background: linear-gradient(135deg, #7c3aed, #059669); border: 1px solid #a855f7; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(168,85,247,0.4);">
-                                    ⚡ GERAR CARTEIRA (MOTOR LOTOFÁCIL)
+                            <!-- SELETOR DE ABAS DO MOTOR LOTOFACIL -->
+                            <div style="display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid rgba(168,85,247,0.3); padding-bottom: 10px;">
+                                <button id="tab-btn-lotofacil-estatistico" type="button" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid #a855f7; background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(168,85,247,0.3)); color: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                    ⚡ Motor Estatístico B2B
                                 </button>
-                                <button id="btn-backtest-motor-lotofacil" style="flex: 1; background: rgba(124, 58, 237, 0.2); border: 1px solid #a855f7; color: #e9d5ff; padding: 10px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Executa teste retrospectivo sem vazamento de dados futuros">
-                                    🧪 BACKTESTING
+                                <button id="tab-btn-lotofacil-grupos" type="button" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(245,158,11,0.4); background: rgba(15,23,42,0.6); color: #fde68a; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                    🎲 Fechamento por Grupos (Jogador)
                                 </button>
+                            </div>
+
+                            <!-- SUB-PAINEL 1: MOTOR ESTATISTICO TRADICIONAL -->
+                            <div id="subpanel-lotofacil-estatistico">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 1.05rem; font-weight: 800; color: #c084fc; display: flex; align-items: center; gap: 8px;">
+                                        ⚡ MOTOR INTELIGENTE LOTOFÁCIL — B2B LOTERIAS
+                                    </div>
+                                    <span style="font-size: 0.75rem; background: rgba(192, 132, 252, 0.15); color: #e9d5ff; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(192, 132, 252, 0.3); font-weight: 700;">
+                                        Análise 10 Concursos • Divisão Dinâmica • Max Consecutivo ≤ 5
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; margin: 0 0 12px 0;">
+                                    Exploração combinatória profunda com divisões testadas dinamicamente (<strong style="color:#c084fc;">01-13/14-25, 01-12/13-25, 01-11/12-25</strong>), relações prioritárias (<strong style="color:#a7f3d0;">7/8, 8/7, 6/9, 9/6</strong>), filtro rígido de consecutividade (<strong>≤ 5</strong>), Score B2B multicritério e bloco obrigatório de Verdade Matemática.
+                                </p>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Janela de Análise:</label>
+                                        <select id="select-historico-lotofacil" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(192,132,252,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                            <option value="10" selected>Últimos 10 Concursos (Obrigatório / Padrão)</option>
+                                            <option value="20">Últimos 20 Concursos</option>
+                                            <option value="50">Últimos 50 Concursos</option>
+                                            <option value="100">Últimos 100 Concursos</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia Combinatória:</label>
+                                        <select id="select-estrategia-lotofacil" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(192,132,252,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                            <option value="equilibrada" selected>Equilibrada (Score B2B + Cobertura)</option>
+                                            <option value="exaustao_prioritaria">Exaustão da Estrutura Principal (7/8 ou 8/7)</option>
+                                            <option value="ampla_cobertura">Ampla Cobertura (Diversificação Máxima)</option>
+                                            <option value="frequencia_pura">Foco em Duplas & Trios Fortes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button id="btn-executar-motor-lotofacil" style="flex: 2; background: linear-gradient(135deg, #7c3aed, #059669); border: 1px solid #a855f7; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(168,85,247,0.4);">
+                                        ⚡ GERAR CARTEIRA (MOTOR LOTOFÁCIL)
+                                    </button>
+                                    <button id="btn-backtest-motor-lotofacil" style="flex: 1; background: rgba(124, 58, 237, 0.2); border: 1px solid #a855f7; color: #e9d5ff; padding: 10px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Executa teste retrospectivo sem vazamento de dados futuros">
+                                        📈 BACKTESTING
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- SUB-PAINEL 2: MOTOR DE FECHAMENTO POR GRUPOS DO JOGADOR -->
+                            <div id="subpanel-lotofacil-grupos" style="display:none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 1.05rem; font-weight: 800; color: #f59e0b; display: flex; align-items: center; gap: 8px;">
+                                        🎲 MOTOR FECHAMENTO POR GRUPOS — LOTOFÁCIL
+                                    </div>
+                                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.15); color: #fde68a; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;">
+                                        O Jogador Monta os Grupos • União Automática • Ordem Crescente
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; margin: 0 0 12px 0;">
+                                    O jogador define as dezenas de cada grupo. O motor combina os grupos para gerar jogos completos de 15 dezenas com números ordenados em ordem crescente e auditoria contra duplicatas.
+                                </p>
+
+                                <!-- Barra de Ações Rápidas -->
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                                    <button id="btn-carregar-exemplo-grupos" type="button" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Carrega os 8 grupos de 3 dezenas da planilha padrão">
+                                        📥 Carregar Exemplo da Planilha (8 Grupos de 3)
+                                    </button>
+                                    <button id="btn-distribuir-volante-grupos" type="button" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #a7f3d0; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Distribui os números selecionados no volante entre os 8 grupos">
+                                        ✨ Distribuir Seleção do Volante
+                                    </button>
+                                    <button id="btn-limpar-todos-grupos" type="button" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        🧹 Limpar Grupos
+                                    </button>
+                                </div>
+
+                                <!-- Parâmetros de Combinação -->
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Modo Combinatório:</label>
+                                        <select id="select-modo-combinatorio-grupos" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(245, 158, 11, 0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                            <option value="fechamento_total" selected>Fechamento Total C(8,5) = 56 Jogos (100% de Cobertura)</option>
+                                            <option value="planilha_48">Matriz da Planilha (48 Jogos)</option>
+                                            <option value="sem_duplicatas">Matriz da Planilha Otimizada (46 Jogos Únicos)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Grupos por Jogo (k):</label>
+                                        <select id="select-k-grupos-por-jogo" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(245, 158, 11, 0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                            <option value="5" selected>5 Grupos por Jogo (padrão p/ grupos de 3 = 15 dezenas)</option>
+                                            <option value="3">3 Grupos por Jogo (p/ grupos de 5 = 15 dezenas)</option>
+                                            <option value="4">4 Grupos por Jogo</option>
+                                            <option value="6">6 Grupos por Jogo</option>
+                                        </select>
+                                    </div>
+                                    <div style="display: flex; align-items: flex-end; padding-bottom: 4px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: #cbd5e1; cursor: pointer;">
+                                            <input type="checkbox" id="check-eliminar-duplicados-grupos" style="accent-color: #f59e0b; width: 16px; height: 16px;">
+                                            <span>Eliminar Jogos Duplicados</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Grid dos 8 Grupos Interativos -->
+                                <div id="grid-grupos-lotofacil" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; margin-bottom: 12px;">
+                                    <!-- Cards dos 8 Grupos -->
+                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 1</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-1" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas" id="input-grupo-1" data-grupo="1" placeholder="Ex: 3, 13, 19" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 2</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-2" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas" id="input-grupo-2" data-grupo="2" placeholder="Ex: 7, 8, 14" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 3</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-3" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas" id="input-grupo-3" data-grupo="3" placeholder="Ex: 1, 12, 20" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 4</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-4" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas" id="input-grupo-4" data-grupo="4" placeholder="Ex: 5, 16, 23" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 5</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-5" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas" id="input-grupo-5" data-grupo="5" placeholder="Ex: 6, 15, 18" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 6</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-6" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas" id="input-grupo-6" data-grupo="6" placeholder="Ex: 4, 10, 17" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 7</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-7" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas" id="input-grupo-7" data-grupo="7" placeholder="Ex: 9, 11, 25" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 8</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-8" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas" id="input-grupo-8" data-grupo="8" placeholder="Ex: 2, 21, 24" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
+                                    </div>
+                                </div>
+
+                                <!-- Barra de Diagnóstico da Matriz em Tempo Real -->
+                                <div id="diagnostico-grupos-lotofacil" style="padding: 10px 12px; background: rgba(0,0,0,0.35); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; margin-bottom: 12px; font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                    <div>
+                                        <span style="color: #94a3b8;">Dezenas Alocadas: </span>
+                                        <strong id="diag-dezenas-alocadas" style="color: #fde68a;">0 / 25</strong>
+                                        <span style="color: #64748b; margin: 0 4px;">|</span>
+                                        <span style="color: #94a3b8;">Ausentes: </span>
+                                        <span id="diag-dezenas-ausentes" style="color: #fca5a5;">Todas</span>
+                                    </div>
+                                    <div>
+                                        <span style="color: #94a3b8;">Estimativa de Jogos: </span>
+                                        <strong id="diag-total-jogos-est" style="color: #34d399;">56 jogos</strong>
+                                        <span style="color: #94a3b8;"> (R$ <span id="diag-custo-jogos-est">168,00</span>)</span>
+                                    </div>
+                                </div>
+
+                                <!-- Botão de Execução Principal -->
+                                <div style="display: flex; gap: 8px;">
+                                    <button id="btn-executar-motor-grupos" type="button" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid #fbbf24; color: #1e1b4b; padding: 12px 16px; border-radius: 8px; font-weight: 800; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 15px rgba(245,158,11,0.4);">
+                                        🚀 GERAR JOGOS POR GRUPOS (ORDENAR E ENUMERAR)
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
