@@ -759,15 +759,7 @@ class MotorLotofacilB2BEngine {
             declaracao_cientifica: 'O backtesting retrospectivo foi executado sob isolamento temporal total. Os sorteios são independentes e não há garantias de repetição exata.'
         };
     }
-}
-
-if (typeof window !== 'undefined') {
-    window.MotorLotofacilB2BEngine = MotorLotofacilB2BEngine;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MotorLotofacilB2BEngine;
-
-    // =========================================================================
+// =========================================================================
     // MOTOR DE FECHAMENTO POR GRUPOS DO JOGADOR (LOTOFACIL B2B)
     // =========================================================================
     static MATRIZ_PLANILHA_48 = [
@@ -958,5 +950,11 @@ if (typeof module !== 'undefined' && module.exports) {
             jogos: jogos
         };
     }
+}
 
+if (typeof window !== 'undefined') {
+    window.MotorLotofacilB2BEngine = MotorLotofacilB2BEngine;
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = MotorLotofacilB2BEngine;
 }
