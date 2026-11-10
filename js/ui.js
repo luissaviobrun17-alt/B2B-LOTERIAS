@@ -6094,7 +6094,7 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             const isCapped = result.games.length > 1000;
 
             const isSS = (gameKey === 'supersete');
-            const isSingleLineGame = (gameKey !== 'lotofacil' && gameKey !== 'lotomania');
+            const isSingleLineGame = (gameKey !== 'lotofacil' && gameKey !== 'lotomania' && gameKey !== 'timemania');
             result.games.slice(0, renderLimit).forEach((gameNumbers, index) => {
                 const nums = gameNumbers.map((n, colIdx) => {
                     if (isSS) {
@@ -6123,11 +6123,12 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                         extraHtml = `<span style="font-size:0.75em;color:#10B981;background:rgba(16,185,129,0.18);padding:2px 6px;border-radius:4px;margin-left:auto;font-weight:bold;">🍀 ${trStr}</span>`;
                     }
                 }
-                const wrapperStyle = isSingleLineGame ? 'display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:5px;width:100%;' : 'display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;width:100%;';
+                let wrapperStyle = isSingleLineGame ? 'display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:5px;width:100%;' : 'display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;width:100%;';
+                if (gameKey === 'timemania') wrapperStyle = 'display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 8px;max-width:215px;margin:6px auto;width:100%;';
                 const gDate = (this.currentGeneratedDates && this.currentGeneratedDates[index]) ? this.currentGeneratedDates[index] : defaultDateStr;
                 const dateBadgeHtml = `<span class="game-date-badge" style="font-size:0.7rem;color:#38bdf8;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);padding:1px 6px;border-radius:4px;font-weight:700;margin-left:6px;" title="Data em que o jogo foi feito">📅 ${gDate}</span>`;
                 const groupBadgeHtml = (result.groupCombos && result.groupCombos[index]) ? `<span style="font-size:0.72rem;color:#fde68a;background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.4);padding:1px 8px;border-radius:4px;font-weight:800;margin-left:6px;" title="Conjuntos combinados neste jogo">🎲 Conjuntos: ${result.groupCombos[index].join(' + ')}</span>` : '';
-                chunks.push(`<div class="game-card"><div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:5px"><div class="game-index-badge" style="position:static">Jogo ${index + 1}</div>${groupBadgeHtml}${dateBadgeHtml}${extraHtml}</div><div class="game-numbers-wrapper" style="${wrapperStyle}">${nums}</div></div>`);
+                chunks.push(`<div class="game-card"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06);"><div class="game-index-badge" style="position:static">Jogo ${index + 1}</div>${groupBadgeHtml}${dateBadgeHtml}${extraHtml}</div><div class="game-numbers-wrapper" style="${wrapperStyle}">${nums}</div></div>`);
             });
 
             this.gamesContainer.innerHTML = chunks.join('');
@@ -6153,7 +6154,11 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             header.style.display = 'flex';
             header.style.justifyContent = 'space-between';
             header.style.alignItems = 'center';
-            header.style.marginBottom = '5px';
+            header.style.flexWrap = 'wrap';
+            header.style.gap = '6px';
+            header.style.marginBottom = '8px';
+            header.style.paddingBottom = '6px';
+            header.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
 
             const leftGroup = document.createElement('div');
             leftGroup.style.display = 'flex';
@@ -6221,13 +6226,22 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
             // Wrapper for numbers
             const numbersWrapper = document.createElement('div');
             numbersWrapper.className = 'game-numbers-wrapper';
-            const isSingleLineGame = (gameKey !== 'lotofacil' && gameKey !== 'lotomania');
+            const isSingleLineGame = (gameKey !== 'lotofacil' && gameKey !== 'lotomania' && gameKey !== 'timemania');
             if (isSingleLineGame) {
                 numbersWrapper.style.display = 'flex';
                 numbersWrapper.style.flexWrap = 'nowrap';
                 numbersWrapper.style.justifyContent = 'center';
                 numbersWrapper.style.alignItems = 'center';
                 numbersWrapper.style.gap = '5px';
+                numbersWrapper.style.width = '100%';
+            } else if (gameKey === 'timemania') {
+                numbersWrapper.style.display = 'flex';
+                numbersWrapper.style.flexWrap = 'wrap';
+                numbersWrapper.style.justifyContent = 'center';
+                numbersWrapper.style.alignItems = 'center';
+                numbersWrapper.style.gap = '6px 8px';
+                numbersWrapper.style.maxWidth = '215px';
+                numbersWrapper.style.margin = '6px auto';
                 numbersWrapper.style.width = '100%';
             }
 
