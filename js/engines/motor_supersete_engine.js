@@ -18,7 +18,7 @@ class MotorSuperSeteB2BEngine {
     static NUM_COLUNAS = 7;
     static DIGITOS_POR_COLUNA = 10;
     static TOTAL_COMBINACOES_TEORICAS = 10000000;
-    static PRECO_APOSTA_SIMPLES = 2.50;
+    static PRECO_APOSTA_SIMPLES = 3.00;
 
     static FRASE_OBRIGATORIA = 
         "Este motor não prevê o sorteio. Ele utiliza matemática, estatística, simulação " +

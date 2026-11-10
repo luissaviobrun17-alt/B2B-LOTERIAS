@@ -1252,7 +1252,7 @@ class MotorMegaSenaB2B:
 
         media_geral = round(statistics.mean(scores_medios), 2) if scores_medios else 0.0
         total_jogos = qtd_testes * quantidade_jogos
-        preco_jogo = 5.00
+        preco_jogo = 6.00
         custo_total = total_jogos * preco_jogo
         retorno = (
             acertos_globais[6] * 35000000.0 +

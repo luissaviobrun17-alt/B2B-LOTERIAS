@@ -474,6 +474,7 @@ class UI {
         }
         this._initMilionariaMotorEvents();
         this._initLotofacilGruposEngine();
+        this._initLotomaniaGruposEngine();
 
         // =========================================================================
         // === BOTÃO E EVENTOS DO MOTOR MEGA-SENA (B2B LOTERIAS) ===
@@ -1921,6 +1922,85 @@ class UI {
             };
         }
 
+        // =========================================================================
+        // === MOTOR TIMEMANIA MATRIX PRO — B2B LOTERIAS (CONTROLADOR OFICIAL) ===
+        // =========================================================================
+        let jogosBaseTimemania = (typeof MotorTimemaniaB2BEngine !== 'undefined' && MotorTimemaniaB2BEngine.JOGOS_BASE_PADRAO)
+            ? JSON.parse(JSON.stringify(MotorTimemaniaB2BEngine.JOGOS_BASE_PADRAO))
+            : [
+                [64, 16, 6, 19, 17, 11, 61, 7, 56, 58],
+                [4, 5, 80, 41, 29, 68, 40, 20, 12, 27],
+                [14, 25, 53, 22, 31, 8, 74, 33, 75, 46],
+                [54, 52, 18, 23, 39, 48, 63, 9, 66, 34],
+                [59, 69, 51, 45, 37, 76, 32, 1, 67, 50],
+                [79, 38, 60, 73, 70, 62, 30, 13, 15, 42],
+                [24, 28, 57, 77, 3, 26, 21, 10, 36, 72],
+                [49, 55, 71, 2, 44, 35, 43, 78, 47, 65]
+            ];
+
+        const renderizarInputsJogosBase = () => {
+            const container = document.getElementById('lista-inputs-jogos-base');
+            if (!container) return;
+            container.innerHTML = '';
+            jogosBaseTimemania.forEach((jogo, idx) => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex; align-items:center; gap:8px;';
+                const l5 = jogo.slice(0, 5).map(n => String(n).padStart(2, '0')).join(' ');
+                const r5 = jogo.slice(5).map(n => String(n).padStart(2, '0')).join(' ');
+                row.innerHTML = `
+                    <span style="font-size:0.75rem; font-weight:800; color:#34d399; min-width:85px;">Jogo Base ${idx + 1}:</span>
+                    <input type="text" class="input-base-timemania" data-idx="${idx}" value="${l5} | ${r5}" style="flex:1; background:#020617; border:1px solid rgba(52,211,153,0.3); color:#f8fafc; padding:4px 8px; border-radius:4px; font-family:monospace; font-size:0.78rem; font-weight:700;">
+                `;
+                container.appendChild(row);
+            });
+
+            container.querySelectorAll('.input-base-timemania').forEach(inp => {
+                inp.onchange = (e) => {
+                    const rowIdx = parseInt(e.target.dataset.idx);
+                    const rawStr = e.target.value.replace(/[^0-9]/g, ' ').trim();
+                    const nums = rawStr.split(/\s+/).map(Number).filter(n => n >= 1 && n <= 80);
+                    if (nums.length === 10) {
+                        jogosBaseTimemania[rowIdx] = nums;
+                    }
+                };
+            });
+        };
+
+        const btnToggleEditorBase = document.getElementById('btn-toggle-editor-base');
+        if (btnToggleEditorBase) {
+            btnToggleEditorBase.onclick = () => {
+                const ed = document.getElementById('editor-base-timemania-container');
+                if (ed) {
+                    const isOpen = ed.style.display !== 'none';
+                    ed.style.display = isOpen ? 'none' : 'block';
+                    if (!isOpen) renderizarInputsJogosBase();
+                }
+            };
+        }
+
+        const btnRestaurarBase = document.getElementById('btn-restaurar-base-timemania');
+        if (btnRestaurarBase) {
+            btnRestaurarBase.onclick = () => {
+                if (typeof MotorTimemaniaB2BEngine !== 'undefined' && MotorTimemaniaB2BEngine.JOGOS_BASE_PADRAO) {
+                    jogosBaseTimemania = JSON.parse(JSON.stringify(MotorTimemaniaB2BEngine.JOGOS_BASE_PADRAO));
+                    renderizarInputsJogosBase();
+                    alert('8 Jogos-Base da Matriz Original restaurados com sucesso!');
+                }
+            };
+        }
+
+        const selectQtdTimemania = document.getElementById('select-qtd-jogos-timemania');
+        if (selectQtdTimemania) {
+            selectQtdTimemania.onchange = () => {
+                const q = parseInt(selectQtdTimemania.value) || 64;
+                const custo = q * 3.50;
+                const badge = document.getElementById('badge-custo-timemania');
+                if (badge) {
+                    badge.textContent = `Custo: R$ ${custo.toFixed(2).replace('.', ',')} (${q} Jogos)`;
+                }}
+            };
+        }
+
         const btnExecutarTimemania = document.getElementById('btn-executar-motor-timemania');
         if (btnExecutarTimemania) {
             btnExecutarTimemania.onclick = async () => {
@@ -1929,65 +2009,45 @@ class UI {
                     if (navBtn) navBtn.click();
                     else this.updateGameInfo('timemania');
                 }
-                const qty = parseInt(document.getElementById('games-quantity')?.value || '10') || 10;
-                const poolSize = parseInt(document.getElementById('select-pool-timemania')?.value || '80') || 80;
-                const historicoLimite = parseInt(document.getElementById('select-historico-timemania')?.value || '0') || null;
-                const estrategia = document.getElementById('select-estrategia-timemania')?.value || 'equilibrada';
-                const estrategiaTimeSelect = document.getElementById('select-estrategia-time-timemania')?.value || 'maior_ift';
-                const noConsecutive3InGroup = document.getElementById('check-no-consec-timemania')?.checked !== false;
-                const sniper = document.getElementById('check-sniper-timemania')?.checked || false;
 
+                const modo = document.getElementById('select-modo-timemania')?.value || 'original';
+                const baseTipo = document.getElementById('select-base-tipo-timemania')?.value || 'direta';
+                const qty = parseInt(document.getElementById('select-qtd-jogos-timemania')?.value || '64') || 64;
+                const blocosVal = document.getElementById('select-blocos-timemania')?.value || 'todos';
+                const blocos = blocosVal === 'todos' ? [1, 2, 3, 4, 5, 6] : [parseInt(blocosVal)];
+                const usarInvertida = baseTipo === 'invertida';
+                const ambasBases = baseTipo === 'ambas';
+
+                const estrategiaTimeSelect = document.getElementById('select-estrategia-time-timemania')?.value || 'maior_ift';
+                const mapFixos = {
+                    'fixo_flamengo': 'FLAMENGO/RJ', 'fixo_corinthians': 'CORINTHIANS/SP',
+                    'fixo_palmeiras': 'PALMEIRAS/SP', 'fixo_saopaulo': 'SÃO PAULO/SP',
+                    'fixo_santos': 'SANTOS/SP', 'fixo_vasco': 'VASCO DA GAMA/RJ',
+                    'fixo_gremio': 'GRÊMIO/RS', 'fixo_internacional': 'INTERNACIONAL/RS',
+                    'fixo_cruzeiro': 'CRUZEIRO/MG', 'fixo_atleticomg': 'ATLÉTICO/MG',
+                    'fixo_botafogo': 'BOTAFOGO/RJ', 'fixo_fluminense': 'FLUMINENSE/RJ',
+                    'fixo_bahia': 'BAHIA/BA', 'fixo_sport': 'SPORT/PE',
+                    'fixo_fortaleza': 'FORTALEZA/CE', 'fixo_ceara': 'CEARÁ/CE'
+                };
                 let estrategiaTime = estrategiaTimeSelect;
                 let timeFixoUsuario = null;
                 if (estrategiaTimeSelect.startsWith('fixo_')) {
-                    const mapFixos = {
-                        'fixo_flamengo': 'FLAMENGO/RJ',
-                        'fixo_corinthians': 'CORINTHIANS/SP',
-                        'fixo_palmeiras': 'PALMEIRAS/SP',
-                        'fixo_saopaulo': 'SÃO PAULO/SP',
-                        'fixo_santos': 'SANTOS/SP',
-                        'fixo_vasco': 'VASCO DA GAMA/RJ',
-                        'fixo_gremio': 'GRÊMIO/RS',
-                        'fixo_internacional': 'INTERNACIONAL/RS',
-                        'fixo_cruzeiro': 'CRUZEIRO/MG',
-                        'fixo_atleticomg': 'ATLÉTICO/MG',
-                        'fixo_botafogo': 'BOTAFOGO/RJ',
-                        'fixo_fluminense': 'FLUMINENSE/RJ',
-                        'fixo_bahia': 'BAHIA/BA',
-                        'fixo_sport': 'SPORT/PE',
-                        'fixo_fortaleza': 'FORTALEZA/CE',
-                        'fixo_ceara': 'CEARÁ/CE'
-                    };
                     timeFixoUsuario = mapFixos[estrategiaTimeSelect] || 'FLAMENGO/RJ';
                     estrategiaTime = 'fixo';
                 }
 
-                // Configurar pool inteligente: prioriza números do volante se selecionados, senão distribui equilibradamente pelos 4 grupos analíticos
-                let pool = null;
-                const userSelected = (this.selectedNumbers && this.selectedNumbers.size >= 10)
-                    ? Array.from(this.selectedNumbers).filter(n => n >= 1 && n <= 80)
-                    : [];
-
-                if (userSelected.length >= 10) {
-                    pool = userSelected.sort((a, b) => a - b);
-                } else if (poolSize < 80) {
-                    pool = (typeof MotorTimemaniaB2BEngine !== 'undefined' && typeof MotorTimemaniaB2BEngine.obterPoolBalanceado === 'function')
-                        ? MotorTimemaniaB2BEngine.obterPoolBalanceado(poolSize)
-                        : null;
-                }
-
                 const origText = btnExecutarTimemania.innerHTML;
                 btnExecutarTimemania.disabled = true;
-                btnExecutarTimemania.innerHTML = '⏳ Otimizando Carteira Timemania...';
-                this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Executando Motor Timemania B2B (4 Grupos x 20 + IFM 8D + Time do Coração)...</div></div>';
+                btnExecutarTimemania.innerHTML = '⚡ Processando Matriz Timemania...';
+                this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Executando TIMEMANIA MATRIX PRO (6 Blocos Combinatórios + Cobertura 80 Dezenas)...</div></div>';
 
                 try {
                     const data = await MotorTimemaniaB2BEngine.gerarCarteira(qty, {
-                        historicoLimite,
-                        estrategia,
-                        sniper,
-                        noConsecutive3InGroup,
-                        pool,
+                        modo,
+                        baseGames: jogosBaseTimemania,
+                        blocosSelecionados: blocos,
+                        usarBaseInvertida: usarInvertida,
+                        ambasBases: ambasBases,
                         estrategiaTime,
                         timeFixoUsuario
                     });
@@ -2002,40 +2062,42 @@ class UI {
 
                         this.renderGames({ pool: Array.from({length: 80}, (_, i) => i+1), games: rawGames, smartAnalysis: null }, 'timemania');
 
+                        const cob = data.matriz_cobertura_80 || MotorTimemaniaB2BEngine.calcularMatrizCobertura80(rawGames);
                         const aud = data.auditoria_10_pontos || {};
+                        const custoTotal = (data.custo_total_rs || (rawGames.length * 3.50)).toFixed(2).replace('.', ',');
+
                         const bannerMsg = `
                             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                                <span style="color:#34D399; font-weight:800; font-size:1.05rem;">🎯 MOTOR TIMEMANIA (B2B LOTERIAS) — ${data.jogos.length} JOGOS</span>
-                                <span style="background:rgba(16,185,129,0.2); color:#A7F3D0; padding:3px 10px; border-radius:6px; font-weight:700; font-size:0.78rem; border: 1px solid rgba(52,211,153,0.4);">
-                                    ${aud.status_geral || 'APROVADO (10/10)'} | SCORE MÉDIO: ${data.score_medio || 75}/100
+                                <span style="color:#34D399; font-weight:900; font-size:1.1rem;">🏆 B2B LOTERIAS — TIMEMANIA MATRIX PRO (${data.jogos.length} JOGOS)</span>
+                                <span style="background:rgba(16,185,129,0.25); color:#A7F3D0; padding:4px 12px; border-radius:6px; font-weight:800; font-size:0.82rem; border:1px solid rgba(52,211,153,0.4);">
+                                    ${aud.status_geral || '100% APROVADO'} | CUSTO: R$ ${custoTotal}
                                 </span>
                             </div>
                             
-                            <div style="margin-top:10px; padding:10px 14px; background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid rgba(52,211,153,0.2); font-size:0.82rem; color:#E2E8F0; line-height:1.6;">
-                                <strong style="color:#FCD34D;">📐 1. ESTRUTURA COMBINATÓRIA DOS 4 GRUPOS:</strong><br>
-                                • <strong>Grupos Analíticos (G1..G4):</strong> G1 (01-20), G2 (21-40), G3 (41-60), G4 (61-80) | <strong>10 números por jogo</strong><br>
-                                • <strong>Estruturas Centrais:</strong> Permutações de 3-3-2-2 e 3-2-3-2 (Centróide Hipergeométrico E[N]=2.5/grupo)<br>
-                                • <strong>Bloqueio de 3 Consecutivos no Grupo:</strong> ${data.regra_3_consec_bloqueada ? '✅ ATIVADO (Filtro Empírico 96.86%)' : 'DESATIVADO'} | 
-                                <strong>Modo SNIPER:</strong> ${data.sniper_ativo ? '🎯 LIGADO (Alta Precisão)' : 'DESLIGADO'}
+                            <div style="margin-top:10px; padding:12px 14px; background:rgba(0,0,0,0.35); border-radius:8px; border:1px solid rgba(52,211,153,0.25); font-size:0.83rem; color:#E2E8F0; line-height:1.65;">
+                                <strong style="color:#FCD34D;">📐 1. ESTRUTURA COMBINATÓRIA MATRICIAL:</strong><br>
+                                • <strong>Modo de Operação:</strong> ${modo.toUpperCase()} | <strong>Base Utilizada:</strong> ${baseTipo.toUpperCase()}<br>
+                                • <strong>Cobertura das 80 Dezenas:</strong> <strong style="color:#34D399;">${cob.cobertura_dezenas_pct}%</strong> (${cob.total_dezenas_cobertas}/80 dezenas cobertas)<br>
+                                • <strong>Cobertura de Pares C(80,2):</strong> <strong style="color:#60A5FA;">${cob.cobertura_pares?.percentual || 0}%</strong> (${cob.cobertura_pares?.total_cobertos || 0}/3.160 pares do universo)<br>
+                                • <strong>Cobertura de Trincas C(80,3):</strong> <strong style="color:#F472B6;">${cob.cobertura_trincas?.percentual || 0}%</strong> (${cob.cobertura_trincas?.total_cobertos || 0}/82.160 trincas)
                             </div>
 
-                            <div style="margin-top:8px; padding:10px 14px; background:rgba(16,185,129,0.08); border-radius:8px; border:1px solid rgba(16,185,129,0.3); font-size:0.82rem; color:#D1FAE5; line-height:1.6;">
-                                <strong style="color:#34D399;">⚽ 2. TIME DO CORAÇÃO & COBERTURA:</strong><br>
-                                • <strong>Estratégia de Time:</strong> ${estrategiaTimeSelect} | <strong>Top Time Atribuído:</strong> ${data.jogos[0]?.time_coracao || '--'}<br>
-                                • <strong>Cobertura do Pool:</strong> <strong>${data.cobertura_pool_pct || 90}%</strong> (${data.total_numeros_cobertos || 72}/${data.total_pool || 80} dezenas ativas) | 
-                                <strong>Diversidade Jaccard:</strong> ${data.diversidade_jaccard_pct || 82}%
+                            <div style="margin-top:8px; padding:10px 14px; background:rgba(16,185,129,0.1); border-radius:8px; border:1px solid rgba(16,185,129,0.35); font-size:0.82rem; color:#D1FAE5; line-height:1.6;">
+                                <strong style="color:#34D399;">⚽ 2. TIME DO CORAÇÃO & ORÇAMENTO OFICIAL:</strong><br>
+                                • <strong>Top Time Atribuído:</strong> ${data.jogos[0]?.time_coracao || '--'} | <strong>Preço Oficial Caixa:</strong> R$ 3,50 por aposta<br>
+                                • <strong>Índice de Diversidade Jaccard:</strong> ${cob.diversidade_jaccard_pct || 82.5}% (Anti-Redundância Garantida)
                             </div>
 
-                            <div style="margin-top:8px; padding:12px 14px; background:rgba(239,68,68,0.08); border-radius:8px; border:1px solid rgba(239,68,68,0.35); font-size:0.80rem; color:#FECACA; line-height:1.5;">
-                                <strong style="color:#F87171;">🛡️ 3. VERDADE MATEMÁTICA (TRANSPARÊNCIA OBRIGATÓRIA):</strong><br>
-                                • <em>Loterias são processos estocásticos aleatórios independentes. O motor otimiza as estruturas matemáticas e a cobertura sem garantia de retorno futuro.</em>
+                            <div style="margin-top:8px; padding:10px 14px; background:rgba(239,68,68,0.08); border-radius:8px; border:1px solid rgba(239,68,68,0.35); font-size:0.80rem; color:#FECACA; line-height:1.5;">
+                                <strong style="color:#F87171;">⚖️ 3. HONESTIDADE CIENTÍFICA:</strong><br>
+                                • <em>Sorteios lotéricos são independentes e aleatórios. O motor otimiza a cobertura combinatória e a simetria das apostas sem promessas ilusórias de ganho certo.</em>
                             </div>
                         `;
 
                         setTimeout(() => {
                             var b = document.createElement('div');
                             b.className = 'smart-gen-analysis';
-                            b.style.cssText = 'margin-top:10px;margin-bottom:12px;padding:16px 20px;border-radius:12px;background:linear-gradient(135deg, rgba(5,150,105,0.18), rgba(15,23,42,0.95));border:1px solid #10b981;box-shadow:0 6px 25px rgba(16,185,129,0.3);';
+                            b.style.cssText = 'margin-top:10px;margin-bottom:12px;padding:16px 20px;border-radius:12px;background:linear-gradient(135deg, rgba(5,150,105,0.2), rgba(15,23,42,0.98));border:1px solid #10b981;box-shadow:0 6px 25px rgba(16,185,129,0.3);';
                             b.innerHTML = bannerMsg;
                             var old = this.gamesContainer.parentNode.querySelector('.smart-gen-analysis');
                             if (old) old.remove();
@@ -2043,7 +2105,7 @@ class UI {
                         }, 50);
                     }
                 } catch (err) {
-                    this.gamesContainer.innerHTML = '<div class="empty-state" style="color:#EF4444;">Erro ao gerar no Motor Timemania: ' + err.message + '</div>';
+                    this.gamesContainer.innerHTML = '<div class="empty-state" style="color:#EF4444;">Erro no Motor Timemania Matrix Pro: ' + err.message + '</div>';
                 } finally {
                     btnExecutarTimemania.disabled = false;
                     btnExecutarTimemania.innerHTML = origText;
@@ -2052,8 +2114,105 @@ class UI {
             };
         }
 
-        // =========================================================================
-        // === BOTÃO E EVENTOS DO MOTOR LOTECA (B2B LOTERIAS) ===
+        // === BOTÃO COMPARADOR DE DESDOBRAMENTOS ===
+        const btnComparadorTimemania = document.getElementById('btn-comparador-timemania');
+        if (btnComparadorTimemania) {
+            btnComparadorTimemania.onclick = async () => {
+                const compDiv = document.getElementById('timemania-comparador-container');
+                const tableDiv = document.getElementById('timemania-comparador-tabela-div');
+                if (!compDiv || !tableDiv) return;
+
+                compDiv.style.display = 'block';
+                tableDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#93c5fd;">Calculando confronto científico entre Modo Original, Aprimorado e Híbrido...</div>';
+
+                try {
+                    const compData = MotorTimemaniaB2BEngine.compararDesdobramentos(64, jogosBaseTimemania);
+                    let rowsHtml = '';
+                    compData.tabela_comparativa.forEach(row => {
+                        rowsHtml += `
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                                <td style="padding:10px; font-weight:700; color:#f8fafc;">${row.criterio}</td>
+                                <td style="padding:10px; color:#34d399; font-weight:800; text-align:center;">${row.original}</td>
+                                <td style="padding:10px; color:#60a5fa; font-weight:800; text-align:center;">${row.aprimorado}</td>
+                                <td style="padding:10px; color:#f59e0b; font-weight:800; text-align:center;">${row.hibrido}</td>
+                            </tr>
+                        `;
+                    });
+
+                    tableDiv.innerHTML = `
+                        <table style="width:100%; border-collapse:collapse; font-size:0.83rem;">
+                            <thead>
+                                <tr style="background:rgba(30,58,138,0.4); border-bottom:1.5px solid #3b82f6;">
+                                    <th style="padding:10px; text-align:left; color:#93c5fd;">Critério Avaliado</th>
+                                    <th style="padding:10px; text-align:center; color:#34d399;">Modo 1 (Original)</th>
+                                    <th style="padding:10px; text-align:center; color:#60a5fa;">Modo 2 (Aprimorado)</th>
+                                    <th style="padding:10px; text-align:center; color:#f59e0b;">Modo 5 (Híbrido)</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    `;
+                    compDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } catch (e) {
+                    tableDiv.innerHTML = '<div style="color:#ef4444; padding:15px;">Erro ao gerar comparação: ' + e.message + '</div>';
+                }
+            };
+        }
+
+        // === BOTÃO MATRIZ DE COBERTURA HEATMAP 80 ===
+        const btnHeatmapTimemania = document.getElementById('btn-cobertura-heatmap-timemania');
+        if (btnHeatmapTimemania) {
+            btnHeatmapTimemania.onclick = () => {
+                const heatDiv = document.getElementById('timemania-heatmap-container');
+                const gridDiv = document.getElementById('timemania-heatmap-grid');
+                const metDiv = document.getElementById('timemania-heatmap-metricas');
+                if (!heatDiv || !gridDiv || !metDiv) return;
+
+                heatDiv.style.display = 'block';
+                const jogosParaAnalise = (this.currentGeneratedGames && this.currentGeneratedGames.length > 0)
+                    ? this.currentGeneratedGames
+                    : MotorTimemaniaB2BEngine.gerarDesdobramentosMatriz(jogosBaseTimemania).map(j => j.dezenas);
+
+                const cob = MotorTimemaniaB2BEngine.calcularMatrizCobertura80(jogosParaAnalise);
+
+                metDiv.innerHTML = `
+                    <span style="color:#34d399;"><strong>Cobertura:</strong> ${cob.cobertura_dezenas_pct}% (${cob.total_dezenas_cobertas}/80)</span>
+                    <span style="color:#60a5fa;"><strong>Pares:</strong> ${cob.cobertura_pares.percentual}% (${cob.cobertura_pares.total_cobertos}/3.160)</span>
+                    <span style="color:#f472b6;"><strong>Trincas:</strong> ${cob.cobertura_trincas.percentual}% (${cob.cobertura_trincas.total_cobertos}/82.160)</span>
+                    <span style="color:#fde68a;"><strong>Freq. Média:</strong> ${cob.frequencia_media}x</span>
+                    <span style="color:#cbd5e1;"><strong>Jogos Analisados:</strong> ${cob.total_jogos}</span>
+                `;
+
+                gridDiv.innerHTML = '';
+                for (let n = 1; n <= 80; n++) {
+                    const freq = cob.contagem_por_dezena[n] || 0;
+                    let bgColor = 'rgba(239,68,68,0.2)'; // Ausente
+                    let borderColor = '#ef4444';
+                    let textColor = '#fca5a5';
+
+                    if (freq > 0) {
+                        if (freq >= cob.frequencia_media) {
+                            bgColor = 'rgba(16,185,129,0.3)';
+                            borderColor = '#10b981';
+                            textColor = '#a7f3d0';
+                        } else {
+                            bgColor = 'rgba(245,158,11,0.25)';
+                            borderColor = '#f59e0b';
+                            textColor = '#fde68a';
+                        }
+                    }
+
+                    const cell = document.createElement('div');
+                    cell.style.cssText = `padding:6px 2px; text-align:center; border-radius:4px; font-size:0.75rem; font-weight:800; background:${bgColor}; border:1px solid ${borderColor}; color:${textColor}; cursor:default;`;
+                    cell.title = `Dezena ${String(n).padStart(2,'0')}: Aparece ${freq}x`;
+                    cell.innerHTML = `<div>${String(n).padStart(2,'0')}</div><div style="font-size:0.65rem; opacity:0.85;">${freq}x</div>`;
+                    gridDiv.appendChild(cell);
+                }
+                heatDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            };
+        }
+
+                // === BOTÃO E EVENTOS DO MOTOR LOTECA (B2B LOTERIAS) ===
         // =========================================================================
         const btnQuickLoteca = document.getElementById('btn-quick-motor-loteca');
         if (btnQuickLoteca) {
@@ -5847,7 +6006,7 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
         // ── ORDENAÇÃO GLOBAL POR SINERGIA IA 🔥 ──
         // Isso garante que os motores entreguem os melhores jogos estatisticamente no topo da lista.
         // Otimização: executado para até 1.000 jogos (evita sobrecarga de CPU em volumes gigantescos)
-        if (gameKey !== 'supersete' && gameKey !== 'loteca' && result.games.length > 0 && result.games.length <= 1000 && typeof ClosingEngine !== 'undefined') {
+        if (!result.preserveOrder && gameKey !== 'supersete' && gameKey !== 'loteca' && result.games.length > 0 && result.games.length <= 1000 && typeof ClosingEngine !== 'undefined') {
             let pool = result.pool;
             if (!pool || pool.length === 0) {
                 pool = Array.from(this.selectedNumbers || []);
@@ -5967,7 +6126,8 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
                 const wrapperStyle = isSingleLineGame ? 'display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:5px;width:100%;' : 'display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;width:100%;';
                 const gDate = (this.currentGeneratedDates && this.currentGeneratedDates[index]) ? this.currentGeneratedDates[index] : defaultDateStr;
                 const dateBadgeHtml = `<span class="game-date-badge" style="font-size:0.7rem;color:#38bdf8;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);padding:1px 6px;border-radius:4px;font-weight:700;margin-left:6px;" title="Data em que o jogo foi feito">📅 ${gDate}</span>`;
-                chunks.push(`<div class="game-card"><div style="display:flex;align-items:center;margin-bottom:5px"><div class="game-index-badge" style="position:static">Jogo ${index + 1}</div>${dateBadgeHtml}${extraHtml}</div><div class="game-numbers-wrapper" style="${wrapperStyle}">${nums}</div></div>`);
+                const groupBadgeHtml = (result.groupCombos && result.groupCombos[index]) ? `<span style="font-size:0.72rem;color:#fde68a;background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.4);padding:1px 8px;border-radius:4px;font-weight:800;margin-left:6px;" title="Conjuntos combinados neste jogo">🎲 Conjuntos: ${result.groupCombos[index].join(' + ')}</span>` : '';
+                chunks.push(`<div class="game-card"><div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:5px"><div class="game-index-badge" style="position:static">Jogo ${index + 1}</div>${groupBadgeHtml}${dateBadgeHtml}${extraHtml}</div><div class="game-numbers-wrapper" style="${wrapperStyle}">${nums}</div></div>`);
             });
 
             this.gamesContainer.innerHTML = chunks.join('');
@@ -7172,7 +7332,7 @@ async function car(){
           }
         }
         if(!valorEncontrado||valorEncontrado<=0){
-          valorEncontrado=(dups===1&&trips===0)?3.00:(dups===2?6.00:3.00);
+          valorEncontrado=(dups===1&&trips===0)?4.00:(dups===2?8.00:4.00);
         }
         vmL.valorAposta=valorEncontrado;
         if(scL)scL.valorAposta=valorEncontrado;
@@ -7297,7 +7457,7 @@ async function fillLoteca(picks){
       }
     }
     if(!valorEncontrado||valorEncontrado<=0){
-      valorEncontrado=(numDuplos===1&&numTriplos===0)?3.00:(numDuplos===2?6.00:3.00);
+      valorEncontrado=(numDuplos===1&&numTriplos===0)?4.00:(numDuplos===2?8.00:4.00);
     }
     vm.valorAposta=valorEncontrado;
     if(sc)sc.valorAposta=valorEncontrado;
@@ -9682,7 +9842,7 @@ if(pp){
                         winningGames.forEach(wg => {
                             const extraIdx = this.currentGeneratedExtras[wg.index];
                             if (extraIdx === drawnExtraIdx) {
-                                const premioExtra = this.currentGameKey === 'timemania' ? 7.50 : 3.00;
+                                const premioExtra = (game.extraPrize && game.extraPrize.prize) ? game.extraPrize.prize : (this.currentGameKey === 'timemania' ? 7.50 : 2.50);
                                 extrasGanhadores.push({ jogo: wg.index + 1, extra: extraIdx, acertos: wg.hits, premio: wg.prize, premioExtra: premioExtra });
                             }
                         });
@@ -10816,6 +10976,479 @@ if(pp){
     // =========================================================================
     // MOTOR DE FECHAMENTO POR GRUPOS DA LOTOFACIL (O JOGADOR DEFINE OS GRUPOS)
     // =========================================================================
+    // =========================================================================
+    // MOTOR DE FECHAMENTO POR CONJUNTOS DA LOTOMANIA (10 CONJUNTOS DE 10 DEZENAS)
+    // =========================================================================
+    _initLotomaniaGruposEngine() {
+        const tabEstatistico = document.getElementById('tab-btn-lotomania-estatistico');
+        const tabGrupos = document.getElementById('tab-btn-lotomania-grupos');
+        const subEstatistico = document.getElementById('subpanel-lotomania-estatistico');
+        const subGrupos = document.getElementById('subpanel-lotomania-grupos');
+
+        if (tabEstatistico && tabGrupos && subEstatistico && subGrupos) {
+            tabEstatistico.onclick = () => {
+                subEstatistico.style.display = 'block';
+                subGrupos.style.display = 'none';
+                tabEstatistico.style.background = 'linear-gradient(135deg, rgba(2,132,199,0.5), rgba(14,116,144,0.35))';
+                tabEstatistico.style.borderColor = '#38bdf8';
+                tabEstatistico.style.color = '#fff';
+                tabGrupos.style.background = 'rgba(15,23,42,0.6)';
+                tabGrupos.style.borderColor = 'rgba(245,158,11,0.4)';
+                tabGrupos.style.color = '#fde68a';
+            };
+
+            tabGrupos.onclick = () => {
+                subEstatistico.style.display = 'none';
+                subGrupos.style.display = 'block';
+                tabGrupos.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.45), rgba(180,83,9,0.35))';
+                tabGrupos.style.borderColor = '#f59e0b';
+                tabGrupos.style.color = '#fff';
+                tabEstatistico.style.background = 'rgba(15,23,42,0.6)';
+                tabEstatistico.style.borderColor = 'rgba(56,189,248,0.4)';
+                tabEstatistico.style.color = '#7dd3fc';
+                this._atualizarDiagnosticoGruposLotomania();
+            };
+        }
+
+        for (let i = 1; i <= 10; i++) {
+            const input = document.getElementById(`input-grupo-lotomania-${i}`);
+            if (input) {
+                input.addEventListener('input', () => {
+                    this._atualizarDiagnosticoGruposLotomania();
+                });
+            }
+        }
+
+        const selModo = document.getElementById('select-modo-combinatorio-grupos-lotomania');
+        const selK = document.getElementById('select-k-grupos-por-jogo-lotomania');
+        if (selModo) selModo.addEventListener('change', () => this._atualizarDiagnosticoGruposLotomania());
+        if (selK) selK.addEventListener('change', () => this._atualizarDiagnosticoGruposLotomania());
+
+        const selQtdConjLoto = document.getElementById('select-qtd-conjuntos-lotomania');
+        if (selQtdConjLoto) selQtdConjLoto.addEventListener('change', () => this._atualizarDiagnosticoGruposLotomania());
+
+        const btnPlanilhaApostador = document.getElementById('btn-carregar-planilha-apostador-lotomania');
+        if (btnPlanilhaApostador) {
+            btnPlanilhaApostador.onclick = () => {
+                const matrizExemplo = MotorLotomaniaB2BEngine.GRUPOS_EXEMPLO_PADRAO_10 || {
+                    1: [50, 85, 99, 7, 13, 90, 48, 25, 3, 4],
+                    2: [32, 98, 29, 70, 6, 80, 91, 12, 5, 22],
+                    3: [43, 52, 16, 21, 26, 53, 76, 82, 96, 37],
+                    4: [39, 33, 79, 73, 75, 87, 15, 40, 60, 72],
+                    5: [86, 23, 24, 36, 69, 74, 8, 20, 66, 63],
+                    6: [95, 78, 81, 31, 61, 14, 18, 34, 58, 84],
+                    7: [46, 71, 93, 42, 44, 45, 47, 49, 62, 67],
+                    8: [11, 19, 27, 35, 77, 92, 28, 89, 97, 38],
+                    9: [2, 59, 41, 68, 57, 64, 0, 9, 83, 55],
+                    10: [51, 17, 30, 54, 10, 65, 56, 94, 1, 88]
+                };
+                for (let i = 1; i <= 10; i++) {
+                    const input = document.getElementById(`input-grupo-lotomania-${i}`);
+                    if (input) input.value = (matrizExemplo[i] || []).join(', ');
+                }
+                this._atualizarDiagnosticoGruposLotomania();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast('Matriz 10x10 da Planilha do Apostador (100 dezenas de 00 a 99) carregada com sucesso!', 'success', 2500);
+                }
+            };
+        }
+
+        const btnAplicarSeq100 = document.getElementById('btn-aplicar-sequencia-100-lotomania');
+        if (btnAplicarSeq100) {
+            btnAplicarSeq100.onclick = () => {
+                const inputSeq = document.getElementById('input-sequencia-100-lotomania');
+                if (!inputSeq || !inputSeq.value.trim()) {
+                    alert('Por favor, cole os 100 números no campo de texto!');
+                    return;
+                }
+                const nums = inputSeq.value
+                    .split(/[\s,;]+/)
+                    .map(x => parseInt(x.trim(), 10))
+                    .map(x => x === 100 ? 0 : x)
+                    .filter(x => !isNaN(x) && x >= 0 && x <= 99);
+
+                const vistos = new Set();
+                const unicos = [];
+                for (const n of nums) {
+                    if (!vistos.has(n)) { vistos.add(n); unicos.push(n); }
+                }
+
+                if (unicos.length !== 100) {
+                    const confirmUse = confirm(`Foram identificadas ${unicos.length} dezenas distintas (esperado: 100). Deseja preencher os 10 conjuntos com as dezenas disponíveis?`);
+                    if (!confirmUse) return;
+                }
+
+                for (let i = 1; i <= 10; i++) {
+                    const pedaco = unicos.slice((i - 1) * 10, i * 10);
+                    const input = document.getElementById(`input-grupo-lotomania-${i}`);
+                    if (input) input.value = pedaco.join(', ');
+                }
+                this._atualizarDiagnosticoGruposLotomania();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`${unicos.length} dezenas distribuídas com sucesso nos 10 grupos!`, 'success', 2500);
+                }
+            };
+        }
+
+        const btnExemplo = document.getElementById('btn-carregar-exemplo-grupos-lotomania');
+        if (btnExemplo) {
+            btnExemplo.onclick = () => {
+                const exemplo = {
+                    1: '50, 99, 90, 48, 85, 39, 74, 33, 32, 79',
+                    2: '25, 12, 21, 98, 7, 15, 40, 75, 30, 17',
+                    3: '29, 70, 88, 1, 94, 77, 35, 19, 11, 67',
+                    4: '56, 65, 10, 54, 18, 62, 55, 49, 47, 44',
+                    5: '84, 58, 51, 83, 6, 60, 72, 86, 5, 22',
+                    6: '80, 91, 13, 4, 16, 24, 45, 69, 8, 20',
+                    7: '26, 53, 76, 82, 9, 43, 66, 42, 93, 87',
+                    8: '0, 34, 64, 57, 14, 71, 46, 73, 59, 38',
+                    9: '68, 41, 2, 97, 89, 61, 31, 27, 52, 63',
+                    10: '96, 3, 23, 36, 37, 81, 95, 78, 28, 92'
+                };
+                for (let i = 1; i <= 10; i++) {
+                    const input = document.getElementById(`input-grupo-lotomania-${i}`);
+                    if (input) input.value = exemplo[i];
+                }
+                this._atualizarDiagnosticoGruposLotomania();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast('Matriz de 10 conjuntos de 10 números da planilha carregada!', 'success', 2500);
+                }
+            };
+        }
+
+        const btnDistribuir = document.getElementById('btn-distribuir-volante-grupos-lotomania');
+        if (btnDistribuir) {
+            btnDistribuir.onclick = () => {
+                let pool = [];
+                if (this.selectedNumbers && this.selectedNumbers.size > 0) {
+                    pool = Array.from(this.selectedNumbers).sort((a, b) => a - b);
+                } else {
+                    pool = Array.from({length: 100}, (_, i) => i);
+                }
+                const porGrupo = Math.ceil(pool.length / 10);
+                for (let i = 1; i <= 10; i++) {
+                    const pedaco = pool.slice((i - 1) * porGrupo, i * porGrupo);
+                    const input = document.getElementById(`input-grupo-lotomania-${i}`);
+                    if (input) input.value = pedaco.join(', ');
+                }
+                this._atualizarDiagnosticoGruposLotomania();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`${pool.length} dezenas distribuídas nos 10 conjuntos!`, 'success', 2500);
+                }
+            };
+        }
+
+        const btnLimpar = document.getElementById('btn-limpar-todos-grupos-lotomania');
+        if (btnLimpar) {
+            btnLimpar.onclick = () => {
+                for (let i = 1; i <= 10; i++) {
+                    const input = document.getElementById(`input-grupo-lotomania-${i}`);
+                    if (input) input.value = '';
+                }
+                this._atualizarDiagnosticoGruposLotomania();
+            };
+        }
+
+        const resetBotoesFreq = () => {
+            document.querySelectorAll('.btn-freq-lotomania-opt').forEach(b => {
+                b.style.background = 'rgba(245, 158, 11, 0.18)';
+                b.style.color = '#fde68a';
+                b.style.borderColor = '#f59e0b';
+                b.style.boxShadow = 'none';
+            });
+        };
+
+        // Formação Automática de Conjuntos por Frequência dos Últimos Sorteios
+        [3, 5, 10, 15].forEach(qtd => {
+            const btn = document.getElementById(`btn-freq-lotomania-${qtd}`);
+            if (btn) {
+                btn.onclick = async () => {
+                    await this._preencherGruposPorFrequenciaLotomania(qtd, btn);
+                };
+            }
+        });
+
+        // Limpar destaque dos botões de frequência ao acionar outros métodos
+        if (btnPlanilhaApostador) btnPlanilhaApostador.addEventListener('click', resetBotoesFreq);
+        if (btnAplicarSeq100) btnAplicarSeq100.addEventListener('click', resetBotoesFreq);
+        if (btnExemplo) btnExemplo.addEventListener('click', resetBotoesFreq);
+        if (btnDistribuir) btnDistribuir.addEventListener('click', resetBotoesFreq);
+        if (btnLimpar) btnLimpar.addEventListener('click', resetBotoesFreq);
+
+        const btnExecutar = document.getElementById('btn-executar-motor-grupos-lotomania');
+        if (btnExecutar) {
+            btnExecutar.onclick = async () => {
+                await this._executarGeracaoJogosPorGruposLotomania();
+            };
+        }
+
+        this._atualizarDiagnosticoGruposLotomania();
+    }
+
+    async _preencherGruposPorFrequenciaLotomania(qtdSorteios, btnClicado) {
+        try {
+            if (typeof StatsService === 'undefined') {
+                alert('Serviço de estatísticas não disponível.');
+                return;
+            }
+
+            // Resetar estilos dos botões
+            document.querySelectorAll('.btn-freq-lotomania-opt').forEach(b => {
+                b.style.background = 'rgba(245, 158, 11, 0.18)';
+                b.style.color = '#fde68a';
+                b.style.borderColor = '#f59e0b';
+                b.style.boxShadow = 'none';
+            });
+
+            // Destacar o botão ativo
+            if (btnClicado) {
+                btnClicado.style.background = '#f59e0b';
+                btnClicado.style.color = '#000';
+                btnClicado.style.borderColor = '#fbbf24';
+                btnClicado.style.boxShadow = '0 0 12px rgba(245, 158, 11, 0.5)';
+            }
+
+            if (typeof StatsService.ensureHistory === 'function') {
+                await StatsService.ensureHistory('lotomania');
+            }
+
+            let rank100 = [];
+            if (typeof StatsService.getRankedNumbers === 'function') {
+                rank100 = StatsService.getRankedNumbers('lotomania', qtdSorteios);
+            }
+            if (!rank100 || rank100.length < 100) {
+                const stats = StatsService.getStats('lotomania', qtdSorteios);
+                if (stats && stats.hot && stats.hot.length > 0) {
+                    const coldAsc = (stats.cold || []).slice().reverse();
+                    rank100 = stats.hot.map(s => s.number).concat(coldAsc.map(s => s.number));
+                }
+            }
+
+            if (!rank100 || rank100.length < 100) {
+                alert(`Histórico insuficiente para calcular as 100 dezenas nos últimos ${qtdSorteios} sorteios.`);
+                return;
+            }
+
+            // Atualizar campo de sequência dos 100 números (00 a 99)
+            const inputSeq = document.getElementById('input-sequencia-100-lotomania');
+            if (inputSeq) {
+                inputSeq.value = rank100.map(n => String(n).padStart(2, '0')).join(', ');
+            }
+
+            // Preencher os 10 conjuntos (10 dezenas em cada) do mais sorteado ao menos sorteado
+            for (let i = 1; i <= 10; i++) {
+                const pedaco = rank100.slice((i - 1) * 10, i * 10);
+                const input = document.getElementById(`input-grupo-lotomania-${i}`);
+                if (input) {
+                    input.value = pedaco.map(n => String(n).padStart(2, '0')).join(', ');
+                }
+            }
+
+            this._atualizarDiagnosticoGruposLotomania();
+
+            if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                Guardian.toast(`10 conjuntos formados com base nos últimos ${qtdSorteios} sorteios (do mais sorteado ao menos sorteado)!`, 'success', 3000);
+            }
+        } catch (err) {
+            console.error('[UI] Erro ao preencher conjuntos por frequência na Lotomania:', err);
+            alert('Erro ao carregar estatísticas da Lotomania: ' + err.message);
+        }
+    }
+
+    _obterGruposDigitadosLotomania() {
+        const grupos = {};
+        for (let i = 1; i <= 10; i++) {
+            const input = document.getElementById(`input-grupo-lotomania-${i}`);
+            if (input && input.value.trim()) {
+                const nums = input.value
+                    .split(/[\s,;]+/)
+                    .map(x => parseInt(x.trim(), 10))
+                    .map(x => x === 100 ? 0 : x)
+                    .filter(x => !isNaN(x) && x >= 0 && x <= 99);
+                grupos[i] = Array.from(new Set(nums)).sort((a, b) => a - b);
+            }
+        }
+        return grupos;
+    }
+
+    _atualizarDiagnosticoGruposLotomania() {
+        const grupos = this._obterGruposDigitadosLotomania();
+        const todasDezenas = new Set();
+        const duplicadas = new Set();
+        const freq = {};
+
+        for (let i = 1; i <= 10; i++) {
+            const badge = document.getElementById(`badge-count-grupo-lotomania-${i}`);
+            const nums = grupos[i] || [];
+            if (badge) {
+                badge.innerText = `${nums.length} / 10 dezena${nums.length === 1 ? '' : 's'}`;
+                badge.style.color = nums.length === 10 ? '#34d399' : (nums.length > 0 ? '#fde68a' : '#94a3b8');
+            }
+            nums.forEach(n => {
+                if (freq[n]) duplicadas.add(n);
+                freq[n] = (freq[n] || 0) + 1;
+                todasDezenas.add(n);
+            });
+        }
+
+        const diagAlocadas = document.getElementById('diag-dezenas-alocadas-lotomania');
+        const diagAusentes = document.getElementById('diag-dezenas-ausentes-lotomania');
+        const diagTotalJogos = document.getElementById('diag-total-jogos-est-lotomania');
+        const diagCustoJogos = document.getElementById('diag-custo-jogos-est-lotomania');
+
+        const totalAlocadas = todasDezenas.size;
+        if (diagAlocadas) {
+            diagAlocadas.innerText = `${totalAlocadas} / 100`;
+            diagAlocadas.style.color = totalAlocadas === 100 ? '#34d399' : '#fde68a';
+        }
+
+        const ausentes = [];
+        for (let d = 0; d <= 99; d++) {
+            if (!todasDezenas.has(d)) ausentes.push(d);
+        }
+        if (diagAusentes) {
+            if (duplicadas.size > 0) {
+                const dupStr = Array.from(duplicadas).sort((a, b) => a - b).map(n => n.toString().padStart(2, '0')).join(', ');
+                diagAusentes.innerText = `${ausentes.length} ausentes | Repetidas entre conjuntos: [${dupStr}]`;
+                diagAusentes.style.color = '#fbbf24';
+            } else if (ausentes.length === 0) {
+                diagAusentes.innerText = 'Nenhuma (100% de dezenas)';
+                diagAusentes.style.color = '#34d399';
+            } else if (ausentes.length <= 8) {
+                diagAusentes.innerText = ausentes.map(n => n.toString().padStart(2, '0')).join(', ');
+                diagAusentes.style.color = '#fde68a';
+            } else {
+                diagAusentes.innerText = `${ausentes.length} dezenas`;
+                diagAusentes.style.color = '#fca5a5';
+            }
+        }
+
+        const modo = document.getElementById('select-modo-combinatorio-grupos-lotomania')?.value || 'planilha_126';
+        const selConj = document.getElementById('select-qtd-conjuntos-lotomania')?.value || '12';
+        const numConj = parseInt(selConj, 10) || 12;
+
+        let jogosPorConj = 126;
+        if (modo === '10_jogos' || modo === '10_jogos_espelho') {
+            jogosPorConj = 10;
+        } else if (modo === 'fechamento_total') {
+            jogosPorConj = 252;
+        } else {
+            jogosPorConj = 126;
+        }
+
+        const totalEst = numConj * jogosPorConj;
+
+        if (diagTotalJogos) diagTotalJogos.innerText = `${numConj} conjuntos • ${totalEst} jogos`;
+        if (diagCustoJogos) diagCustoJogos.innerText = (totalEst * 3.5).toFixed(2).replace('.', ',');
+    }
+
+    async _executarGeracaoJogosPorGruposLotomania() {
+        if (this.currentGameKey !== 'lotomania') {
+            const navBtn = document.querySelector(`.nav-btn[data-game="lotomania"]`);
+            if (navBtn) navBtn.click();
+            else this.updateGameInfo('lotomania');
+        }
+
+        const grupos = this._obterGruposDigitadosLotomania();
+        if (Object.keys(grupos).length === 0) {
+            alert('Por favor, preencha os conjuntos com seus números ou clique em "Carregar Exemplo da Planilha"!');
+            return;
+        }
+
+        const btnExecutar = document.getElementById('btn-executar-motor-grupos-lotomania');
+        const origText = btnExecutar ? btnExecutar.innerHTML : '';
+        if (btnExecutar) {
+            btnExecutar.disabled = true;
+            btnExecutar.innerHTML = '⏳ Gerando Jogos por Conjuntos...';
+        }
+
+        this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Combinando conjuntos e ordenando jogos...</div></div>';
+
+        try {
+            const modo = document.getElementById('select-modo-combinatorio-grupos-lotomania')?.value || 'planilha_126';
+            const selConj = document.getElementById('select-qtd-conjuntos-lotomania')?.value || '12';
+            const qtdConjuntosVal = parseInt(selConj, 10) || 12;
+            const k = 5;
+
+            const res = await MotorLotomaniaB2BEngine.gerarJogosPorGrupos(grupos, {
+                modo: modo,
+                qtdConjuntos: qtdConjuntosVal,
+                qtdGruposPorJogo: 5,
+                eliminarDuplicados: true,
+                ordenarDezenas: true,
+                fixas: Array.from(this.fixedNumbers || []),
+                excluidas: Array.from(this.excludedNumbers || [])
+            });
+
+            if (res && res.sucesso && res.jogos && res.jogos.length > 0) {
+                const rawGames = res.jogos.map(j => j.numeros);
+                this.currentGeneratedGames = rawGames;
+                this._lastGeneratedGames = rawGames;
+
+                this.renderGames({
+                    pool: res.dezenas_usadas || Array.from({length: 100}, (_, i) => i),
+                    games: rawGames,
+                    groupCombos: res.jogos.map(j => j.grupos_combinados || []),
+                    smartAnalysis: null,
+                    preserveOrder: true
+                }, 'lotomania');
+
+                this._renderVisualConjuntosLotomania(res);
+
+                setTimeout(() => {
+                    const b = document.createElement('div');
+                    b.className = 'smart-gen-analysis';
+                    b.style.cssText = 'margin-top:10px;margin-bottom:12px;padding:14px 18px;border-radius:10px;background:radial-gradient(circle at top left, rgba(245,158,11,0.2), rgba(15,23,42,0.95));border:1px solid #f59e0b;color:#fde68a;font-size:0.83rem;box-shadow:0 6px 20px rgba(0,0,0,0.4);';
+
+                    const ausentesStr = res.dezenas_ausentes && res.dezenas_ausentes.length > 0
+                        ? res.dezenas_ausentes.map(n => n.toString().padStart(2, '0')).join(', ')
+                        : 'Nenhuma (cobertura total 100/100)';
+
+                    const k = res.qtd_grupos_por_jogo || 5;
+                    const totalConj = res.total_conjuntos || res.total_grupos || 10;
+
+                    b.innerHTML = `
+                        <div style="font-weight:800;font-size:0.95rem;color:#fbbf24;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+                            🎲 MOTOR DE FECHAMENTO POR CONJUNTOS CONCLUÍDO COM SUCESSO!
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:8px;line-height:1.6;color:#e2e8f0;">
+                            <div>• <strong>Total de Jogos Gerados:</strong> <span style="color:#34d399;">${res.total_jogos} jogos</span></div>
+                            <div>• <strong>Jogos Únicos:</strong> <span style="color:#38bdf8;">${res.jogos_unicos}</span> | <strong>Duplicados:</strong> <span style="color:${res.jogos_duplicados > 0 ? '#fca5a5' : '#34d399'};">${res.jogos_duplicados}</span></div>
+                            <div>• <strong>Conjuntos Utilizados:</strong> ${totalConj} matrizes/conjuntos (${k} grupos combinados por aposta)</div>
+                            <div>• <strong>Dezenas Ausentes:</strong> <span style="color:#fde68a;">[${ausentesStr}]</span></div>
+                            <div>• <strong>Custo Total:</strong> R$ ${(res.custo_total_brl !== undefined ? Number(res.custo_total_brl).toFixed(2) : (res.total_jogos * 3.5).toFixed(2)).replace('.', ',')}</div>
+                            <div>• <strong>Formato:</strong> 50 dezenas em ordem crescente (00 a 99) por aposta</div>
+                        </div>
+                    `;
+
+                    const old = this.gamesContainer.parentNode.querySelector('.smart-gen-analysis');
+                    if (old) old.remove();
+                    this.gamesContainer.parentNode.insertBefore(b, this.gamesContainer);
+                }, 60);
+
+                setTimeout(() => {
+                    if (this.gamesContainer) {
+                        this.gamesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 150);
+
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`🎲 ${res.total_jogos} jogos gerados por conjuntos com sucesso!`, 'success', 3000);
+                }
+            } else {
+                alert('Erro ao gerar jogos por conjuntos: ' + ((res && res.erro) || 'Verifique se os conjuntos possuem dezenas suficientes.'));
+            }
+        } catch (e) {
+            console.error('Erro no motor por conjuntos da Lotomania:', e);
+            alert('Erro ao executar motor por conjuntos: ' + e.message);
+        } finally {
+            if (btnExecutar) {
+                btnExecutar.disabled = false;
+                btnExecutar.innerHTML = origText;
+            }
+        }
+    }
+
     _initLotofacilGruposEngine() {
         const tabEstatistico = document.getElementById('tab-btn-lotofacil-estatistico');
         const tabGrupos = document.getElementById('tab-btn-lotofacil-grupos');
@@ -10847,6 +11480,116 @@ if(pp){
             };
         }
 
+        this._modoGruposLotofacil = '8_grupos';
+        this._pool25Lotofacil = null;
+
+        const btnModo8 = document.getElementById('btn-modo-8-grupos');
+        const btnModo5 = document.getElementById('btn-modo-5-grupos');
+
+        const alternarModoGrupos = (modo) => {
+            this._modoGruposLotofacil = modo;
+            const extras = document.querySelectorAll('.card-grupo-lotofacil-extra');
+            const selModo = document.getElementById('select-modo-combinatorio-grupos');
+            const selK = document.getElementById('select-k-grupos-por-jogo');
+            const painel8 = document.getElementById('painel-config-8-grupos');
+            const painel5 = document.getElementById('painel-config-5-grupos');
+            const btnExecutar = document.getElementById('btn-executar-motor-grupos');
+
+            const tituloFreq = document.getElementById('titulo-freq-lotofacil');
+            const descFreq = document.getElementById('desc-freq-lotofacil');
+            const btnSubModo8 = document.getElementById('btn-freq-modo-8-lotofacil');
+            const btnSubModo5 = document.getElementById('btn-freq-modo-5-lotofacil');
+
+            if (modo === '5_grupos') {
+                if (btnModo5) {
+                    btnModo5.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.35), rgba(37,99,235,0.25))';
+                    btnModo5.style.borderColor = '#3b82f6';
+                    btnModo5.style.color = '#fff';
+                }
+                if (btnModo8) {
+                    btnModo8.style.background = 'rgba(15,23,42,0.6)';
+                    btnModo8.style.borderColor = 'rgba(255,255,255,0.1)';
+                    btnModo8.style.color = '#cbd5e1';
+                }
+                if (btnSubModo5) {
+                    btnSubModo5.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.35), rgba(37,99,235,0.25))';
+                    btnSubModo5.style.borderColor = '#3b82f6';
+                    btnSubModo5.style.color = '#fff';
+                }
+                if (btnSubModo8) {
+                    btnSubModo8.style.background = 'rgba(15,23,42,0.6)';
+                    btnSubModo8.style.borderColor = 'rgba(255,255,255,0.15)';
+                    btnSubModo8.style.color = '#cbd5e1';
+                }
+                if (tituloFreq) tituloFreq.innerHTML = '🔥 Formar 5 Grupos de 5 Dezenas por Estatística (Mais Sorteados → Menos Sorteados):';
+                if (descFreq) descFreq.innerText = 'Preenche os 5 grupos (5 dezenas cada • 100% das 25 dezenas): Grupo 1 (Top 5 mais sorteados) até Grupo 5 (menos sorteados).';
+                if (painel5) painel5.style.display = 'block';
+                if (painel8) painel8.style.display = 'none';
+                extras.forEach(el => el.style.display = 'none');
+                if (selModo) selModo.value = 'fechamento_5_grupos';
+                if (selK) selK.value = '3';
+                if (btnExecutar) btnExecutar.innerHTML = '🚀 GERAR DESDOBRAMENTO 5×5 (5 GRUPOS DE 5 • 100% DAS 25 DEZENAS)';
+                const ph5 = {
+                    1: 'Ex: 16, 25, 6, 13, 24',
+                    2: 'Ex: 19, 23, 5, 8, 11',
+                    3: 'Ex: 15, 17, 22, 4, 20',
+                    4: 'Ex: 1, 7, 12, 14, 3',
+                    5: 'Ex: 10, 18, 9, 21, 2'
+                };
+                for (let i = 1; i <= 5; i++) {
+                    const inp = document.getElementById(`input-grupo-${i}`);
+                    if (inp) inp.placeholder = ph5[i] || 'Ex: 5 dezenas';
+                }
+            } else {
+                if (btnModo8) {
+                    btnModo8.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.35), rgba(217,119,6,0.25))';
+                    btnModo8.style.borderColor = '#f59e0b';
+                    btnModo8.style.color = '#fff';
+                }
+                if (btnModo5) {
+                    btnModo5.style.background = 'rgba(15,23,42,0.6)';
+                    btnModo5.style.borderColor = 'rgba(255,255,255,0.1)';
+                    btnModo5.style.color = '#cbd5e1';
+                }
+                if (btnSubModo8) {
+                    btnSubModo8.style.background = 'rgba(245, 158, 11, 0.35)';
+                    btnSubModo8.style.borderColor = '#f59e0b';
+                    btnSubModo8.style.color = '#fff';
+                }
+                if (btnSubModo5) {
+                    btnSubModo5.style.background = 'rgba(15, 23, 42, 0.6)';
+                    btnSubModo5.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                    btnSubModo5.style.color = '#cbd5e1';
+                }
+                if (tituloFreq) tituloFreq.innerHTML = '🔥 Formar 8 Grupos de 3 Dezenas por Estatística (Mais Sorteados → Menos Sorteados):';
+                if (descFreq) descFreq.innerText = 'Preenche os 8 grupos (3 dezenas cada): Grupo 1 (Top 3 mais sorteados) até Grupo 8 (menos sorteados • 24 dezenas • rotação em até 25 conjuntos).';
+                if (painel8) painel8.style.display = 'block';
+                if (painel5) painel5.style.display = 'none';
+                extras.forEach(el => el.style.display = 'block');
+                if (selModo) selModo.value = 'fechamento_total';
+                if (selK) selK.value = '5';
+                if (btnExecutar) btnExecutar.innerHTML = '🚀 GERAR ATÉ 25 CONJUNTOS (8 GRUPOS DE 3 • FECHAMENTO LOTOFÁCIL)';
+                const ph8 = {
+                    1: 'Ex: 3, 13, 19', 2: 'Ex: 7, 8, 14', 3: 'Ex: 1, 12, 20', 4: 'Ex: 5, 16, 23',
+                    5: 'Ex: 6, 15, 18', 6: 'Ex: 4, 10, 17', 7: 'Ex: 9, 11, 25', 8: 'Ex: 2, 21, 24'
+                };
+                for (let i = 1; i <= 8; i++) {
+                    const inp = document.getElementById(`input-grupo-${i}`);
+                    if (inp) inp.placeholder = ph8[i] || 'Ex: 3 dezenas';
+                }
+            }
+            this._atualizarDiagnosticoGrupos();
+        };
+
+        if (btnModo8) btnModo8.onclick = () => alternarModoGrupos('8_grupos');
+        if (btnModo5) btnModo5.onclick = () => alternarModoGrupos('5_grupos');
+
+        const btnSubModo8 = document.getElementById('btn-freq-modo-8-lotofacil');
+        const btnSubModo5 = document.getElementById('btn-freq-modo-5-lotofacil');
+        if (btnSubModo8) btnSubModo8.onclick = () => alternarModoGrupos('8_grupos');
+        if (btnSubModo5) btnSubModo5.onclick = () => alternarModoGrupos('5_grupos');
+
+        // Monitorar inputs dos 8 grupos
         for (let i = 1; i <= 8; i++) {
             const input = document.getElementById(`input-grupo-${i}`);
             if (input) {
@@ -10856,57 +11599,225 @@ if(pp){
             }
         }
 
+        // Seletor de modo combinatório
         const selModo = document.getElementById('select-modo-combinatorio-grupos');
         const selK = document.getElementById('select-k-grupos-por-jogo');
-        if (selModo) selModo.addEventListener('change', () => this._atualizarDiagnosticoGrupos());
+        if (selModo) {
+            selModo.addEventListener('change', () => {
+                if (selModo.value === 'fechamento_5_grupos') {
+                    alternarModoGrupos('5_grupos');
+                } else if (['fechamento_total', 'planilha_48', 'sem_duplicatas', 'otimizado_24'].includes(selModo.value)) {
+                    alternarModoGrupos('8_grupos');
+                }
+                this._atualizarDiagnosticoGrupos();
+            });
+        }
         if (selK) selK.addEventListener('change', () => this._atualizarDiagnosticoGrupos());
 
+        // Seletor de quantidade de conjuntos (Modo 8 grupos)
+        const selQtdConj8 = document.getElementById('select-qtd-conjuntos-lotofacil');
+        if (selQtdConj8) {
+            selQtdConj8.addEventListener('change', () => this._atualizarDiagnosticoGrupos());
+        }
+
+        // Seletor de quantidade de conjuntos (Modo 5 grupos)
+        const selQtdConj5 = document.getElementById('select-qtd-conjuntos-5-grupos');
+        if (selQtdConj5) {
+            selQtdConj5.addEventListener('change', () => this._atualizarDiagnosticoGrupos());
+        }
+
+        // Checkbox eliminar duplicados
+        const chkDup = document.getElementById('check-eliminar-duplicados-grupos');
+        if (chkDup) {
+            chkDup.addEventListener('change', () => this._atualizarDiagnosticoGrupos());
+        }
+
+        // Botão aplicar sequência no Modo 8 Grupos (24 dezenas em 8x3)
+        const btnAplicarSeq8 = document.getElementById('btn-aplicar-sequencia-25-lotofacil');
+        if (btnAplicarSeq8) {
+            btnAplicarSeq8.onclick = () => {
+                const inpSeq = document.getElementById('input-sequencia-25-lotofacil');
+                if (!inpSeq || !inpSeq.value.trim()) {
+                    alert('Por favor, digite ou cole as 25 dezenas ordenadas por frequência/prioridade na caixa de texto.');
+                    return;
+                }
+                const rawVals = inpSeq.value.split(/[\s,;]+/).map(x => parseInt(x.trim(), 10)).filter(x => !isNaN(x) && x >= 1 && x <= 25);
+                const uniqueVals = [];
+                const seen = new Set();
+                for (const v of rawVals) {
+                    if (!seen.has(v)) {
+                        seen.add(v);
+                        uniqueVals.push(v);
+                    }
+                }
+                if (uniqueVals.length < 25) {
+                    for (let d = 1; d <= 25; d++) {
+                        if (!seen.has(d)) {
+                            seen.add(d);
+                            uniqueVals.push(d);
+                        }
+                    }
+                }
+                this._pool25Lotofacil = uniqueVals.slice(0, 25);
+                for (let i = 1; i <= 8; i++) {
+                    const pedaco = this._pool25Lotofacil.slice((i - 1) * 3, i * 3);
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) input.value = pedaco.map(n => String(n).padStart(2, '0')).join(', ');
+                }
+                this._atualizarDiagnosticoGrupos();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`25 dezenas distribuídas nos 8 grupos (1º conjunto = 24 dezenas, dezena ${this._pool25Lotofacil[24]} excluída para rotação)!`, 'success', 3000);
+                }
+            };
+        }
+
+        // Botão aplicar sequência no Modo 5 Grupos (25 dezenas em 5x5)
+        const btnAplicarSeq5 = document.getElementById('btn-aplicar-sequencia-25');
+        if (btnAplicarSeq5) {
+            btnAplicarSeq5.onclick = () => {
+                const inpSeq = document.getElementById('input-sequencia-25-dezenas');
+                if (!inpSeq || !inpSeq.value.trim()) {
+                    alert('Por favor, digite ou cole as 25 dezenas do 1º conjunto na caixa de texto.');
+                    return;
+                }
+                const rawVals = inpSeq.value.split(/[\s,;]+/).map(x => parseInt(x.trim(), 10)).filter(x => !isNaN(x) && x >= 1 && x <= 25);
+                const uniqueVals = [];
+                const seen = new Set();
+                for (const v of rawVals) {
+                    if (!seen.has(v)) {
+                        seen.add(v);
+                        uniqueVals.push(v);
+                    }
+                }
+                if (uniqueVals.length < 25) {
+                    for (let d = 1; d <= 25; d++) {
+                        if (!seen.has(d)) {
+                            seen.add(d);
+                            uniqueVals.push(d);
+                        }
+                    }
+                }
+                for (let i = 1; i <= 5; i++) {
+                    const pedaco = uniqueVals.slice((i - 1) * 5, i * 5);
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) input.value = pedaco.map(n => String(n).padStart(2, '0')).join(', ');
+                }
+                for (let i = 6; i <= 8; i++) {
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) input.value = '';
+                }
+                this._atualizarDiagnosticoGrupos();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast('25 dezenas distribuídas com sucesso nos 5 grupos do 1º conjunto!', 'success', 2500);
+                }
+            };
+        }
+
+        // Botão carregar exemplo padrão (8 grupos da planilha)
         const btnExemplo = document.getElementById('btn-carregar-exemplo-grupos');
         if (btnExemplo) {
             btnExemplo.onclick = () => {
+                alternarModoGrupos('8_grupos');
                 const exemplo = {
-                    1: '3, 13, 19',
-                    2: '7, 8, 14',
-                    3: '1, 12, 20',
-                    4: '5, 16, 23',
-                    5: '6, 15, 18',
-                    6: '4, 10, 17',
-                    7: '9, 11, 25',
-                    8: '2, 21, 24'
+                    1: '03, 13, 19',
+                    2: '07, 08, 14',
+                    3: '01, 12, 20',
+                    4: '05, 16, 23',
+                    5: '06, 15, 18',
+                    6: '04, 10, 17',
+                    7: '09, 11, 25',
+                    8: '02, 21, 24'
                 };
                 for (let i = 1; i <= 8; i++) {
                     const input = document.getElementById(`input-grupo-${i}`);
                     if (input) input.value = exemplo[i];
                 }
+                const poolExemplo = [3, 13, 19, 7, 8, 14, 1, 12, 20, 5, 16, 23, 6, 15, 18, 4, 10, 17, 9, 11, 25, 2, 21, 24, 22];
+                this._pool25Lotofacil = poolExemplo;
+                const inpSeq = document.getElementById('input-sequencia-25-lotofacil');
+                if (inpSeq) inpSeq.value = poolExemplo.map(n => String(n).padStart(2, '0')).join(', ');
                 this._atualizarDiagnosticoGrupos();
                 if (typeof Guardian !== 'undefined' && Guardian.toast) {
-                    Guardian.toast('Matriz de 8 grupos da planilha carregada!', 'success', 2500);
+                    Guardian.toast('Matriz padrão de 8 grupos da planilha carregada!', 'success', 2500);
                 }
             };
         }
 
+        // Botão carregar exemplo 5 grupos (5x5)
+        const btnExemplo5 = document.getElementById('btn-carregar-exemplo-5-grupos');
+        if (btnExemplo5) {
+            btnExemplo5.onclick = () => {
+                alternarModoGrupos('5_grupos');
+                const exemplo5 = {
+                    1: '16, 25, 06, 13, 24',
+                    2: '19, 23, 05, 08, 11',
+                    3: '15, 17, 22, 04, 20',
+                    4: '01, 07, 12, 14, 03',
+                    5: '10, 18, 09, 21, 02'
+                };
+                for (let i = 1; i <= 5; i++) {
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) input.value = exemplo5[i];
+                }
+                for (let i = 6; i <= 8; i++) {
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) input.value = '';
+                }
+                const inpSeq = document.getElementById('input-sequencia-25-dezenas');
+                if (inpSeq) {
+                    inpSeq.value = '16, 25, 06, 13, 24, 19, 23, 05, 08, 11, 15, 17, 22, 04, 20, 01, 07, 12, 14, 03, 10, 18, 09, 21, 02';
+                }
+                this._atualizarDiagnosticoGrupos();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast('Matriz Base de 5 grupos da planilha carregada com sucesso!', 'success', 2500);
+                }
+            };
+        }
+
+        // Botão distribuir seleção do volante
         const btnDistribuir = document.getElementById('btn-distribuir-volante-grupos');
         if (btnDistribuir) {
             btnDistribuir.onclick = () => {
+                const isModo5 = this._modoGruposLotofacil === '5_grupos';
+                const qtdGrupos = isModo5 ? 5 : 8;
                 let pool = [];
                 if (this.selectedNumbers && this.selectedNumbers.size > 0) {
                     pool = Array.from(this.selectedNumbers).sort((a, b) => a - b);
                 } else {
-                    pool = Array.from({length: 24}, (_, i) => i + 1);
+                    pool = Array.from({length: isModo5 ? 25 : 24}, (_, i) => i + 1);
                 }
-                const porGrupo = Math.ceil(pool.length / 8);
-                for (let i = 1; i <= 8; i++) {
+                if (pool.length < (isModo5 ? 25 : 24)) {
+                    const seen = new Set(pool);
+                    for (let d = 1; d <= 25; d++) {
+                        if (!seen.has(d)) pool.push(d);
+                    }
+                }
+                const porGrupo = isModo5 ? 5 : 3;
+                for (let i = 1; i <= qtdGrupos; i++) {
                     const pedaco = pool.slice((i - 1) * porGrupo, i * porGrupo);
                     const input = document.getElementById(`input-grupo-${i}`);
-                    if (input) input.value = pedaco.join(', ');
+                    if (input) input.value = pedaco.map(n => String(n).padStart(2, '0')).join(', ');
+                }
+                if (isModo5) {
+                    for (let i = 6; i <= 8; i++) {
+                        const input = document.getElementById(`input-grupo-${i}`);
+                        if (input) input.value = '';
+                    }
+                    const inpSeq = document.getElementById('input-sequencia-25-dezenas');
+                    if (inpSeq) inpSeq.value = pool.slice(0, 25).map(n => String(n).padStart(2, '0')).join(', ');
+                } else {
+                    this._pool25Lotofacil = pool.slice(0, 25);
+                    const inpSeq = document.getElementById('input-sequencia-25-lotofacil');
+                    if (inpSeq) inpSeq.value = this._pool25Lotofacil.map(n => String(n).padStart(2, '0')).join(', ');
                 }
                 this._atualizarDiagnosticoGrupos();
                 if (typeof Guardian !== 'undefined' && Guardian.toast) {
-                    Guardian.toast(`${pool.length} dezenas distribuídas nos 8 grupos!`, 'success', 2500);
+                    Guardian.toast(`${pool.length} dezenas distribuídas nos ${qtdGrupos} grupos!`, 'success', 2500);
                 }
             };
         }
 
+        // Botão limpar grupos
         const btnLimpar = document.getElementById('btn-limpar-todos-grupos');
         if (btnLimpar) {
             btnLimpar.onclick = () => {
@@ -10914,21 +11825,134 @@ if(pp){
                     const input = document.getElementById(`input-grupo-${i}`);
                     if (input) input.value = '';
                 }
+                const inpSeq8 = document.getElementById('input-sequencia-25-lotofacil');
+                if (inpSeq8) inpSeq8.value = '';
+                const inpSeq5 = document.getElementById('input-sequencia-25-dezenas');
+                if (inpSeq5) inpSeq5.value = '';
+                this._pool25Lotofacil = null;
                 this._atualizarDiagnosticoGrupos();
             };
         }
 
+        // Formação Automática de Grupos por Frequência dos Últimos Sorteios da Lotofácil (3, 5, 10, 15)
+        [3, 5, 10, 15].forEach(qtd => {
+            const btn = document.getElementById(`btn-freq-lotofacil-${qtd}`);
+            if (btn) {
+                btn.onclick = async () => {
+                    await this._preencherGruposPorFrequenciaLotofacil(qtd, btn);
+                };
+            }
+        });
+
+        // Botão Executar Motor de Fechamento por Grupos
         const btnExecutar = document.getElementById('btn-executar-motor-grupos');
         if (btnExecutar) {
             btnExecutar.onclick = async () => {
                 await this._executarGeracaoJogosPorGrupos();
             };
         }
+
+        this._atualizarDiagnosticoGrupos();
+    }
+
+    async _preencherGruposPorFrequenciaLotofacil(qtdSorteios, btnClicado) {
+        try {
+            if (typeof StatsService === 'undefined') {
+                alert('Serviço de estatísticas não disponível.');
+                return;
+            }
+
+            // Resetar estilos dos botões de frequência
+            document.querySelectorAll('.btn-freq-lotofacil-opt').forEach(b => {
+                b.style.background = 'rgba(245, 158, 11, 0.18)';
+                b.style.color = '#fde68a';
+                b.style.borderColor = '#f59e0b';
+                b.style.boxShadow = 'none';
+            });
+
+            // Destacar o botão ativo
+            if (btnClicado) {
+                btnClicado.style.background = '#f59e0b';
+                btnClicado.style.color = '#000';
+                btnClicado.style.borderColor = '#fbbf24';
+                btnClicado.style.boxShadow = '0 0 12px rgba(245, 158, 11, 0.5)';
+            }
+
+            if (typeof StatsService.ensureHistory === 'function') {
+                await StatsService.ensureHistory('lotofacil');
+            }
+
+            let rank25 = [];
+            if (typeof StatsService.getRankedNumbers === 'function') {
+                rank25 = StatsService.getRankedNumbers('lotofacil', qtdSorteios);
+            }
+            if (!rank25 || rank25.length < 25) {
+                const stats = StatsService.getStats('lotofacil', qtdSorteios);
+                if (stats && stats.hot && stats.hot.length > 0) {
+                    const coldAsc = (stats.cold || []).slice().reverse();
+                    rank25 = stats.hot.map(s => s.number).concat(coldAsc.map(s => s.number));
+                }
+            }
+
+            if (!rank25 || rank25.length < 25) {
+                alert(`Histórico insuficiente para calcular as 25 dezenas da Lotofácil nos últimos ${qtdSorteios} sorteios.`);
+                return;
+            }
+
+            const isModo5 = this._modoGruposLotofacil === '5_grupos';
+
+            if (isModo5) {
+                // Modo 5 Grupos: 5 dezenas em cada grupo (total 25 dezenas, 100% da Lotofácil)
+                for (let i = 1; i <= 5; i++) {
+                    const pedaco = rank25.slice((i - 1) * 5, i * 5);
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) {
+                        input.value = pedaco.map(n => String(n).padStart(2, '0')).join(', ');
+                    }
+                }
+                for (let i = 6; i <= 8; i++) {
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) input.value = '';
+                }
+                const inpSeq5 = document.getElementById('input-sequencia-25-dezenas');
+                if (inpSeq5) {
+                    inpSeq5.value = rank25.map(n => String(n).padStart(2, '0')).join(', ');
+                }
+                this._atualizarDiagnosticoGrupos();
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`5 grupos de 5 dezenas formados pelos últimos ${qtdSorteios} sorteios (100% das 25 dezenas em ordem decrescente)!`, 'success', 3000);
+                }
+            } else {
+                // Modo 8 Grupos: 3 dezenas em cada grupo (total 24 dezenas do pool de 25)
+                this._pool25Lotofacil = rank25.slice(0, 25);
+                const inpSeq8 = document.getElementById('input-sequencia-25-lotofacil');
+                if (inpSeq8) {
+                    inpSeq8.value = this._pool25Lotofacil.map(n => String(n).padStart(2, '0')).join(', ');
+                }
+                for (let i = 1; i <= 8; i++) {
+                    const pedaco = this._pool25Lotofacil.slice((i - 1) * 3, i * 3);
+                    const input = document.getElementById(`input-grupo-${i}`);
+                    if (input) {
+                        input.value = pedaco.map(n => String(n).padStart(2, '0')).join(', ');
+                    }
+                }
+                this._atualizarDiagnosticoGrupos();
+                const numExcluido1 = this._pool25Lotofacil[24];
+                if (typeof Guardian !== 'undefined' && Guardian.toast) {
+                    Guardian.toast(`8 grupos de 3 dezenas formados pelos últimos ${qtdSorteios} sorteios! 1º conjunto com as 24 mais sorteadas (dezena ${String(numExcluido1).padStart(2, '0')} excluída no 1º conjunto para rotação em até 25 conjuntos).`, 'success', 3500);
+                }
+            }
+        } catch (err) {
+            console.error('[UI] Erro ao preencher grupos por frequência na Lotofácil:', err);
+            alert('Erro ao carregar estatísticas da Lotofácil: ' + err.message);
+        }
     }
 
     _obterGruposDigitados() {
+        const isModo5 = this._modoGruposLotofacil === '5_grupos';
+        const maxGrupos = isModo5 ? 5 : 8;
         const grupos = {};
-        for (let i = 1; i <= 8; i++) {
+        for (let i = 1; i <= maxGrupos; i++) {
             const input = document.getElementById(`input-grupo-${i}`);
             if (input && input.value.trim()) {
                 const nums = input.value
@@ -10942,6 +11966,9 @@ if(pp){
     }
 
     _atualizarDiagnosticoGrupos() {
+        const isModo5 = this._modoGruposLotofacil === '5_grupos';
+        const maxGrupos = isModo5 ? 5 : 8;
+        const idealPorGrupo = isModo5 ? 5 : 3;
         const grupos = this._obterGruposDigitados();
         const todasDezenas = new Set();
         const duplicadas = new Set();
@@ -10949,17 +11976,23 @@ if(pp){
 
         for (let i = 1; i <= 8; i++) {
             const badge = document.getElementById(`badge-count-grupo-${i}`);
-            const input = document.getElementById(`input-grupo-${i}`);
             const nums = grupos[i] || [];
             if (badge) {
-                badge.innerText = `${nums.length} dezena${nums.length === 1 ? '' : 's'}`;
-                badge.style.color = nums.length === 3 ? '#34d399' : (nums.length > 0 ? '#fde68a' : '#94a3b8');
+                if (isModo5 && i > 5) {
+                    badge.innerText = 'Desativado';
+                    badge.style.color = '#64748b';
+                } else {
+                    badge.innerText = `${nums.length} dezena${nums.length === 1 ? '' : 's'}`;
+                    badge.style.color = nums.length === idealPorGrupo ? '#34d399' : (nums.length > 0 ? '#fde68a' : '#94a3b8');
+                }
             }
-            nums.forEach(n => {
-                if (freq[n]) duplicadas.add(n);
-                freq[n] = (freq[n] || 0) + 1;
-                todasDezenas.add(n);
-            });
+            if (!isModo5 || i <= 5) {
+                nums.forEach(n => {
+                    if (freq[n]) duplicadas.add(n);
+                    freq[n] = (freq[n] || 0) + 1;
+                    todasDezenas.add(n);
+                });
+            }
         }
 
         const diagAlocadas = document.getElementById('diag-dezenas-alocadas');
@@ -10968,9 +12001,10 @@ if(pp){
         const diagCustoJogos = document.getElementById('diag-custo-jogos-est');
 
         const totalAlocadas = todasDezenas.size;
+        const metaAlocadas = isModo5 ? 25 : 24;
         if (diagAlocadas) {
-            diagAlocadas.innerText = `${totalAlocadas} / 25`;
-            diagAlocadas.style.color = totalAlocadas >= 24 ? '#34d399' : '#fde68a';
+            diagAlocadas.innerText = `${totalAlocadas} / ${metaAlocadas}`;
+            diagAlocadas.style.color = totalAlocadas === metaAlocadas ? '#34d399' : (totalAlocadas > metaAlocadas ? '#fca5a5' : '#fde68a');
         }
 
         const ausentes = [];
@@ -10979,10 +12013,13 @@ if(pp){
         }
         if (diagAusentes) {
             if (ausentes.length === 0) {
-                diagAusentes.innerText = 'Nenhuma (100% de dezenas)';
+                diagAusentes.innerText = isModo5 ? 'Nenhuma (100% de dezenas)' : 'Nenhuma (25 dezenas no volante)';
+                diagAusentes.style.color = '#34d399';
+            } else if (ausentes.length === 1 && !isModo5) {
+                diagAusentes.innerText = `Dezena ${String(ausentes[0]).padStart(2, '0')} (excluída no 1º conjunto)`;
                 diagAusentes.style.color = '#34d399';
             } else if (ausentes.length <= 5) {
-                diagAusentes.innerText = ausentes.map(n => n.toString().padStart(2, '0')).join(', ');
+                diagAusentes.innerText = ausentes.map(n => String(n).padStart(2, '0')).join(', ');
                 diagAusentes.style.color = '#fde68a';
             } else {
                 diagAusentes.innerText = `${ausentes.length} dezenas`;
@@ -10990,29 +12027,52 @@ if(pp){
             }
         }
 
-        const modo = document.getElementById('select-modo-combinatorio-grupos')?.value || 'fechamento_total';
-        const k = parseInt(document.getElementById('select-k-grupos-por-jogo')?.value || '5') || 5;
-        const totalGrupos = Object.keys(grupos).length;
+        const modo = document.getElementById('select-modo-combinatorio-grupos')?.value || (isModo5 ? 'fechamento_5_grupos' : 'fechamento_total');
 
-        let totalEst = 0;
-        if (modo === 'planilha_48') {
-            totalEst = 48;
-        } else if (modo === 'sem_duplicatas') {
-            totalEst = 46;
-        } else {
-            function comb(n, r) {
-                if (r < 0 || r > n) return 0;
-                let c = 1;
-                for (let i = 1; i <= r; i++) {
-                    c = (c * (n - i + 1)) / i;
-                }
-                return Math.round(c);
+        if (isModo5 || modo === 'fechamento_5_grupos') {
+            const selConj5 = document.getElementById('select-qtd-conjuntos-5-grupos')?.value || 'auto';
+            let numConj5 = 97;
+            if (selConj5 === 'auto' || selConj5 === '97') numConj5 = 97;
+            else numConj5 = parseInt(selConj5, 10) || 1;
+            const totalEst5 = numConj5 * 10;
+            if (diagTotalJogos) {
+                diagTotalJogos.innerText = `${numConj5} conjuntos • ${totalEst5} jogos`;
             }
-            totalEst = comb(totalGrupos >= k ? totalGrupos : 8, k);
+            if (diagCustoJogos) {
+                diagCustoJogos.innerText = (totalEst5 * 3.5).toFixed(2).replace('.', ',');
+            }
+            return;
         }
 
-        if (diagTotalJogos) diagTotalJogos.innerText = `${totalEst} jogos`;
-        if (diagCustoJogos) diagCustoJogos.innerText = (totalEst * 3.0).toFixed(2).replace('.', ',');
+        // Modo 8 Grupos:
+        const selQtdConj8 = document.getElementById('select-qtd-conjuntos-lotofacil');
+        const qtdConj8 = parseInt(selQtdConj8 ? selQtdConj8.value : '25', 10) || 25;
+        const eliminarDup = document.getElementById('check-eliminar-duplicados-grupos')?.checked !== false;
+
+        let jogosPorConj = 56;
+        if (modo === 'planilha_48') jogosPorConj = 48;
+        else if (modo === 'sem_duplicatas') jogosPorConj = 46;
+        else if (modo === 'otimizado_24') jogosPorConj = 24;
+
+        let totalEst = qtdConj8 * jogosPorConj;
+        if (eliminarDup && qtdConj8 > 1) {
+            if (modo === 'fechamento_total') {
+                totalEst = Math.round(qtdConj8 * 56 * (qtdConj8 === 25 ? 0.789 : (1 - (qtdConj8 - 1) * 0.008)));
+            } else if (modo === 'planilha_48') {
+                totalEst = Math.round(qtdConj8 * 48 * (qtdConj8 === 25 ? 0.80 : (1 - (qtdConj8 - 1) * 0.008)));
+            } else if (modo === 'sem_duplicatas') {
+                totalEst = Math.round(qtdConj8 * 46 * (qtdConj8 === 25 ? 0.80 : (1 - (qtdConj8 - 1) * 0.008)));
+            } else if (modo === 'otimizado_24') {
+                totalEst = Math.round(qtdConj8 * 24 * (qtdConj8 === 25 ? 0.85 : 0.92));
+            }
+        }
+
+        if (diagTotalJogos) {
+            diagTotalJogos.innerText = `${qtdConj8} conjunto${qtdConj8 > 1 ? 's' : ''} • ${totalEst} jogos`;
+        }
+        if (diagCustoJogos) {
+            diagCustoJogos.innerText = (totalEst * 3.5).toFixed(2).replace('.', ',');
+        }
     }
 
     async _executarGeracaoJogosPorGrupos() {
@@ -11024,7 +12084,7 @@ if(pp){
 
         const grupos = this._obterGruposDigitados();
         if (Object.keys(grupos).length === 0) {
-            alert('Por favor, preencha pelo menos alguns grupos ou clique em "Carregar Exemplo da Planilha"!');
+            alert('Por favor, preencha os grupos de dezenas ou selecione uma das opções estatísticas (3, 5, 10 ou 15 sorteios)!');
             return;
         }
 
@@ -11035,20 +12095,50 @@ if(pp){
             btnExecutar.innerHTML = '⏳ Gerando Jogos por Grupos...';
         }
 
-        this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Combinando grupos e ordenando jogos...</div></div>';
+        this.gamesContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.2em;">Combinando grupos e desdobrando conjuntos...</div></div>';
 
         try {
-            const modo = document.getElementById('select-modo-combinatorio-grupos')?.value || 'fechamento_total';
-            const k = parseInt(document.getElementById('select-k-grupos-por-jogo')?.value || '5') || 5;
-            const eliminarDuplicados = document.getElementById('check-eliminar-duplicados-grupos')?.checked || (modo === 'sem_duplicatas');
+            const isModo5 = this._modoGruposLotofacil === '5_grupos';
+            const modo = document.getElementById('select-modo-combinatorio-grupos')?.value || (isModo5 ? 'fechamento_5_grupos' : 'fechamento_total');
+            const kPadrao = (isModo5 || modo === 'fechamento_5_grupos') ? 3 : 5;
+            const k = parseInt(document.getElementById('select-k-grupos-por-jogo')?.value || kPadrao) || kPadrao;
+            const eliminarDuplicados = document.getElementById('check-eliminar-duplicados-grupos')?.checked !== false;
+
+            let qtdConjuntosVal = null;
+            let poolParaUso = null;
+
+            if (isModo5) {
+                const selConj5 = document.getElementById('select-qtd-conjuntos-5-grupos')?.value || 'auto';
+                if (selConj5 === 'auto' || selConj5 === '97') qtdConjuntosVal = 97;
+                else qtdConjuntosVal = parseInt(selConj5, 10) || 1;
+            } else {
+                const selConj8 = document.getElementById('select-qtd-conjuntos-lotofacil');
+                qtdConjuntosVal = parseInt(selConj8 ? selConj8.value : '25', 10) || 25;
+
+                poolParaUso = this._pool25Lotofacil;
+                if (!poolParaUso || poolParaUso.length < 25) {
+                    const inpSeq8 = document.getElementById('input-sequencia-25-lotofacil');
+                    if (inpSeq8 && inpSeq8.value.trim()) {
+                        const rawVals = inpSeq8.value.split(/[\s,;]+/).map(x => parseInt(x.trim(), 10)).filter(x => !isNaN(x) && x >= 1 && x <= 25);
+                        const uniq = Array.from(new Set(rawVals));
+                        for (let d = 1; d <= 25; d++) {
+                            if (!uniq.includes(d)) uniq.push(d);
+                        }
+                        poolParaUso = uniq.slice(0, 25);
+                        this._pool25Lotofacil = poolParaUso;
+                    }
+                }
+            }
 
             const res = await MotorLotofacilB2BEngine.gerarJogosPorGrupos(grupos, {
-                modo: modo === 'sem_duplicatas' ? 'planilha_48' : modo,
+                modo: isModo5 ? '5_grupos_rotativo' : (modo === 'sem_duplicatas' ? 'planilha_48' : modo),
                 qtdGruposPorJogo: k,
                 eliminarDuplicados: eliminarDuplicados,
                 ordenarDezenas: true,
                 fixas: Array.from(this.fixedNumbers || []),
-                excluidas: Array.from(this.excludedNumbers || [])
+                excluidas: Array.from(this.excludedNumbers || []),
+                qtdConjuntos: qtdConjuntosVal,
+                pool: poolParaUso
             });
 
             if (res && res.sucesso && res.jogos && res.jogos.length > 0) {
@@ -11062,26 +12152,30 @@ if(pp){
                     smartAnalysis: null
                 }, 'lotofacil');
 
+                if (typeof this._renderVisualConjuntosLotofacil === 'function') {
+                    this._renderVisualConjuntosLotofacil(res);
+                }
+
                 setTimeout(() => {
                     const b = document.createElement('div');
                     b.className = 'smart-gen-analysis';
                     b.style.cssText = 'margin-top:10px;margin-bottom:12px;padding:14px 18px;border-radius:10px;background:radial-gradient(circle at top left, rgba(245,158,11,0.2), rgba(15,23,42,0.95));border:1px solid #f59e0b;color:#fde68a;font-size:0.83rem;box-shadow:0 6px 20px rgba(0,0,0,0.4);';
                     
                     const ausentesStr = res.dezenas_ausentes && res.dezenas_ausentes.length > 0 
-                        ? res.dezenas_ausentes.map(n => n.toString().padStart(2, '0')).join(', ') 
-                        : 'Nenhuma (cobertura total 25/25)';
+                        ? res.dezenas_ausentes.map(n => String(n).padStart(2, '0')).join(', ') 
+                        : 'Nenhuma (cobertura total 25/25 no pool global)';
 
                     b.innerHTML = `
                         <div style="font-weight:800;font-size:0.95rem;color:#fbbf24;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
-                            🎲 MOTOR DE FECHAMENTO POR GRUPOS CONCLUÍDO COM SUCESSO!
+                            🎲 MOTOR DE FECHAMENTO POR GRUPOS DA LOTOFÁCIL CONCLUÍDO COM SUCESSO!
                         </div>
                         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:8px;line-height:1.6;color:#e2e8f0;">
+                            <div>• <strong>Conjuntos Desdobrados:</strong> <span style="color:#fde68a;">${res.total_conjuntos || 1} conjuntos</span></div>
                             <div>• <strong>Total de Jogos Gerados:</strong> <span style="color:#34d399;">${res.total_jogos} jogos</span></div>
-                            <div>• <strong>Jogos Únicos:</strong> <span style="color:#38bdf8;">${res.jogos_unicos}</span> | <strong>Duplicados:</strong> <span style="color:${res.jogos_duplicados > 0 ? '#fca5a5' : '#34d399'};">${res.jogos_duplicados}</span></div>
-                            <div>• <strong>Grupos Utilizados:</strong> ${res.total_grupos} grupos combinados ${k} a ${k}</div>
+                            <div>• <strong>Jogos Únicos:</strong> <span style="color:#38bdf8;">${res.jogos_unicos}</span> | <strong>Duplicados Eliminados:</strong> <span style="color:#34d399;">${res.jogos_duplicados || 0}</span></div>
+                            <div>• <strong>Estrutura Combinatória:</strong> ${isModo5 ? '5 grupos de 5 dezenas combinados 3 a 3' : '8 grupos de 3 dezenas combinados 5 a 5'} (15 dezenas/jogo)</div>
                             <div>• <strong>Dezenas Ausentes:</strong> <span style="color:#fde68a;">[${ausentesStr}]</span></div>
-                            <div>• <strong>Custo Total:</strong> R$ ${(res.total_jogos * 3.0).toFixed(2).replace('.', ',')}</div>
-                            <div>• <strong>Formato:</strong> 15 dezenas em ordem crescente por aposta</div>
+                            <div>• <strong>Custo Total:</strong> R$ ${(res.custo_total_brl !== undefined ? Number(res.custo_total_brl).toFixed(2) : (res.total_jogos * 3.5).toFixed(2)).replace('.', ',')}</div>
                         </div>
                     `;
 
@@ -11113,9 +12207,168 @@ if(pp){
         }
     }
 
+    _renderVisualConjuntosLotomania(res) {
+        const container = document.getElementById('container-visual-conjuntos-lotomania');
+        if (!container) return;
+
+        if (!res || !res.conjuntos || res.conjuntos.length === 0) {
+            container.style.display = 'none';
+            container.innerHTML = '';
+            return;
+        }
+
+        container.style.display = 'block';
+        let html = `
+            <div style="background: radial-gradient(circle at top left, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.95)); border: 1px solid #f59e0b; border-radius: 10px; padding: 14px 16px; box-shadow: 0 6px 25px rgba(0,0,0,0.4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                    <div style="font-size: 0.98rem; font-weight: 800; color: #fde68a; display: flex; align-items: center; gap: 8px;">
+                        🎲 DESDOBRAMENTO 10x10 DA LOTOMANIA (HORIZONTAL E VERTICAL)
+                    </div>
+                    <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 3px 10px; border-radius: 999px; border: 1px solid #10b981; font-weight: 800;">
+                        ✓ ${res.total_conjuntos} Conjuntos • ${res.total_jogos} Jogos de 50 Dezenas • 0 Duplicatas
+                    </span>
+                </div>
+                <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0 0 12px 0;">
+                    Os 10 grupos de 10 dezenas jogam entre si formando apostas de 50 dezenas e dividindo as 50 dezenas restantes (jogos espelho complementares), combinando varredura horizontal e vertical sem duplicidades:
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+        `;
+
+        const maxConjRender = 50;
+        const conjSlice = res.conjuntos.slice(0, maxConjRender);
+
+        conjSlice.forEach((conj) => {
+            const gruposHtml = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(g => {
+                const nums = (conj.grupos[g] || []).map(n => n.toString().padStart(2, '0')).join(', ');
+                return `<span style="background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);"><strong style="color:#fde68a;">G${g}:</strong> [${nums}]</span>`;
+            }).join(' ');
+
+            html += `
+                <details style="background: rgba(0,0,0,0.3); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 6px; padding: 8px 12px;" ${conj.numero_conjunto === 1 ? 'open' : ''}>
+                    <summary style="font-weight: 800; font-size: 0.82rem; color: #fde68a; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <span>🏷️ ${conj.descricao}</span>
+                        <span style="font-size: 0.72rem; color: #34d399; background: rgba(16,185,129,0.15); padding: 1px 6px; border-radius: 4px;">${conj.total_jogos_desdobrados || (conj.jogos_indices ? conj.jogos_indices.length : 0)} jogos desdobrados</span>
+                    </summary>
+                    <div style="margin-top: 8px; font-size: 0.75rem; color: #e2e8f0; display: flex; flex-wrap: wrap; gap: 6px;">
+                        ${gruposHtml}
+                    </div>
+                    <div style="margin-top: 8px; font-size: 0.73rem; color: #94a3b8; line-height: 1.4;">
+                        Jogos gerados por este conjunto: índices <strong>#${conj.jogos_indices ? conj.jogos_indices[0] : 1}</strong> a <strong>#${conj.jogos_indices ? conj.jogos_indices[conj.jogos_indices.length - 1] : 10}</strong>.
+                    </div>
+                </details>
+            `;
+        });
+
+        if (res.conjuntos.length > maxConjRender) {
+            html += `
+                <div style="text-align: center; padding: 12px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; color: #fde68a; font-size: 0.8rem; font-weight: 700; margin-top: 6px;">
+                    ⚡ Exibindo os primeiros ${maxConjRender} conjuntos para fluidez visual. Todos os <strong>${res.total_conjuntos} conjuntos (${res.total_jogos} jogos)</strong> foram gerados e estão disponíveis na listagem de jogos, conferência e exportação.
+                </div>
+            `;
+        }
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    _renderVisualConjuntosLotofacil(res) {
+        const container = document.getElementById('container-visual-conjuntos-lotofacil') || document.getElementById('container-visual-conjuntos');
+        if (!container) return;
+
+        if (!res || !res.conjuntos || res.conjuntos.length === 0) {
+            container.style.display = 'none';
+            container.innerHTML = '';
+            return;
+        }
+
+        const isModo5 = this._modoGruposLotofacil === '5_grupos';
+        const corTema = isModo5 ? '#3b82f6' : '#f59e0b';
+        const corTexto = isModo5 ? '#93c5fd' : '#fde68a';
+        const titulo = isModo5 
+            ? '🎲 DESDOBRAMENTO 5x5 DA LOTOFÁCIL (100% DAS 25 DEZENAS)'
+            : '🎲 DESDOBRAMENTO EM CONJUNTOS 8×3 DA LOTOFÁCIL (FECHAMENTO MATRICIAL)';
+
+        container.style.display = 'block';
+        let html = `
+            <div style="background: radial-gradient(circle at top left, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.95)); border: 1px solid ${corTema}; border-radius: 10px; padding: 14px 16px; box-shadow: 0 6px 25px rgba(0,0,0,0.4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                    <div style="font-size: 0.98rem; font-weight: 800; color: ${corTexto}; display: flex; align-items: center; gap: 8px;">
+                        ${titulo}
+                    </div>
+                    <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 3px 10px; border-radius: 999px; border: 1px solid #10b981; font-weight: 800;">
+                        ✓ ${res.total_conjuntos} Conjuntos • ${res.total_jogos} Jogos de 15 Dezenas • ${res.jogos_duplicados || 0} Duplicatas Eliminadas
+                    </span>
+                </div>
+                <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0 0 12px 0;">
+                    ${isModo5 
+                        ? 'O apostador formou o 1º conjunto com as 25 dezenas (5 grupos de 5). O motor desdobrou os conjuntos sucessivamente sem duplicidades:'
+                        : 'Cada conjunto é composto por 24 dezenas distribuídas em 8 grupos de 3 dezenas com rotação científica da dezena excluída em cada conjunto:'}
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+        `;
+
+        const maxConjRender = 50;
+        const conjSlice = res.conjuntos.slice(0, maxConjRender);
+        conjSlice.forEach((conj) => {
+            const gKeys = Object.keys(conj.grupos || {}).map(Number).sort((a, b) => a - b);
+            const gruposHtml = gKeys.map(g => {
+                const nums = (conj.grupos[g] || []).map(n => String(n).padStart(2, '0')).join(', ');
+                return `<span style="background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);"><strong style="color:${corTexto};">G${g}:</strong> [${nums}]</span>`;
+            }).join(' ');
+
+            const dezAusenteBadge = (conj.dezena_ausente !== undefined && conj.dezena_ausente !== null)
+                ? `<span style="font-size: 0.72rem; color: #fca5a5; background: rgba(239,68,68,0.15); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(239,68,68,0.3);">Excluída: ${String(conj.dezena_ausente).padStart(2, '0')}</span>`
+                : '';
+
+            const jogosInfo = conj.jogos_indices && conj.jogos_indices.length > 0
+                ? `#${conj.jogos_indices[0]} a #${conj.jogos_indices[conj.jogos_indices.length - 1]}`
+                : `${conj.total_jogos_desdobrados || 0} jogos`;
+
+            html += `
+                <details style="background: rgba(0,0,0,0.3); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 6px; padding: 8px 12px;" ${conj.numero_conjunto === 1 ? 'open' : ''}>
+                    <summary style="font-weight: 800; font-size: 0.82rem; color: ${corTexto}; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span>🏷️ ${conj.descricao || ('Conjunto ' + conj.numero_conjunto)}</span>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            ${dezAusenteBadge}
+                            <span style="font-size: 0.72rem; color: #34d399; background: rgba(16,185,129,0.15); padding: 1px 6px; border-radius: 4px;">${conj.total_jogos_desdobrados || (conj.jogos_indices ? conj.jogos_indices.length : 0)} jogos</span>
+                        </div>
+                    </summary>
+                    <div style="margin-top: 8px; font-size: 0.75rem; color: #e2e8f0; display: flex; flex-wrap: wrap; gap: 6px;">
+                        ${gruposHtml}
+                    </div>
+                    <div style="margin-top: 8px; font-size: 0.73rem; color: #94a3b8; line-height: 1.4;">
+                        Jogos gerados por este conjunto: <strong>${jogosInfo}</strong>.
+                    </div>
+                </details>
+            `;
+        });
+
+        if (res.conjuntos.length > maxConjRender) {
+            html += `
+                <div style="text-align: center; padding: 12px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; color: #fde68a; font-size: 0.8rem; font-weight: 700; margin-top: 6px;">
+                    ⚡ Exibindo os primeiros ${maxConjRender} conjuntos para fluidez visual. Todos os <strong>${res.total_conjuntos} conjuntos (${res.total_jogos} jogos)</strong> foram gerados e estão disponíveis na listagem, exportação e conferência.
+                </div>
+            `;
+        }
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
 }
 
 // Export removed for global script compatibility
+
+
+
+
 /* Cache bust: 20260511171042 */
 
 

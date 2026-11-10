@@ -754,7 +754,7 @@ class MotorLotofacilB2BEngine {
                 maximo_acertos_baseline: Math.max(...acertosBase, 0),
                 jogos_premiados_motor: acertosMotor.filter(a => a >= 11).length,
                 jogos_premiados_baseline: acertosBase.filter(a => a >= 11).length,
-                custo_total_apostas_brl: +(qtdJogos * 3.0).toFixed(2)
+                custo_total_apostas_brl: +(qtdJogos * 3.5).toFixed(2)
             },
             declaracao_cientifica: 'O backtesting retrospectivo foi executado sob isolamento temporal total. Os sorteios são independentes e não há garantias de repetição exata.'
         };
@@ -777,6 +777,20 @@ class MotorLotofacilB2BEngine {
         [3, 4, 5, 7, 8], [3, 4, 6, 7, 8], [3, 5, 6, 7, 8], [4, 5, 6, 7, 8]
     ];
 
+    // Matriz canônica de 5 Grupos tomados 3 a 3: C(5,3) = 10 jogos
+    static MATRIZ_5_GRUPOS_10 = [
+        [1, 2, 3],
+        [1, 2, 4],
+        [1, 2, 5],
+        [1, 3, 4],
+        [1, 3, 5],
+        [1, 4, 5],
+        [2, 3, 4],
+        [2, 3, 5],
+        [2, 4, 5],
+        [3, 4, 5]
+    ];
+
     static GRUPOS_EXEMPLO_PADRAO = {
         1: [3, 13, 19],
         2: [7, 8, 14],
@@ -787,6 +801,512 @@ class MotorLotofacilB2BEngine {
         7: [9, 11, 25],
         8: [2, 21, 24]
     };
+
+    static GRUPOS_EXEMPLO_PADRAO_5 = {
+        1: [16, 25, 6, 13, 24],
+        2: [19, 23, 5, 8, 11],
+        3: [15, 17, 22, 4, 20],
+        4: [1, 7, 12, 14, 3],
+        5: [10, 18, 9, 21, 2]
+    };
+
+    static VETORES_DESLOCAMENTO_37 = [
+        [0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0], [2, 0, 0, 0, 0], [3, 0, 0, 0, 0], [4, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0], [0, 2, 0, 0, 0], [0, 3, 0, 0, 0], [0, 4, 0, 0, 0],
+        [0, 0, 1, 0, 0], [0, 0, 2, 0, 0], [0, 0, 3, 0, 0], [0, 0, 4, 0, 0],
+        [0, 0, 0, 1, 0], [0, 0, 0, 2, 0], [0, 0, 0, 3, 0], [0, 0, 0, 4, 0],
+        [0, 0, 0, 0, 1], [0, 0, 0, 0, 2], [0, 0, 0, 0, 3], [0, 0, 0, 0, 4],
+        [1, 1, 0, 0, 0], [2, 2, 0, 0, 0], [3, 3, 0, 0, 0], [4, 4, 0, 0, 0],
+        [0, 4, 4, 0, 0], [0, 1, 1, 0, 0], [0, 2, 2, 0, 0], [0, 3, 3, 0, 0],
+        [0, 0, 1, 1, 0], [0, 0, 2, 2, 0], [0, 0, 3, 3, 0], [0, 0, 4, 4, 0],
+        [0, 0, 0, 1, 1], [0, 0, 0, 2, 2], [0, 0, 0, 3, 3], [0, 0, 0, 4, 4]
+    ];
+
+    static _descreverConjunto5x5(idx, sVec) {
+        if (idx === 0) return 'Conjunto 1 (Matriz Base do Apostador)';
+        const nonZero = [];
+        for (let c = 0; c < 5; c++) {
+            if (sVec[c] !== 0) nonZero.push([c + 1, sVec[c]]);
+        }
+        if (nonZero.length === 1) {
+            return `Conjunto ${idx + 1} (Rotação Coluna ${nonZero[0][0]} — Deslocamento ${nonZero[0][1]})`;
+        } else if (nonZero.length === 2) {
+            return `Conjunto ${idx + 1} (Rotação Colunas ${nonZero[0][0]} e ${nonZero[1][0]} — Deslocamento ${nonZero[0][1]})`;
+        }
+        return `Conjunto ${idx + 1}`;
+    }
+
+    static gerarFormulasConjuntos5x5(limiteConjuntos = 97) {
+        const usedGames = new Set();
+        const conjuntos = [];
+
+        function getConjH(s) {
+            const grps = [];
+            for (let r = 0; r < 5; r++) {
+                const grp = [];
+                for (let c = 0; c < 5; c++) {
+                    grp.push([(r - s[c] + 50) % 5, c]);
+                }
+                grps.push(grp);
+            }
+            return grps;
+        }
+
+        function getConjV(t) {
+            const grps = [];
+            for (let c = 0; c < 5; c++) {
+                const grp = [];
+                for (let r = 0; r < 5; r++) {
+                    grp.push([r, (c - t[r] + 50) % 5]);
+                }
+                grps.push(grp);
+            }
+            return grps;
+        }
+
+        function getGames(grps) {
+            const gSet = new Set();
+            for (const combo of MotorLotofacilB2BEngine.MATRIZ_5_GRUPOS_10) {
+                const rawCoords = [];
+                for (const gid of combo) {
+                    for (const coord of grps[gid - 1]) rawCoords.push(coord[0] * 5 + coord[1]);
+                }
+                rawCoords.sort((a, b) => a - b);
+                gSet.add(rawCoords.join('-'));
+            }
+            return gSet;
+        }
+
+        function hasOverlap(gSet) {
+            for (const sig of gSet) {
+                if (usedGames.has(sig)) return true;
+            }
+            return false;
+        }
+
+        function addGames(gSet) {
+            for (const sig of gSet) usedGames.add(sig);
+        }
+
+        // 1. Fase Horizontal 37
+        for (let idx = 0; idx < this.VETORES_DESLOCAMENTO_37.length; idx++) {
+            const s = this.VETORES_DESLOCAMENTO_37[idx];
+            const grps = getConjH(s);
+            const gSet = getGames(grps);
+            if (!hasOverlap(gSet)) {
+                const desc = this._descreverConjunto5x5(idx, s);
+                conjuntos.push({
+                    numero: conjuntos.length + 1,
+                    descricao: desc,
+                    orientacao: 'Linhas (Horizontal • 5 para a Direita)',
+                    shift: s,
+                    grupos_coords: grps
+                });
+                addGames(gSet);
+                if (conjuntos.length >= limiteConjuntos) return conjuntos;
+            }
+        }
+
+        // 2. Fase Vertical 37 ('cinco numeros para baixo geram grupos')
+        for (let idx = 0; idx < this.VETORES_DESLOCAMENTO_37.length; idx++) {
+            const s = this.VETORES_DESLOCAMENTO_37[idx];
+            const grps = getConjV(s);
+            const gSet = getGames(grps);
+            if (!hasOverlap(gSet)) {
+                const descV = idx === 0 
+                    ? 'Conjunto Vertical Base (Colunas da Matriz Base • 5 para Baixo)'
+                    : `Conjunto Vertical ${conjuntos.length + 1} (Colunas • Rotação Linha [${s.join(',')}])`;
+                conjuntos.push({
+                    numero: conjuntos.length + 1,
+                    descricao: descV,
+                    orientacao: 'Colunas (Vertical • 5 para Baixo)',
+                    shift: s,
+                    grupos_coords: grps
+                });
+                addGames(gSet);
+                if (conjuntos.length >= limiteConjuntos) return conjuntos;
+            }
+        }
+
+        // 3. Fase Complementar Horizontal
+        for (let s1 = 0; s1 < 5; s1++) {
+            for (let s2 = 0; s2 < 5; s2++) {
+                for (let s3 = 0; s3 < 5; s3++) {
+                    for (let s4 = 0; s4 < 5; s4++) {
+                        const s = [0, s1, s2, s3, s4];
+                        const grps = getConjH(s);
+                        const gSet = getGames(grps);
+                        if (!hasOverlap(gSet)) {
+                            conjuntos.push({
+                                numero: conjuntos.length + 1,
+                                descricao: `Conjunto ${conjuntos.length + 1} (Horizontal • Deslocamento [${s.join(',')}])`,
+                                orientacao: 'Linhas (Horizontal • 5 para a Direita)',
+                                shift: s,
+                                grupos_coords: grps
+                            });
+                            addGames(gSet);
+                            if (conjuntos.length >= limiteConjuntos) return conjuntos;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. Fase Complementar Vertical
+        for (let s1 = 0; s1 < 5; s1++) {
+            for (let s2 = 0; s2 < 5; s2++) {
+                for (let s3 = 0; s3 < 5; s3++) {
+                    for (let s4 = 0; s4 < 5; s4++) {
+                        const s = [0, s1, s2, s3, s4];
+                        const grps = getConjV(s);
+                        const gSet = getGames(grps);
+                        if (!hasOverlap(gSet)) {
+                            conjuntos.push({
+                                numero: conjuntos.length + 1,
+                                descricao: `Conjunto ${conjuntos.length + 1} (Vertical • Deslocamento [${s.join(',')}])`,
+                                orientacao: 'Colunas (Vertical • 5 para Baixo)',
+                                shift: s,
+                                grupos_coords: grps
+                            });
+                            addGames(gSet);
+                            if (conjuntos.length >= limiteConjuntos) return conjuntos;
+                        }
+                    }
+                }
+            }
+        }
+
+        return conjuntos;
+    }
+
+    static derivarConjuntosRotativos8x3(matrizOuGrupos, options = {}) {
+        let pool25 = [];
+        if (options.pool && Array.isArray(options.pool) && options.pool.length === 25) {
+            pool25 = options.pool.map(Number).filter(n => n >= 1 && n <= 25);
+        } else if (Array.isArray(matrizOuGrupos) && matrizOuGrupos.length === 25) {
+            pool25 = matrizOuGrupos.map(Number).filter(n => n >= 1 && n <= 25);
+        } else {
+            const presentes = [];
+            if (matrizOuGrupos && typeof matrizOuGrupos === 'object') {
+                const keys = Object.keys(matrizOuGrupos).map(Number).sort((a, b) => a - b);
+                for (const k of keys) {
+                    const row = matrizOuGrupos[k];
+                    if (Array.isArray(row)) {
+                        for (const x of row) {
+                            const val = parseInt(x);
+                            if (val >= 1 && val <= 25 && !presentes.includes(val)) {
+                                presentes.push(val);
+                            }
+                        }
+                    }
+                }
+            }
+            const ausentes = [];
+            for (let d = 1; d <= 25; d++) {
+                if (!presentes.includes(d)) ausentes.push(d);
+            }
+            pool25 = presentes.concat(ausentes);
+        }
+
+        const vistosPool = new Set(pool25);
+        for (let d = 1; d <= 25; d++) {
+            if (!vistosPool.has(d)) pool25.push(d);
+        }
+        pool25 = pool25.slice(0, 25);
+
+        const fixasSet = new Set((options.fixas || []).map(Number).filter(n => n >= 1 && n <= 25));
+        const excluidasSet = new Set((options.excluidas || []).map(Number).filter(n => n >= 1 && n <= 25));
+        const ordenarDezenas = options.ordenarDezenas !== false;
+        const eliminarDuplicados = !!options.eliminarDuplicados;
+
+        let limite = 25;
+        if (options.qtdConjuntos && !isNaN(parseInt(options.qtdConjuntos, 10)) && parseInt(options.qtdConjuntos, 10) > 0) {
+            limite = Math.min(25, parseInt(options.qtdConjuntos, 10));
+        }
+
+        function getCombinations(arr, size) {
+            const result = [];
+            function combine(prefix, start) {
+                if (prefix.length === size) {
+                    result.push(prefix.slice());
+                    return;
+                }
+                for (let i = start; i < arr.length; i++) {
+                    prefix.push(arr[i]);
+                    combine(prefix, i + 1);
+                    prefix.pop();
+                }
+            }
+            combine([], 0);
+            return result;
+        }
+
+        const allCombos56 = getCombinations([1, 2, 3, 4, 5, 6, 7, 8], 5);
+        let combos = allCombos56;
+        if (options.modo === 'planilha_48') {
+            combos = this.MATRIZ_PLANILHA_48 || allCombos56.slice(0, 48);
+        } else if (options.modo === 'otimizado_24') {
+            combos = allCombos56.slice(0, 24);
+        }
+
+        const conjuntos = [];
+        const jogos = [];
+        const vistos = new Map();
+        let totalJogosBrutos = 0;
+        let jogosDuplicados = 0;
+        const freqDezenas = {};
+        const todasDezenas = new Set();
+
+        for (let k = 0; k < limite; k++) {
+            const excluded = pool25[24 - k];
+            const rem = pool25.filter(x => x !== excluded);
+
+            const s = k % 24;
+            const remShifted = rem.slice(s).concat(rem.slice(0, s));
+
+            const gruposC = {};
+            for (let g = 0; g < 8; g++) {
+                const pedaco = remShifted.slice(g * 3, (g + 1) * 3);
+                gruposC[g + 1] = ordenarDezenas ? pedaco.slice().sort((a, b) => a - b) : pedaco;
+            }
+
+            const conjJogosIndices = [];
+
+            for (const combo of combos) {
+                totalJogosBrutos++;
+                const numSet = new Set(fixasSet);
+                for (const gid of combo) {
+                    for (const num of gruposC[gid]) numSet.add(num);
+                }
+                for (const excl of excluidasSet) numSet.delete(excl);
+
+                const listaNums = Array.from(numSet);
+                if (ordenarDezenas) listaNums.sort((a, b) => a - b);
+
+                const sig = listaNums.slice().sort((a, b) => a - b).join('-');
+
+                if (vistos.has(sig)) {
+                    jogosDuplicados++;
+                    if (eliminarDuplicados) continue;
+                } else {
+                    vistos.set(sig, jogos.length + 1);
+                }
+
+                for (const d of listaNums) {
+                    freqDezenas[d] = (freqDezenas[d] || 0) + 1;
+                    todasDezenas.add(d);
+                }
+
+                const idxJogo = jogos.length + 1;
+                conjJogosIndices.push(idxJogo);
+
+                const soma = listaNums.reduce((acc, v) => acc + v, 0);
+                const pares = listaNums.filter(d => d % 2 === 0).length;
+                const impares = listaNums.length - pares;
+                const primos = listaNums.filter(d => [2, 3, 5, 7, 11, 13, 17, 19, 23].includes(d)).length;
+                const moldura = listaNums.filter(d => [1, 2, 3, 4, 5, 6, 10, 11, 15, 16, 20, 21, 22, 23, 24, 25].includes(d)).length;
+
+                jogos.push({
+                    numero_jogo: idxJogo,
+                    numeros: listaNums,
+                    conjunto: k + 1,
+                    grupos_combinados: combo,
+                    soma, pares, impares, primos, moldura
+                });
+            }
+
+            const exStr = String(excluded).padStart(2, '0');
+            conjuntos.push({
+                numero_conjunto: k + 1,
+                descricao: `Conjunto ${k + 1} (24 Dezenas • Ausente: ${exStr})`,
+                dezena_ausente: excluded,
+                grupos: gruposC,
+                qtd_jogos: conjJogosIndices.length,
+                jogos_indices: conjJogosIndices
+            });
+        }
+
+        const custoUnitario = 3.50;
+        return {
+            sucesso: true,
+            modo: options.modo || 'fechamento_total',
+            total_conjuntos: conjuntos.length,
+            conjuntos: conjuntos,
+            total_jogos: jogos.length,
+            jogos_brutos: totalJogosBrutos,
+            jogos_unicos: vistos.size,
+            jogos_duplicados: jogosDuplicados,
+            total_grupos: 8,
+            qtd_grupos_por_jogo: 5,
+            custo_unitario_brl: custoUnitario,
+            custo_total_brl: Math.round(jogos.length * custoUnitario * 100) / 100,
+            dezenas_usadas: Array.from(todasDezenas).sort((a, b) => a - b),
+            jogos: jogos
+        };
+    }
+
+    static derivarConjuntosRotativos5x5(matrizOuGrupos, options = {}) {
+        const matrizBase = [];
+        if (matrizOuGrupos && typeof matrizOuGrupos === 'object' && !Array.isArray(matrizOuGrupos)) {
+            const keys = Object.keys(matrizOuGrupos).map(Number).sort((a, b) => a - b).slice(0, 5);
+            for (const k of keys) {
+                const vals = (matrizOuGrupos[k] || []).map(Number).filter(n => n >= 1 && n <= 25);
+                matrizBase.push(vals);
+            }
+        } else if (Array.isArray(matrizOuGrupos)) {
+            if (matrizOuGrupos.length === 25) {
+                for (let i = 0; i < 5; i++) {
+                    matrizBase.push(matrizOuGrupos.slice(i * 5, (i + 1) * 5).map(Number));
+                }
+            } else {
+                for (let i = 0; i < Math.min(5, matrizOuGrupos.length); i++) {
+                    matrizBase.push((matrizOuGrupos[i] || []).map(Number).filter(n => n >= 1 && n <= 25));
+                }
+            }
+        }
+
+        if (matrizBase.length !== 5 || matrizBase.some(r => r.length !== 5)) {
+            return {
+                sucesso: false,
+                erro: 'A matriz base precisa ter exatamente 5 grupos com 5 dezenas cada (5x5).'
+            };
+        }
+
+        const fixasSet = new Set((options.fixas || []).map(Number).filter(n => n >= 1 && n <= 25));
+        const excluidasSet = new Set((options.excluidas || []).map(Number).filter(n => n >= 1 && n <= 25));
+        const ordenarDezenas = options.ordenarDezenas !== false;
+        const eliminarDuplicados = !!options.eliminarDuplicados;
+        const pararNaDuplicidade = options.pararNaDuplicidade !== false;
+
+        let limite = 97;
+        if (options.qtdConjuntos && !isNaN(parseInt(options.qtdConjuntos, 10)) && parseInt(options.qtdConjuntos, 10) > 0) {
+            limite = parseInt(options.qtdConjuntos, 10);
+        } else if (options.qtdConjuntos === 'max') {
+            limite = 1246;
+        }
+
+        const formulas = this.gerarFormulasConjuntos5x5(limite);
+
+        const conjuntos = [];
+        const jogos = [];
+        const vistos = new Map();
+        let jogosDuplicados = 0;
+        const freqDezenas = {};
+        const todasDezenas = new Set();
+
+        for (let cIdx = 0; cIdx < formulas.length; cIdx++) {
+            const fInfo = formulas[cIdx];
+            const gruposC = {};
+            for (let gNum = 0; gNum < 5; gNum++) {
+                gruposC[gNum + 1] = fInfo.grupos_coords[gNum].map(([r, c]) => matrizBase[r][c]);
+            }
+
+            // Verificação antecipada de duplicidade
+            let temDuplicado = false;
+            for (const combo of this.MATRIZ_5_GRUPOS_10) {
+                const s = new Set(fixasSet);
+                for (const gid of combo) {
+                    for (const d of gruposC[gid]) s.add(d);
+                }
+                for (const d of excluidasSet) s.delete(d);
+                const sig = Array.from(s).sort((a, b) => a - b).join('-');
+                if (vistos.has(sig)) {
+                    temDuplicado = true;
+                    break;
+                }
+            }
+
+            if (temDuplicado && pararNaDuplicidade && cIdx > 0) {
+                break;
+            }
+
+            const conjuntoInfo = {
+                numero_conjunto: cIdx + 1,
+                descricao: fInfo.descricao,
+                orientacao: fInfo.orientacao,
+                grupos: gruposC,
+                jogos_indices: []
+            };
+
+            for (let comboIdx = 0; comboIdx < this.MATRIZ_5_GRUPOS_10.length; comboIdx++) {
+                const combo = this.MATRIZ_5_GRUPOS_10[comboIdx];
+                const s = new Set(fixasSet);
+                for (const gid of combo) {
+                    for (const d of gruposC[gid]) s.add(d);
+                }
+                for (const d of excluidasSet) s.delete(d);
+
+                let listaNums = Array.from(s);
+                if (ordenarDezenas) listaNums.sort((a, b) => a - b);
+
+                const sig = Array.from(s).sort((a, b) => a - b).join('-');
+                const duplicadoDe = vistos.has(sig) ? vistos.get(sig) : null;
+
+                if (duplicadoDe === null) {
+                    vistos.set(sig, jogos.length + 1);
+                } else {
+                    jogosDuplicados++;
+                    if (eliminarDuplicados) continue;
+                }
+
+                for (const d of listaNums) {
+                    freqDezenas[d] = (freqDezenas[d] || 0) + 1;
+                    todasDezenas.add(d);
+                }
+
+                const soma = listaNums.reduce((acc, x) => acc + x, 0);
+                const pares = listaNums.filter(x => x % 2 === 0).length;
+                const impares = listaNums.length - pares;
+                const primos = listaNums.filter(x => [2, 3, 5, 7, 11, 13, 17, 19, 23].includes(x)).length;
+                const moldura = listaNums.filter(x => [1, 2, 3, 4, 5, 6, 10, 11, 15, 16, 20, 21, 22, 23, 24, 25].includes(x)).length;
+
+                const idxJogo = jogos.length + 1;
+                conjuntoInfo.jogos_indices.push(idxJogo);
+
+                jogos.push({
+                    indice: idxJogo,
+                    numero_conjunto: cIdx + 1,
+                    indice_no_conjunto: comboIdx + 1,
+                    descricao_conjunto: fInfo.descricao,
+                    grupos_combinados: combo,
+                    numeros: listaNums,
+                    total_dezenas: listaNums.length,
+                    soma: soma,
+                    pares: pares,
+                    impares: impares,
+                    primos: primos,
+                    moldura: moldura,
+                    duplicado_de: duplicadoDe
+                });
+            }
+
+            conjuntos.push(conjuntoInfo);
+        }
+
+        const ausentes = [];
+        for (let d = 1; d <= 25; d++) {
+            if (!todasDezenas.has(d)) ausentes.push(d);
+        }
+
+        return {
+            sucesso: true,
+            modo: '5_grupos_rotativo',
+            total_conjuntos: conjuntos.length,
+            total_jogos: jogos.length,
+            jogos_unicos: vistos.size,
+            jogos_duplicados: jogosDuplicados,
+            conjuntos: conjuntos,
+            jogos: jogos,
+            total_grupos: 5,
+            qtd_grupos_por_jogo: 3,
+            dezenas_usadas: Array.from(todasDezenas).sort((a, b) => a - b),
+            dezenas_ausentes: ausentes,
+            frequencia_dezenas: freqDezenas,
+            custo_total_brl: +(jogos.length * 3.5).toFixed(2),
+            grupos_definidos: conjuntos.length > 0 ? conjuntos[0].grupos : {}
+        };
+    }
 
     static async gerarJogosPorGrupos(grupos, options = {}) {
         // 1. Tentar API Python local se estiver ativa
@@ -801,11 +1321,13 @@ class MotorLotofacilB2BEngine {
                 body: JSON.stringify({
                     grupos: grupos,
                     combinacoes: options.combinacoes || null,
-                    qtd_grupos_por_jogo: options.qtdGruposPorJogo || 5,
+                    qtd_grupos_por_jogo: options.qtdGruposPorJogo || null,
                     eliminar_duplicados: options.eliminarDuplicados || false,
                     ordenar_dezenas: options.ordenarDezenas !== undefined ? options.ordenarDezenas : true,
                     fixas: options.fixas || [],
-                    excluidas: options.excluidas || []
+                    excluidas: options.excluidas || [],
+                    modo: options.modo || null,
+                    qtd_conjuntos: options.qtdConjuntos || null
                 })
             });
             clearTimeout(timeoutId);
@@ -841,7 +1363,18 @@ class MotorLotofacilB2BEngine {
             return { sucesso: false, erro: 'Nenhum grupo valido fornecido. Defina os grupos com dezenas entre 1 e 25.' };
         }
 
-        const k = Math.min(groupKeys.length, Math.max(1, parseInt(options.qtdGruposPorJogo) || 5));
+        // Fechamento de 8 grupos de 3 dezenas (Desdobramento em ate 25 Conjuntos):
+        const isModo8 = groupKeys.length === 8 || (Array.isArray(grupos) && grupos.length === 25);
+        if (isModo8 && (options.qtdConjuntos || ['fechamento_total', 'planilha_48', 'otimizado_24', 'conjuntos_8x3'].includes(options.modo))) {
+            return this.derivarConjuntosRotativos8x3(grupos, options);
+        }
+
+        const isModo5 = options.modo === '5_grupos' || options.modo === 'fechamento_5_grupos' || options.modo === '5_grupos_rotativo' || groupKeys.length === 5;
+        if (isModo5 && groupKeys.length === 5 && Object.values(normGrupos).every(v => v.length === 5)) {
+            return this.derivarConjuntosRotativos5x5(grupos, options);
+        }
+        const kDefault = isModo5 ? 3 : 5;
+        const k = Math.min(groupKeys.length, Math.max(1, parseInt(options.qtdGruposPorJogo) || kDefault));
         const eliminarDuplicados = !!options.eliminarDuplicados;
         const ordenarDezenas = options.ordenarDezenas !== false;
         const fixasSet = new Set((options.fixas || []).map(Number).filter(n => n >= 1 && n <= 25));
@@ -852,6 +1385,8 @@ class MotorLotofacilB2BEngine {
             combos = options.combinacoes.map(c => c.map(Number));
         } else if (options.modo === 'planilha_48') {
             combos = this.MATRIZ_PLANILHA_48;
+        } else if (isModo5 && k === 3) {
+            combos = this.MATRIZ_5_GRUPOS_10;
         } else {
             function getCombinations(arr, size) {
                 const result = [];
@@ -945,7 +1480,7 @@ class MotorLotofacilB2BEngine {
             dezenas_usadas: Array.from(todasDezenasUsadas).sort((a, b) => a - b),
             dezenas_ausentes: dezenasAusentes,
             frequencia_dezenas: freqDezenas,
-            custo_total_brl: +(jogos.length * 3.0).toFixed(2),
+            custo_total_brl: +(jogos.length * 3.5).toFixed(2),
             grupos_definidos: normGrupos,
             jogos: jogos
         };

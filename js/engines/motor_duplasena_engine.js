@@ -597,7 +597,7 @@ class MotorDuplaSenaB2BEngine {
             return { sucesso: false, erro: 'Histórico insuficiente para backtesting.' };
         }
 
-        const PRECO_JOGO = 2.50;
+        const PRECO_JOGO = 3.00;
         let custoTotal = 0;
         let retornoTotal = 0;
         let totalJogosSimulados = 0;

@@ -1163,8 +1163,8 @@ class MotorLotofacilB2B:
         contagem_base = collections.Counter(acertos_baseline)
 
         # Tabela oficial de prêmios da Lotofácil (estimativas)
-        valores_premios = {11: 6.0, 12: 12.0, 13: 30.0, 14: 1500.0, 15: 1500000.0}
-        custo_aposta = 3.0 * quantidade_jogos
+        valores_premios = {11: 7.0, 12: 14.0, 13: 35.0, 14: 1500.0, 15: 1500000.0}
+        custo_aposta = 3.5 * quantidade_jogos
 
         retorno_motor = sum(valores_premios.get(pts, 0) * qtd for pts, qtd in contagem_motor.items())
         retorno_base = sum(valores_premios.get(pts, 0) * qtd for pts, qtd in contagem_base.items())
@@ -1221,6 +1221,22 @@ class MotorLotofacilB2B:
         [3, 4, 5, 7, 8], [3, 4, 6, 7, 8], [3, 5, 6, 7, 8], [4, 5, 6, 7, 8]
     ]
 
+    # Matriz canônica de 5 Grupos tomados 3 a 3: C(5,3) = 10 jogos
+    # Cada jogo combina 3 grupos de 5 números = 15 números por volante
+    MATRIZ_5_GRUPOS_10 = [
+        [1, 2, 3],
+        [1, 2, 4],
+        [1, 2, 5],
+        [1, 3, 4],
+        [1, 3, 5],
+        [1, 4, 5],
+        [2, 3, 4],
+        [2, 3, 5],
+        [2, 4, 5],
+        [3, 4, 5]
+    ]
+
+    # Exemplo clássico da planilha: 8 grupos de 3 dezenas (24 dezenas)
     GRUPOS_EXEMPLO_PADRAO = {
         1: [3, 13, 19],
         2: [7, 8, 14],
@@ -1232,21 +1248,500 @@ class MotorLotofacilB2B:
         8: [2, 21, 24]
     }
 
+    # Exemplo canônico de 5 grupos de 5 dezenas (100% de cobertura: todas as 25 dezenas)
+    GRUPOS_EXEMPLO_PADRAO_5 = {
+        1: [16, 25, 6, 13, 24],
+        2: [19, 23, 5, 8, 11],
+        3: [15, 17, 22, 4, 20],
+        4: [1, 7, 12, 14, 3],
+        5: [10, 18, 9, 21, 2]
+    }
+
+    # Os 37 vetores de deslocamento ciclico de colunas derivados da planilha de fechamento 5x5.
+    # Cada deslocamento de coluna altera exatamente 5 numeros no conjunto (1 dezena em cada grupo).
+    # O desdobramento sucessivo para exatamente ao atingir o limite de duplicidade (37 conjuntos = 370 jogos 100% unicos).
+    VETORES_DESLOCAMENTO_37 = [
+        # Conjunto 1: Matriz Base do apostador (0 deslocamentos)
+        (0, 0, 0, 0, 0),
+        # Conjuntos 2 a 5: Coluna 1 rotacionada ciclicamente (deslocamentos 1, 2, 3, 4)
+        (1, 0, 0, 0, 0), (2, 0, 0, 0, 0), (3, 0, 0, 0, 0), (4, 0, 0, 0, 0),
+        # Conjuntos 6 a 9: Coluna 2 rotacionada ciclicamente (deslocamentos 1, 2, 3, 4)
+        (0, 1, 0, 0, 0), (0, 2, 0, 0, 0), (0, 3, 0, 0, 0), (0, 4, 0, 0, 0),
+        # Conjuntos 10 a 13: Coluna 3 rotacionada ciclicamente (deslocamentos 1, 2, 3, 4)
+        (0, 0, 1, 0, 0), (0, 0, 2, 0, 0), (0, 0, 3, 0, 0), (0, 0, 4, 0, 0),
+        # Conjuntos 14 a 17: Coluna 4 rotacionada ciclicamente (deslocamentos 1, 2, 3, 4)
+        (0, 0, 0, 1, 0), (0, 0, 0, 2, 0), (0, 0, 0, 3, 0), (0, 0, 0, 4, 0),
+        # Conjuntos 18 a 21: Coluna 5 rotacionada ciclicamente (deslocamentos 1, 2, 3, 4)
+        (0, 0, 0, 0, 1), (0, 0, 0, 0, 2), (0, 0, 0, 0, 3), (0, 0, 0, 0, 4),
+        # Conjuntos 22 a 25: Colunas 1 e 2 rotacionadas simultaneamente
+        (1, 1, 0, 0, 0), (2, 2, 0, 0, 0), (3, 3, 0, 0, 0), (4, 4, 0, 0, 0),
+        # Conjuntos 26 a 29: Colunas 2 e 3 rotacionadas simultaneamente
+        (0, 4, 4, 0, 0), (0, 1, 1, 0, 0), (0, 2, 2, 0, 0), (0, 3, 3, 0, 0),
+        # Conjuntos 30 a 33: Colunas 3 e 4 rotacionadas simultaneamente
+        (0, 0, 1, 1, 0), (0, 0, 2, 2, 0), (0, 0, 3, 3, 0), (0, 0, 4, 4, 0),
+        # Conjuntos 34 a 37: Colunas 4 e 5 rotacionadas simultaneamente
+        (0, 0, 0, 1, 1), (0, 0, 0, 2, 2), (0, 0, 0, 3, 3), (0, 0, 0, 4, 4)
+    ]
+
     @classmethod
-    def gerar_jogos_por_grupos(
+    def _descrever_conjunto_5x5(cls, idx: int, s_vec: tuple) -> str:
+        if idx == 0:
+            return "Conjunto 1 (Matriz Base do Apostador)"
+        non_zero = [(c + 1, s_vec[c]) for c in range(5) if s_vec[c] != 0]
+        if len(non_zero) == 1:
+            col, shift = non_zero[0]
+            return f"Conjunto {idx + 1} (Rotação Coluna {col} — Deslocamento {shift})"
+        elif len(non_zero) == 2:
+            cols = f"Colunas {non_zero[0][0]} e {non_zero[1][0]}"
+            shifts = f"Deslocamento {non_zero[0][1]}"
+            return f"Conjunto {idx + 1} (Rotação {cols} — {shifts})"
+        return f"Conjunto {idx + 1}"
+
+    @classmethod
+    def gerar_formulas_conjuntos_5x5(cls, limite_conjuntos: int = 97) -> List[Dict[str, Any]]:
+        """
+        Gera as formulas de mapeamento de coordenadas para desdobramento de conjuntos 5x5
+        sem nenhuma duplicidade de jogos ou conjuntos.
+        Considera tanto os 5 numeros para a direita (grupos horizontais / linhas)
+        quanto os 5 numeros para baixo (grupos verticais / colunas), desdobrando
+        um a um ate o limite solicitado (padrao: 97 conjuntos = 970 jogos 100% unicos).
+        """
+        used_games = set()
+        conjuntos = []
+
+        def get_conj_H(s):
+            return [[((r - s[c]) % 5, c) for c in range(5)] for r in range(5)]
+
+        def get_conj_V(t):
+            return [[(r, (c - t[r]) % 5) for r in range(5)] for c in range(5)]
+
+        def get_games(grps):
+            g_set = set()
+            for g1, g2, g3 in cls.MATRIZ_5_GRUPOS_10:
+                # indice canonico do volante
+                ticket = tuple(sorted(grps[g1 - 1] + grps[g2 - 1] + grps[g3 - 1]))
+                g_set.add(ticket)
+            return g_set
+
+        # 1. Fase Horizontal 37 (Linhas da Matriz com deslocamento ciclico das colunas)
+        for idx, s in enumerate(cls.VETORES_DESLOCAMENTO_37):
+            grps = get_conj_H(s)
+            g_set = get_games(grps)
+            if not g_set.intersection(used_games):
+                desc = cls._descrever_conjunto_5x5(idx, s)
+                conjuntos.append({
+                    'numero': len(conjuntos) + 1,
+                    'descricao': desc,
+                    'orientacao': 'Linhas (Horizontal • 5 para a Direita)',
+                    'shift': s,
+                    'grupos_coords': grps
+                })
+                used_games.update(g_set)
+                if len(conjuntos) >= limite_conjuntos:
+                    return conjuntos
+
+        # 2. Fase Vertical 37 (Colunas da Matriz: 'cinco numeros para baixo geram grupos')
+        for idx, s in enumerate(cls.VETORES_DESLOCAMENTO_37):
+            grps = get_conj_V(s)
+            g_set = get_games(grps)
+            if not g_set.intersection(used_games):
+                if idx == 0:
+                    desc_v = "Conjunto Vertical Base (Colunas da Matriz Base • 5 para Baixo)"
+                else:
+                    desc_v = f"Conjunto Vertical {len(conjuntos) + 1} (Colunas • Rotação Linha {s})"
+                conjuntos.append({
+                    'numero': len(conjuntos) + 1,
+                    'descricao': desc_v,
+                    'orientacao': 'Colunas (Vertical • 5 para Baixo)',
+                    'shift': s,
+                    'grupos_coords': grps
+                })
+                used_games.update(g_set)
+                if len(conjuntos) >= limite_conjuntos:
+                    return conjuntos
+
+        # 3. Fase Complementar Horizontal (ate atingir limite_conjuntos)
+        for s_tail in itertools.product(range(5), repeat=4):
+            s = (0,) + s_tail
+            if s not in cls.VETORES_DESLOCAMENTO_37:
+                grps = get_conj_H(s)
+                g_set = get_games(grps)
+                if not g_set.intersection(used_games):
+                    desc = f"Conjunto {len(conjuntos) + 1} (Horizontal • Deslocamento {s})"
+                    conjuntos.append({
+                        'numero': len(conjuntos) + 1,
+                        'descricao': desc,
+                        'orientacao': 'Linhas (Horizontal • 5 para a Direita)',
+                        'shift': s,
+                        'grupos_coords': grps
+                    })
+                    used_games.update(g_set)
+                    if len(conjuntos) >= limite_conjuntos:
+                        return conjuntos
+
+        # 4. Fase Complementar Vertical
+        for s_tail in itertools.product(range(5), repeat=4):
+            s = (0,) + s_tail
+            if s not in cls.VETORES_DESLOCAMENTO_37:
+                grps = get_conj_V(s)
+                g_set = get_games(grps)
+                if not g_set.intersection(used_games):
+                    desc = f"Conjunto {len(conjuntos) + 1} (Vertical • Deslocamento {s})"
+                    conjuntos.append({
+                        'numero': len(conjuntos) + 1,
+                        'descricao': desc,
+                        'orientacao': 'Colunas (Vertical • 5 para Baixo)',
+                        'shift': s,
+                        'grupos_coords': grps
+                    })
+                    used_games.update(g_set)
+                    if len(conjuntos) >= limite_conjuntos:
+                        return conjuntos
+
+        return conjuntos
+
+    @classmethod
+    def derivar_conjuntos_rotativos_8x3(
         cls,
-        grupos: Any,
-        combinacoes: Optional[List[List[int]]] = None,
-        qtd_grupos_por_jogo: int = 5,
+        matriz_ou_grupos: Any,
+        qtd_conjuntos: Optional[int] = 25,
+        modo: Optional[str] = "fechamento_total",
+        eliminar_duplicados: bool = True,
+        ordenar_dezenas: bool = True,
+        fixas: Optional[List[int]] = None,
+        excluidas: Optional[List[int]] = None,
+        pool: Optional[List[int]] = None
+    ) -> Dict[str, Any]:
+        """
+        Desdobra ate 25 conjuntos de 24 dezenas a partir do pool de 25 dezenas da Lotofacil.
+        Cada conjunto e composto por 24 dezenas distribuidas em 8 grupos de 3 dezenas.
+        Em cada conjunto k, uma dezena diferente das 25 e excluida (C(25,24) = 25 conjuntos).
+        Os 8 grupos jogam entre si tomados 5 a 5 gerando 56 jogos (ou 48 jogos da planilha).
+        Garante cobertura cientifica maxima com 100% dos jogos formados por 15 dezenas.
+        """
+        import itertools, collections
+        pool_25: List[int] = []
+        if pool and isinstance(pool, list) and len(pool) == 25:
+            pool_25 = [int(x) for x in pool if 1 <= int(x) <= 25]
+        elif isinstance(matriz_ou_grupos, list) and len(matriz_ou_grupos) == 25:
+            pool_25 = [int(x) for x in matriz_ou_grupos if 1 <= int(x) <= 25]
+        else:
+            presentes: List[int] = []
+            if isinstance(matriz_ou_grupos, dict):
+                for k in sorted(matriz_ou_grupos.keys(), key=lambda x: int(x)):
+                    for x in matriz_ou_grupos[k]:
+                        try:
+                            val = int(x)
+                            if 1 <= val <= 25 and val not in presentes:
+                                presentes.append(val)
+                        except (ValueError, TypeError):
+                            pass
+            elif isinstance(matriz_ou_grupos, list):
+                for item in matriz_ou_grupos:
+                    if isinstance(item, list):
+                        for x in item:
+                            val = int(x)
+                            if 1 <= val <= 25 and val not in presentes:
+                                presentes.append(val)
+                    else:
+                        val = int(item)
+                        if 1 <= val <= 25 and val not in presentes:
+                            presentes.append(val)
+
+            ausentes = [d for d in range(1, 26) if d not in presentes]
+            pool_25 = presentes + ausentes
+
+        vistos_pool = set(pool_25)
+        for d in range(1, 26):
+            if d not in vistos_pool:
+                pool_25.append(d)
+        pool_25 = pool_25[:25]
+
+        fixed_set = set(int(x) for x in (fixas or []) if 1 <= int(x) <= 25)
+        excluded_set = set(int(x) for x in (excluidas or []) if 1 <= int(x) <= 25)
+
+        limite = 25
+        if qtd_conjuntos is not None:
+            try:
+                limite = min(25, max(1, int(qtd_conjuntos)))
+            except (ValueError, TypeError):
+                limite = 25
+
+        all_combos_56 = list(itertools.combinations(range(1, 9), 5))
+        if modo == "planilha_48":
+            combos = all_combos_56[:48]
+        elif modo == "otimizado_24":
+            combos = all_combos_56[:24]
+        else:
+            combos = all_combos_56
+
+        conjuntos = []
+        jogos = []
+        vistos = {}
+        total_jogos_brutos = 0
+        jogos_duplicados = 0
+        freq_dezenas = collections.Counter()
+        todas_dezenas_usadas = set()
+
+        for k in range(limite):
+            excluded = pool_25[24 - k]
+            rem = [x for x in pool_25 if x != excluded]
+
+            s = k % 24
+            rem_shifted = rem[s:] + rem[:s]
+
+            grupos_c = {}
+            for g in range(8):
+                grupos_c[g + 1] = sorted(rem_shifted[g*3 : (g+1)*3]) if ordenar_dezenas else rem_shifted[g*3 : (g+1)*3]
+
+            conj_jogos_indices = []
+
+            for combo in combos:
+                total_jogos_brutos += 1
+                numeros_set = set(fixed_set)
+                for gid in combo:
+                    numeros_set.update(grupos_c[gid])
+                numeros_set.difference_update(excluded_set)
+
+                lista_nums = list(numeros_set)
+                if ordenar_dezenas:
+                    lista_nums.sort()
+
+                sig = tuple(sorted(lista_nums))
+
+                if sig in vistos:
+                    jogos_duplicados += 1
+                    if eliminar_duplicados:
+                        continue
+                else:
+                    vistos[sig] = len(jogos) + 1
+
+                for d in lista_nums:
+                    freq_dezenas[d] += 1
+                    todas_dezenas_usadas.add(d)
+
+                idx_jogo = len(jogos) + 1
+                conj_jogos_indices.append(idx_jogo)
+
+                soma = sum(lista_nums)
+                pares = sum(1 for d in lista_nums if d % 2 == 0)
+                impares = len(lista_nums) - pares
+                primos = sum(1 for d in lista_nums if d in (2, 3, 5, 7, 11, 13, 17, 19, 23))
+                moldura = sum(1 for d in lista_nums if d in (1, 2, 3, 4, 5, 6, 10, 11, 15, 16, 20, 21, 22, 23, 24, 25))
+
+                jogos.append({
+                    "numero_jogo": idx_jogo,
+                    "numeros": lista_nums,
+                    "conjunto": k + 1,
+                    "grupos_combinados": list(combo),
+                    "soma": soma,
+                    "pares": pares,
+                    "impares": impares,
+                    "primos": primos,
+                    "moldura": moldura
+                })
+
+            conjuntos.append({
+                "numero_conjunto": k + 1,
+                "descricao": f"Conjunto {k + 1} (24 Dezenas • Ausente: {excluded:02d})",
+                "dezena_ausente": excluded,
+                "grupos": {str(g): grupos_c[g] for g in range(1, 9)},
+                "qtd_jogos": len(conj_jogos_indices),
+                "jogos_indices": conj_jogos_indices
+            })
+
+        custo_unitario = 3.50
+        return {
+            "sucesso": True,
+            "modo": modo or "fechamento_total",
+            "total_conjuntos": len(conjuntos),
+            "conjuntos": conjuntos,
+            "total_jogos": len(jogos),
+            "jogos_brutos": total_jogos_brutos,
+            "jogos_unicos": len(vistos),
+            "jogos_duplicados": jogos_duplicados,
+            "total_grupos": 8,
+            "qtd_grupos_por_jogo": 5,
+            "custo_unitario_brl": custo_unitario,
+            "custo_total_brl": round(len(jogos) * custo_unitario, 2),
+            "dezenas_usadas": sorted(list(todas_dezenas_usadas)),
+            "jogos": jogos
+        }
+
+    @classmethod
+    def derivar_conjuntos_rotativos_5x5(
+        cls,
+        matriz_ou_grupos: Any,
+        qtd_conjuntos: Optional[int] = None,
+        parar_na_duplicidade: bool = True,
         eliminar_duplicados: bool = False,
         ordenar_dezenas: bool = True,
         fixas: Optional[List[int]] = None,
         excluidas: Optional[List[int]] = None
     ) -> Dict[str, Any]:
         """
+        Desdobra conjuntos sucessivos da Matriz 5x5 considerando tanto os 5 numeros
+        para a direita (linhas) quanto os 5 numeros para baixo (colunas), sem duplicidade.
+        Para automaticamente quando for atingido o limite ou a quantidade solicitada (padrao: 97 conjuntos = 970 jogos).
+        Para cada conjunto formado, seus 5 grupos jogam entre si tomados 3 a 3 gerando 10 jogos da Lotofacil.
+        """
+        matriz_base: List[List[int]] = []
+        if isinstance(matriz_ou_grupos, dict):
+            for k in sorted(matriz_ou_grupos.keys(), key=lambda x: int(x))[:5]:
+                vals = [int(x) for x in matriz_ou_grupos[k] if 1 <= int(x) <= 25]
+                matriz_base.append(vals)
+        elif isinstance(matriz_ou_grupos, list):
+            if len(matriz_ou_grupos) == 25:
+                for i in range(5):
+                    matriz_base.append([int(x) for x in matriz_ou_grupos[i*5:(i+1)*5]])
+            else:
+                for row in matriz_ou_grupos[:5]:
+                    matriz_base.append([int(x) for x in row if 1 <= int(x) <= 25])
+
+        if len(matriz_base) != 5 or any(len(r) != 5 for r in matriz_base):
+            return {
+                "sucesso": False,
+                "erro": f"A matriz base precisa ter exatamente 5 grupos com 5 dezenas cada (5x5). Encontrado: {[len(r) for r in matriz_base]}"
+            }
+
+        fixed_set = set(int(x) for x in (fixas or []) if 1 <= int(x) <= 25)
+        excluded_set = set(int(x) for x in (excluidas or []) if 1 <= int(x) <= 25)
+
+        limite = 97
+        if qtd_conjuntos is not None and str(qtd_conjuntos).isdigit() and int(qtd_conjuntos) > 0:
+            limite = int(qtd_conjuntos)
+        elif qtd_conjuntos == "max":
+            limite = 1246
+
+        formulas = cls.gerar_formulas_conjuntos_5x5(limite_conjuntos=limite)
+
+        conjuntos = []
+        jogos = []
+        vistos: Dict[Tuple[int, ...], int] = {}
+        jogos_duplicados = 0
+        freq_dezenas: collections.Counter = collections.Counter()
+        todas_dezenas: Set[int] = set()
+
+        for c_idx, f_info in enumerate(formulas):
+            # Mapear dezenas do apostador nos 5 grupos do conjunto
+            grupos_c = {}
+            for g_num, grp_coords in enumerate(f_info['grupos_coords'], 1):
+                grupos_c[g_num] = [matriz_base[r][c] for r, c in grp_coords]
+
+            # Verificar duplicidade se solicitado
+            tem_duplicado = False
+            for combo in cls.MATRIZ_5_GRUPOS_10:
+                s = set(fixed_set)
+                for gid in combo:
+                    s.update(grupos_c[gid])
+                s.difference_update(excluded_set)
+                sig = tuple(sorted(s))
+                if sig in vistos:
+                    tem_duplicado = True
+                    break
+
+            if tem_duplicado and parar_na_duplicidade and c_idx > 0:
+                break
+
+            conjunto_info = {
+                "numero_conjunto": c_idx + 1,
+                "descricao": f_info['descricao'],
+                "orientacao": f_info['orientacao'],
+                "grupos": {str(k): v for k, v in grupos_c.items()},
+                "jogos_indices": []
+            }
+
+            for combo_idx, combo in enumerate(cls.MATRIZ_5_GRUPOS_10, 1):
+                numeros_jogo = set(fixed_set)
+                for gid in combo:
+                    numeros_jogo.update(grupos_c[gid])
+                numeros_jogo.difference_update(excluded_set)
+
+                lista_nums = list(numeros_jogo)
+                if ordenar_dezenas:
+                    lista_nums.sort()
+
+                sig = tuple(sorted(lista_nums))
+                duplicado_de = vistos.get(sig, None)
+
+                if duplicado_de is None:
+                    vistos[sig] = len(jogos) + 1
+                else:
+                    jogos_duplicados += 1
+                    if eliminar_duplicados:
+                        continue
+
+                for d in lista_nums:
+                    freq_dezenas[d] += 1
+                    todas_dezenas.add(d)
+
+                soma = sum(lista_nums)
+                pares = sum(1 for d in lista_nums if d % 2 == 0)
+                impares = len(lista_nums) - pares
+                primos = sum(1 for d in lista_nums if d in (2, 3, 5, 7, 11, 13, 17, 19, 23))
+                moldura = sum(1 for d in lista_nums if d in (1, 2, 3, 4, 5, 6, 10, 11, 15, 16, 20, 21, 22, 23, 24, 25))
+
+                idx_jogo = len(jogos) + 1
+                conjunto_info["jogos_indices"].append(idx_jogo)
+
+                jogos.append({
+                    "indice": idx_jogo,
+                    "numero_conjunto": c_idx + 1,
+                    "indice_no_conjunto": combo_idx,
+                    "descricao_conjunto": f_info['descricao'],
+                    "grupos_combinados": combo,
+                    "numeros": lista_nums,
+                    "total_dezenas": len(lista_nums),
+                    "soma": soma,
+                    "pares": pares,
+                    "impares": impares,
+                    "primos": primos,
+                    "moldura": moldura,
+                    "duplicado_de": duplicado_de
+                })
+
+            conjuntos.append(conjunto_info)
+
+        ausentes = sorted(list(set(range(1, 26)) - todas_dezenas))
+
+        return {
+            "sucesso": True,
+            "modo": "5_grupos_rotativo",
+            "total_conjuntos": len(conjuntos),
+            "total_jogos": len(jogos),
+            "jogos_unicos": len(vistos),
+            "jogos_duplicados": jogos_duplicados,
+            "conjuntos": conjuntos,
+            "jogos": jogos,
+            "total_grupos": 5,
+            "qtd_grupos_por_jogo": 3,
+            "dezenas_usadas": sorted(list(todas_dezenas)),
+            "dezenas_ausentes": ausentes,
+            "frequencia_dezenas": dict(freq_dezenas),
+            "custo_total_brl": round(len(jogos) * 3.5, 2),
+            "grupos_definidos": conjuntos[0]["grupos"] if conjuntos else {}
+        }
+
+    @classmethod
+    def gerar_jogos_por_grupos(
+        cls,
+        grupos: Any,
+        combinacoes: Optional[List[List[int]]] = None,
+        qtd_grupos_por_jogo: Optional[int] = None,
+        eliminar_duplicados: bool = False,
+        ordenar_dezenas: bool = True,
+        fixas: Optional[List[int]] = None,
+        excluidas: Optional[List[int]] = None,
+        modo: Optional[str] = None,
+        qtd_conjuntos: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
         Motor de Fechamento por Grupos do Jogador (Lotofacil B2B).
         O jogador define os grupos de dezenas e o motor une as combinacoes
         de grupos para formar jogos completos de 15 dezenas em ordem crescente.
+        Suporta tanto o fechamento classico de 8 grupos de 3 dezenas (C(8,5) = 56 jogos
+        ou matriz da planilha de 48 jogos) quanto o fechamento de 5 grupos de 5 dezenas
+        (C(5,3) = 10 jogos cobrindo 100% das 25 dezenas).
         """
         norm_grupos: Dict[int, List[int]] = {}
         if isinstance(grupos, dict):
@@ -1271,14 +1766,68 @@ class MotorLotofacilB2B:
                 "erro": "Nenhum grupo valido fornecido. Defina os grupos com dezenas entre 1 e 25."
             }
 
+        # Fechamento de 8 grupos de 3 dezenas (Desdobramento em ate 25 Conjuntos):
+        is_modo_8 = len(norm_grupos) == 8 or (isinstance(grupos, list) and len(grupos) == 25)
+        if is_modo_8 and (qtd_conjuntos is not None or modo in ("conjuntos_8x3", "fechamento_total", "planilha_48", "otimizado_24")):
+            return cls.derivar_conjuntos_rotativos_8x3(
+                matriz_ou_grupos=grupos,
+                qtd_conjuntos=qtd_conjuntos or 25,
+                modo=modo or "fechamento_total",
+                eliminar_duplicados=eliminar_duplicados,
+                ordenar_dezenas=ordenar_dezenas,
+                fixas=fixas,
+                excluidas=excluidas
+            )
+
+        # Se for fechamento de 5 grupos de 5 dezenas (Matriz 5x5 do Apostador):
+        # O apostador define apenas o 1º conjunto. A IA desdobra os demais conjuntos sucessivos
+        # um por um trocando exatamente 5 dezenas (1 por grupo) ate o limite de duplicidade!
+        is_modo_5 = modo in ("5_grupos", "fechamento_5_grupos", "5_grupos_rotativo") or (len(norm_grupos) == 5 and all(len(v) == 5 for v in norm_grupos.values()))
+        if is_modo_5 and len(norm_grupos) == 5 and all(len(v) == 5 for v in norm_grupos.values()):
+            grupos_orig = {}
+            if isinstance(grupos, dict):
+                for k in sorted(grupos.keys(), key=lambda x: int(x))[:5]:
+                    grupos_orig[int(k)] = [int(x) for x in grupos[k] if 1 <= int(x) <= 25]
+            elif isinstance(grupos, list):
+                if len(grupos) == 25:
+                    for i in range(5):
+                        grupos_orig[i + 1] = [int(x) for x in grupos[i*5:(i+1)*5]]
+                else:
+                    for i, r in enumerate(grupos[:5], 1):
+                        grupos_orig[i] = [int(x) for x in r if 1 <= int(x) <= 25]
+            else:
+                grupos_orig = norm_grupos
+
+            return cls.derivar_conjuntos_rotativos_5x5(
+                matriz_ou_grupos=grupos_orig,
+                qtd_conjuntos=qtd_conjuntos,
+                parar_na_duplicidade=True,
+                eliminar_duplicados=eliminar_duplicados,
+                ordenar_dezenas=ordenar_dezenas,
+                fixas=fixas,
+                excluidas=excluidas
+            )
+
         g_keys = sorted(norm_grupos.keys())
         fixed_set = set(int(x) for x in (fixas or []) if 1 <= int(x) <= 25)
         excluded_set = set(int(x) for x in (excluidas or []) if 1 <= int(x) <= 25)
 
+        # Inferencia automatica do k (grupos por jogo)
+        if qtd_grupos_por_jogo is not None:
+            k_calculado = int(qtd_grupos_por_jogo)
+        elif modo in ("5_grupos", "fechamento_5_grupos") or len(norm_grupos) == 5:
+            k_calculado = 3
+        else:
+            k_calculado = 5
+
         if combinacoes:
             combos = [[int(x) for x in c] for c in combinacoes]
+        elif modo == "planilha_48":
+            combos = cls.MATRIZ_PLANILHA_48
+        elif modo in ("5_grupos", "fechamento_5_grupos") or (len(norm_grupos) == 5 and k_calculado == 3):
+            combos = cls.MATRIZ_5_GRUPOS_10
         else:
-            k = min(len(g_keys), max(1, int(qtd_grupos_por_jogo)))
+            k = min(len(g_keys), max(1, k_calculado))
             combos = [list(c) for c in itertools.combinations(g_keys, k)]
 
         jogos = []
@@ -1338,11 +1887,12 @@ class MotorLotofacilB2B:
             "jogos_unicos": len(vistos),
             "jogos_duplicados": sum(1 for j in jogos if j["duplicado_de"] is not None),
             "total_grupos": len(norm_grupos),
-            "qtd_grupos_por_jogo": qtd_grupos_por_jogo,
+            "qtd_grupos_por_jogo": k_calculado,
+            "modo": modo or ("5_grupos" if len(norm_grupos) == 5 else "8_grupos"),
             "dezenas_usadas": sorted(list(todas_dezenas_usadas)),
             "dezenas_ausentes": dezenas_ausentes,
             "frequencia_dezenas": dict(freq_dezenas),
-            "custo_total_brl": round(len(jogos) * 3.0, 2),
+            "custo_total_brl": round(len(jogos) * 3.5, 2),
             "grupos_definidos": {str(k): v for k, v in norm_grupos.items()},
             "jogos": jogos
         }

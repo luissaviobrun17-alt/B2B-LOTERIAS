@@ -567,15 +567,139 @@
                                     </span>
                                 </div>
                                 <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; margin: 0 0 12px 0;">
-                                    O jogador define as dezenas de cada grupo. O motor combina os grupos para gerar jogos completos de 15 dezenas com números ordenados em ordem crescente e auditoria contra duplicatas.
+                                    O jogador define as dezenas de cada grupo. O motor combina os grupos para gerar jogos completos de 15 dezenas com números ordenados em ordem crescente e auditoria contra duplicatas. Escolha entre o fechamento de <strong>8 grupos (3 dezenas cada • até 25 Conjuntos)</strong> ou o desdobramento de <strong>5 grupos (5 dezenas cada • 100% das 25 Dezenas • 1 a 97 Conjuntos / Teto Máximo 1.246)</strong>.
                                 </p>
+
+                                <!-- Seletor de Modo de Grupos (8 Grupos vs 5 Grupos) -->
+                                <div style="display: flex; gap: 8px; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                                    <button id="btn-modo-8-grupos" type="button" style="flex: 1; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, rgba(245,158,11,0.35), rgba(217,119,6,0.25)); border: 1px solid #f59e0b; color: #fff;">
+                                        📊 Fechamento 8 Grupos (3 dezenas • 56 / 48 Jogos • até 25 Conjuntos)
+                                    </button>
+                                    <button id="btn-modo-5-grupos" type="button" style="flex: 1; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1;">
+                                        ⭐ Fechamento 5 Grupos (5 dezenas • 10 Jogos • 100% das 25 Dezenas • 1 a 97 Conjuntos)
+                                    </button>
+                                </div>
+
+                                <!-- Barra de Formação Estatística Automática por Concursos da Lotofácil (3 ou 5 dezenas) -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.95)); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.45); box-shadow: 0 3px 12px rgba(0,0,0,0.3);">
+                                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                                        <div id="titulo-freq-lotofacil" style="font-size: 0.82rem; font-weight: 800; color: #fde68a; display: flex; align-items: center; gap: 6px;">
+                                            🔥 Formar 8 Grupos de 3 Dezenas por Estatística (Mais Sorteados → Menos Sorteados):
+                                        </div>
+                                        <div id="desc-freq-lotofacil" style="font-size: 0.72rem; color: #cbd5e1;">
+                                            Preenche os 8 grupos (3 dezenas cada) por frequência oficial: Grupo 1 (Top 3 mais sorteados) até Grupo 8 (menos sorteados • 24 dezenas • rotação em até 25 conjuntos).
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                        <button id="btn-freq-modo-8-lotofacil" type="button" class="btn-freq-submodo-opt" style="background: rgba(245, 158, 11, 0.35); border: 1px solid #f59e0b; color: #fff; padding: 5px 10px; border-radius: 6px; font-weight: 800; font-size: 0.74rem; cursor: pointer; transition: all 0.2s;" title="Alternar para formação de 8 Grupos com 3 dezenas cada">
+                                            📊 8 Grupos (3 dezenas)
+                                        </button>
+                                        <button id="btn-freq-modo-5-lotofacil" type="button" class="btn-freq-submodo-opt" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.15); color: #cbd5e1; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.74rem; cursor: pointer; transition: all 0.2s;" title="Alternar para formação de 5 Grupos com 5 dezenas cada (100% das 25 dezenas)">
+                                            ⭐ 5 Grupos (5 dezenas)
+                                        </button>
+                                        <span style="color: #64748b; margin: 0 4px;">|</span>
+                                        <button id="btn-freq-lotofacil-3" type="button" class="btn-freq-lotofacil-opt" data-concursos="3" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 13px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Formar os grupos pelos números mais sorteados nos últimos 3 sorteios">
+                                            ⚡ 3 Sorteios
+                                        </button>
+                                        <button id="btn-freq-lotofacil-5" type="button" class="btn-freq-lotofacil-opt" data-concursos="5" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 13px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Formar os grupos pelos números mais sorteados nos últimos 5 sorteios">
+                                            ⚡ 5 Sorteios
+                                        </button>
+                                        <button id="btn-freq-lotofacil-10" type="button" class="btn-freq-lotofacil-opt" data-concursos="10" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 13px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Formar os grupos pelos números mais sorteados nos últimos 10 sorteios">
+                                            ⚡ 10 Sorteios
+                                        </button>
+                                        <button id="btn-freq-lotofacil-15" type="button" class="btn-freq-lotofacil-opt" data-concursos="15" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 13px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Formar os grupos pelos números mais sorteados nos últimos 15 sorteios">
+                                            ⚡ 15 Sorteios
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Painel Exclusivo de Configuração do Modo 8 Grupos (3 dezenas • até 25 Conjuntos) -->
+                                <div id="painel-config-8-grupos" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                                        <span style="font-weight: 800; font-size: 0.84rem; color: #fde68a; display: flex; align-items: center; gap: 6px;">
+                                            📊 CONFIGURAÇÃO: 8 GRUPOS DE 3 DEZENAS (24 DEZENAS NO POOL DE 25)
+                                        </span>
+                                        <span style="font-size: 0.72rem; background: rgba(245, 158, 11, 0.2); color: #fde68a; padding: 2px 8px; border-radius: 6px; font-weight: 700;">
+                                            C(8,5) = 56 Jogos / Planilha 48 Jogos • até 25 Conjuntos • 0 Duplicatas
+                                        </span>
+                                    </div>
+                                    <p style="font-size: 0.77rem; color: #cbd5e1; margin: 0 0 10px 0; line-height: 1.5;">
+                                        O apostador define as 24 dezenas do 1º conjunto (8 grupos com 3 dezenas cada). O motor desdobra automaticamente até <strong>25 conjuntos de fechamento</strong> rotacionando cientificamente as exclusões da 25ª dezena para máxima cobertura matemática.
+                                    </p>
+
+                                    <!-- Campo de Entrada Rápida de Sequência das 25 Dezenas do Pool 8x3 -->
+                                    <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center;">
+                                        <input type="text" id="input-sequencia-25-lotofacil" placeholder="Cole aqui a sequência das 25 dezenas ordenadas por prioridade/frequência (ex: 20, 10, 11, 25, 03, ...)" style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(245, 158, 11, 0.35); color: #fff; padding: 7px 10px; border-radius: 6px; font-size: 0.8rem;">
+                                        <button id="btn-aplicar-sequencia-25-lotofacil" type="button" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid #fbbf24; color: #1e1b4b; padding: 7px 12px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; cursor: pointer; white-space: nowrap;">
+                                            ⚡ Distribuir nos 8 Grupos
+                                        </button>
+                                    </div>
+
+                                    <!-- Seletor de Quantidade de Conjuntos do Modo 8 Grupos -->
+                                    <div style="margin-top: 6px;">
+                                        <label style="font-size: 0.74rem; color: #fde68a; font-weight: 700; display: block; margin-bottom: 3px;">
+                                            Quantidade de Conjuntos no Desdobramento 8×3:
+                                        </label>
+                                        <select id="select-qtd-conjuntos-lotofacil" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(245, 158, 11, 0.4); color: #fde68a; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 700;">
+                                            <option value="25" selected>✨ Desdobramento Máximo: 25 Conjuntos (Pool 25 • 1.105 a 1.400 Jogos • 0 Duplicatas)</option>
+                                            <option value="20">20 Conjuntos (Pool 25 • 890 a 1.120 Jogos)</option>
+                                            <option value="15">15 Conjuntos (Pool 25 • 675 a 840 Jogos)</option>
+                                            <option value="10">10 Conjuntos (Pool 25 • 455 a 560 Jogos)</option>
+                                            <option value="5">5 Conjuntos (Pool 25 • 235 a 280 Jogos)</option>
+                                            <option value="1">1º Conjunto Base Apenas (24 Dezenas • 48 a 56 Jogos)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Painel Exclusivo de Configuração do Modo 5 Grupos -->
+                                <div id="painel-config-5-grupos" style="display: none; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                                        <span style="font-weight: 800; font-size: 0.84rem; color: #93c5fd; display: flex; align-items: center; gap: 6px;">
+                                            ⭐ CONFIGURAÇÃO: 5 GRUPOS DE 5 DEZENAS (25 NÚMEROS • 100% DA LOTOFÁCIL)
+                                        </span>
+                                        <span style="font-size: 0.72rem; background: rgba(59, 130, 246, 0.2); color: #bfdbfe; padding: 2px 8px; border-radius: 6px; font-weight: 700;">
+                                            C(5,3) = 10 Jogos por Conjunto • 0 Duplicatas
+                                        </span>
+                                    </div>
+                                    <p style="font-size: 0.77rem; color: #cbd5e1; margin: 0 0 10px 0; line-height: 1.5;">
+                                        O apostador informa as 25 dezenas do primeiro conjunto (5 grupos com 5 números cada). O motor desdobra automaticamente os conjuntos subsequentes sem duplicidade de conjuntos e sem repetição de jogos, considerando os 5 números para a direita e os 5 números para baixo (97 conjuntos = 970 jogos 100% únicos).
+                                    </p>
+
+                                    <!-- Campo de Entrada Rápida de Sequência das 25 Dezenas -->
+                                    <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center;">
+                                        <input type="text" id="input-sequencia-25-dezenas" placeholder="Cole aqui as 25 dezenas do 1º conjunto (ex: 16 25 6 13 24 19 23 5 8 11 ...)" style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(59, 130, 246, 0.3); color: #fff; padding: 7px 10px; border-radius: 6px; font-size: 0.8rem;">
+                                        <button id="btn-aplicar-sequencia-25" type="button" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: 1px solid #60a5fa; color: #fff; padding: 7px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; white-space: nowrap;">
+                                            ⚡ Distribuir nos 5 Grupos
+                                        </button>
+                                    </div>
+
+                                    <!-- Seletor de Quantidade de Conjuntos a Desdobrar -->
+                                    <div style="margin-top: 6px;">
+                                        <label style="font-size: 0.74rem; color: #93c5fd; font-weight: 700; display: block; margin-bottom: 3px;">
+                                            Quantidade de Conjuntos no Desdobramento 5×5:
+                                        </label>
+                                        <select id="select-qtd-conjuntos-5-grupos" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 700;">
+                                            <option value="auto" selected>✨ Desdobramento Completo: 97 Conjuntos (970 Jogos • R$ 3.395,00 • 0 Duplicatas)</option>
+                                            <option value="1246">🚀 Teto Máximo Matricial: 1.246 Conjuntos (12.460 Jogos • R$ 43.610,00 • 0 Duplicatas)</option>
+                                            <option value="74">74 Conjuntos: 37 Horizontais + 37 Verticais (740 Jogos • R$ 2.590,00)</option>
+                                            <option value="37">37 Conjuntos: Fase 1 Horizontal (370 Jogos • R$ 1.295,00)</option>
+                                            <option value="21">21 Conjuntos (210 Jogos • R$ 735,00)</option>
+                                            <option value="10">10 Conjuntos (100 Jogos • R$ 350,00)</option>
+                                            <option value="5">5 Conjuntos (50 Jogos • R$ 175,00)</option>
+                                            <option value="1">1º Conjunto Base Apenas (10 Jogos • R$ 35,00)</option>
+                                        </select>
+                                    </div>
+                                </div>
 
                                 <!-- Barra de Ações Rápidas -->
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
                                     <button id="btn-carregar-exemplo-grupos" type="button" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Carrega os 8 grupos de 3 dezenas da planilha padrão">
-                                        📥 Carregar Exemplo da Planilha (8 Grupos de 3)
+                                        📥 Carregar Exemplo Planilha (8 Grupos de 3)
                                     </button>
-                                    <button id="btn-distribuir-volante-grupos" type="button" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #a7f3d0; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Distribui os números selecionados no volante entre os 8 grupos">
+                                    <button id="btn-carregar-exemplo-5-grupos" type="button" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Carrega a matriz exemplo de 5 grupos da planilha do jogador">
+                                        ⭐ Carregar Exemplo Planilha (5 Grupos de 5)
+                                    </button>
+                                    <button id="btn-distribuir-volante-grupos" type="button" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #a7f3d0; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Distribui os números selecionados no volante entre os grupos">
                                         ✨ Distribuir Seleção do Volante
                                     </button>
                                     <button id="btn-limpar-todos-grupos" type="button" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
@@ -589,8 +713,10 @@
                                         <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Modo Combinatório:</label>
                                         <select id="select-modo-combinatorio-grupos" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(245, 158, 11, 0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
                                             <option value="fechamento_total" selected>Fechamento Total C(8,5) = 56 Jogos (100% de Cobertura)</option>
+                                            <option value="fechamento_5_grupos">Fechamento 5 Grupos C(5,3) = 10 Jogos por Conjunto (100% de Cobertura)</option>
                                             <option value="planilha_48">Matriz da Planilha (48 Jogos)</option>
                                             <option value="sem_duplicatas">Matriz da Planilha Otimizada (46 Jogos Únicos)</option>
+                                            <option value="otimizado_24">Fechamento Otimizado Compacto (24 Jogos)</option>
                                         </select>
                                     </div>
                                     <div>
@@ -604,13 +730,13 @@
                                     </div>
                                     <div style="display: flex; align-items: flex-end; padding-bottom: 4px;">
                                         <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: #cbd5e1; cursor: pointer;">
-                                            <input type="checkbox" id="check-eliminar-duplicados-grupos" style="accent-color: #f59e0b; width: 16px; height: 16px;">
+                                            <input type="checkbox" id="check-eliminar-duplicados-grupos" checked style="accent-color: #f59e0b; width: 16px; height: 16px;">
                                             <span>Eliminar Jogos Duplicados</span>
                                         </label>
                                     </div>
                                 </div>
 
-                                <!-- Grid dos 8 Grupos Interativos -->
+<!-- Grid dos 8 Grupos Interativos -->
                                 <div id="grid-grupos-lotofacil" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; margin-bottom: 12px;">
                                     <!-- Cards dos 8 Grupos -->
                                     <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
@@ -648,21 +774,21 @@
                                         </div>
                                         <input type="text" class="input-grupo-dezenas" id="input-grupo-5" data-grupo="5" placeholder="Ex: 6, 15, 18" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
                                     </div>
-                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                    <div class="card-grupo-lotofacil card-grupo-lotofacil-extra" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                             <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 6</span>
                                             <span class="badge-grupo-count" id="badge-count-grupo-6" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
                                         </div>
                                         <input type="text" class="input-grupo-dezenas" id="input-grupo-6" data-grupo="6" placeholder="Ex: 4, 10, 17" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
                                     </div>
-                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                    <div class="card-grupo-lotofacil card-grupo-lotofacil-extra" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                             <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 7</span>
                                             <span class="badge-grupo-count" id="badge-count-grupo-7" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
                                         </div>
                                         <input type="text" class="input-grupo-dezenas" id="input-grupo-7" data-grupo="7" placeholder="Ex: 9, 11, 25" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.82rem; font-weight: 600;">
                                     </div>
-                                    <div class="card-grupo-lotofacil" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                    <div class="card-grupo-lotofacil card-grupo-lotofacil-extra" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                             <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Grupo 8</span>
                                             <span class="badge-grupo-count" id="badge-count-grupo-8" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
@@ -683,16 +809,19 @@
                                     <div>
                                         <span style="color: #94a3b8;">Estimativa de Jogos: </span>
                                         <strong id="diag-total-jogos-est" style="color: #34d399;">56 jogos</strong>
-                                        <span style="color: #94a3b8;"> (R$ <span id="diag-custo-jogos-est">168,00</span>)</span>
+                                        <span style="color: #94a3b8;"> (R$ <span id="diag-custo-jogos-est">196,00</span>)</span>
                                     </div>
                                 </div>
 
                                 <!-- Botão de Execução Principal -->
                                 <div style="display: flex; gap: 8px;">
                                     <button id="btn-executar-motor-grupos" type="button" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid #fbbf24; color: #1e1b4b; padding: 12px 16px; border-radius: 8px; font-weight: 800; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 15px rgba(245,158,11,0.4);">
-                                        🚀 GERAR JOGOS POR GRUPOS (ORDENAR E ENUMERAR)
+                                        🚀 GERAR ATÉ 25 CONJUNTOS POR GRUPOS DE 3 (FECHAMENTO LOTOFÁCIL)
                                     </button>
                                 </div>
+
+                                <!-- Container Visual do Desdobramento dos Conjuntos da Lotofácil -->
+                                <div id="container-visual-conjuntos-lotofacil" style="margin-top: 14px; display: none;"></div>
                             </div>
                         </div>
 
@@ -855,105 +984,353 @@
 
                         <!-- PAINEL MOTOR LOTOMANIA DO B2B LOTERIAS -->
                         <div id="motor-lotomania-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(14, 116, 144, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #0891b2; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
-                                <div style="font-size: 1.05rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
-                                    ⚛️ MOTOR LOTOMANIA — B2B LOTERIAS
-                                </div>
-                                <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 700;">
-                                    5 Conjuntos x 10 = 50 Dezenas • C(20,10)⁵
-                                </span>
-                            </div>
-                            <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.5; margin: 0 0 12px 0;">
-                                Divisao estrita em 5 conjuntos de 20 numeros (<strong style="color:#a7f3d0;">C1: 01-20, C2: 21-40, C3: 41-60, C4: 61-80, C5: 81-00</strong>). Max. <strong style="color:#fcd34d;">4 consecutivos</strong> no jogo ordenado. Auditoria 10/10 e diversificacao de carteira.
-                            </p>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-                                <div>
-                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Historico Utilizado:</label>
-                                    <select id="select-historico-lotomania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                        <option value="0">Todos os Concursos</option>
-                                        <option value="10">Ultimos 10 Concursos</option>
-                                        <option value="20">Ultimos 20 Concursos</option>
-                                        <option value="50">Ultimos 50 Concursos</option>
-                                        <option value="100" selected>Ultimos 100 Concursos</option>
-                                        <option value="200">Ultimos 200 Concursos</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estrategia do Motor:</label>
-                                    <select id="select-estrategia-lotomania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                        <option value="equilibrada" selected>Equilibrada (Recomendada)</option>
-                                        <option value="frequencia">Frequencia Historica</option>
-                                        <option value="frequencia_recente">Frequencia Recente</option>
-                                        <option value="diversificacao">Diversificacao</option>
-                                        <option value="cobertura_maxima">Cobertura Maxima</option>
-                                        <option value="otimizacao_estatistica">Otimizacao Estatistica</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button id="btn-executar-motor-lotomania" style="flex: 2; background: linear-gradient(135deg, #0284c7, #059669); border: 1px solid #34d399; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(5,150,105,0.4);">
-                                    ⚡ GERAR CARTEIRA (MOTOR LOTOMANIA)
+                            <!-- SELETOR DE ABAS DO MOTOR LOTOMANIA -->
+                            <div style="display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid rgba(8,145,178,0.3); padding-bottom: 10px;">
+                                <button id="tab-btn-lotomania-estatistico" type="button" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid #38bdf8; background: linear-gradient(135deg, rgba(2,132,199,0.5), rgba(14,116,144,0.35)); color: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                    ⚡ Motor Estatístico B2B (C1..C5)
                                 </button>
+                                <button id="tab-btn-lotomania-grupos" type="button" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(245,158,11,0.4); background: rgba(15,23,42,0.6); color: #fde68a; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                    🎲 Matriz 10x10 por Conjuntos (Planilha do Apostador)
+                                </button>
+                            </div>
+
+                            <!-- SUB-PAINEL 1: MOTOR ESTATÍSTICO TRADICIONAL LOTOMANIA -->
+                            <div id="subpanel-lotomania-estatistico">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 1.05rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+                                        ⚛️ MOTOR LOTOMANIA — B2B LOTERIAS
+                                    </div>
+                                    <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 700;">
+                                        5 Conjuntos x 10 = 50 Dezenas • C(20,10)⁵
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.5; margin: 0 0 12px 0;">
+                                    Divisão estrita em 5 conjuntos de 20 números (<strong style="color:#a7f3d0;">C1: 01-20, C2: 21-40, C3: 41-60, C4: 61-80, C5: 81-00</strong>). Máx. <strong style="color:#fcd34d;">4 consecutivos</strong> no jogo ordenado. Auditoria 10/10 e diversificação de carteira.
+                                </p>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Histórico Utilizado:</label>
+                                        <select id="select-historico-lotomania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                            <option value="0">Todos os Concursos</option>
+                                            <option value="10">Últimos 10 Concursos</option>
+                                            <option value="20">Últimos 20 Concursos</option>
+                                            <option value="50">Últimos 50 Concursos</option>
+                                            <option value="100" selected>Últimos 100 Concursos</option>
+                                            <option value="200">Últimos 200 Concursos</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia do Motor:</label>
+                                        <select id="select-estrategia-lotomania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                            <option value="equilibrada" selected>Equilibrada (Recomendada)</option>
+                                            <option value="frequencia">Frequência Histórica</option>
+                                            <option value="frequencia_recente">Frequência Recente</option>
+                                            <option value="diversificacao">Diversificação</option>
+                                            <option value="cobertura_maxima">Cobertura Máxima</option>
+                                            <option value="otimizacao_estatistica">Otimização Estatística</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button id="btn-executar-motor-lotomania" style="flex: 2; background: linear-gradient(135deg, #0284c7, #059669); border: 1px solid #34d399; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(5,150,105,0.4);">
+                                        ⚡ GERAR CARTEIRA (MOTOR LOTOMANIA)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- SUB-PAINEL 2: MOTOR DE CONJUNTOS 10x10 DA LOTOMANIA (PLANILHA DO APOSTADOR) -->
+                            <div id="subpanel-lotomania-grupos" style="display:none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 1.05rem; font-weight: 800; color: #f59e0b; display: flex; align-items: center; gap: 8px;">
+                                        🎲 MOTOR DE CONJUNTOS 10x10 — LOTOMANIA (PLANILHA DO APOSTADOR)
+                                    </div>
+                                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.15); color: #fde68a; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;">
+                                        Matriz 10x10 • 100 Dezenas • Desdobramento 2D (Horizontal e Vertical)
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; margin: 0 0 12px 0;">
+                                    O apostador define ou cola a matriz de <strong>100 dezenas (00 a 99)</strong> distribuídas em 10 grupos de 10 dezenas. O motor desdobra os conjuntos tanto na horizontal quanto na vertical (linhas e colunas transpostas), combinando 5 conjuntos por jogo para formar 50 números e os 50 números espelho, sem repetição de números e sem jogos duplicados.
+                                </p>
+
+                                <!-- Barra de Formação Estatística Automática por Concursos (Mais Sorteados -> Menos Sorteados) -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.95)); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.45); box-shadow: 0 3px 12px rgba(0,0,0,0.3);">
+                                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                                        <div style="font-size: 0.82rem; font-weight: 800; color: #fde68a; display: flex; align-items: center; gap: 6px;">
+                                            🔥 Formar 10 Conjuntos por Estatística (Mais Sorteados → Menos Sorteados):
+                                        </div>
+                                        <div style="font-size: 0.72rem; color: #cbd5e1;">
+                                            Preenche os 10 conjuntos por frequência oficial: Conjunto 1 (Top 10 mais sorteados) até Conjunto 10 (menos sorteados).
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                        <button id="btn-freq-lotomania-3" type="button" class="btn-freq-lotomania-opt" data-concursos="3" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Formar os 10 conjuntos pelos números mais sorteados nos últimos 3 sorteios">
+                                            ⚡ 3 Sorteios
+                                        </button>
+                                        <button id="btn-freq-lotomania-5" type="button" class="btn-freq-lotomania-opt" data-concursos="5" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Formar os 10 conjuntos pelos números mais sorteados nos últimos 5 sorteios">
+                                            ⚡ 5 Sorteios
+                                        </button>
+                                        <button id="btn-freq-lotomania-10" type="button" class="btn-freq-lotomania-opt" data-concursos="10" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Formar os 10 conjuntos pelos números mais sorteados nos últimos 10 sorteios">
+                                            ⚡ 10 Sorteios
+                                        </button>
+                                        <button id="btn-freq-lotomania-15" type="button" class="btn-freq-lotomania-opt" data-concursos="15" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Formar os 10 conjuntos pelos números mais sorteados nos últimos 15 sorteios">
+                                            ⚡ 15 Sorteios
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Campo de Colar Sequencia de 100 Numeros da Lotomania -->
+                                <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center; background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4);">
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 0.73rem; color: #fde68a; font-weight: 700; display: block; margin-bottom: 3px;">
+                                            ⚡ Colar Sequência dos 100 Números da Matriz 10x10 (00 a 99 em qualquer ordem):
+                                        </label>
+                                        <input type="text" id="input-sequencia-100-lotomania" placeholder="Cole aqui os 100 números separados por espaço, vírgula ou tabulação..." style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(245, 158, 11, 0.3); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem;">
+                                    </div>
+                                    <button id="btn-aplicar-sequencia-100-lotomania" type="button" style="align-self: flex-end; background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid #fbbf24; color: #1e1b4b; padding: 7px 12px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; cursor: pointer; white-space: nowrap;">
+                                        ⚡ Distribuir nos 10 Grupos
+                                    </button>
+                                </div>
+
+                                <!-- Barra de Ações Rápidas -->
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                                    <button id="btn-carregar-planilha-apostador-lotomania" type="button" style="background: linear-gradient(135deg, rgba(245,158,11,0.25), rgba(217,119,6,0.35)); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Carrega a Matriz 10x10 oficial da Planilha do Apostador">
+                                        📋 Carregar Matriz do Apostador (100 Dezenas • 00 a 99)
+                                    </button>
+                                    <button id="btn-carregar-exemplo-grupos-lotomania" type="button" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Carrega os 10 conjuntos de 10 números de exemplo da planilha">
+                                        📥 Carregar Exemplo Alternativo
+                                    </button>
+                                    <button id="btn-distribuir-volante-grupos-lotomania" type="button" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #a7f3d0; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Distribui as dezenas selecionadas no volante entre os 10 conjuntos">
+                                        ✨ Distribuir Seleção do Volante
+                                    </button>
+                                    <button id="btn-limpar-todos-grupos-lotomania" type="button" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        🧹 Limpar Conjuntos
+                                    </button>
+                                </div>
+
+                                <!-- Parâmetros de Combinação e Desdobramento 2D -->
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                                    <div>
+                                        <label style="font-size: 0.73rem; color: #fde68a; font-weight: 700; display: block; margin-bottom: 3px;">
+                                            Desdobramento de Conjuntos (Horizontal e Vertical):
+                                        </label>
+                                        <select id="select-qtd-conjuntos-lotomania" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(245, 158, 11, 0.4); color: #fde68a; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 700;">
+                                            <option value="12" selected>✨ Planilha Completa: 12 Matrizes (11 Horizontais + 1 Vertical Transposta)</option>
+                                            <option value="1">1º Conjunto Base Apenas (Linhas da Matriz Base)</option>
+                                            <option value="2">2 Conjuntos (Horizontal + Vertical Base)</option>
+                                            <option value="4">4 Conjuntos (1º Bloco da Planilha: 4 Matrizes)</option>
+                                            <option value="8">8 Conjuntos (Blocos 1 e 2 da Planilha: 8 Matrizes)</option>
+                                            <option value="20">20 Conjuntos (Varredura Bipolar Completa: 10H + 10V)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.73rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 3px;">
+                                            Modo de Jogos por Conjunto:
+                                        </label>
+                                        <select id="select-modo-combinatorio-grupos-lotomania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(245, 158, 11, 0.3); color: #e2e8f0; padding: 7px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                            <option value="10_jogos">10 Jogos por Conjunto (5 Pares de 50 Números Espelho • R$ 30,00 por conjunto)</option>
+                                            <option value="planilha_126" selected>Planilha 126 Jogos por Conjunto (R$ 378,00 por conjunto)</option>
+                                            <option value="fechamento_total">Fechamento Total C(10,5) = 252 Jogos por Conjunto (R$ 756,00 por conjunto)</option>
+                                        </select>
+                                    </div>
+                                    <div style="display: none;">
+                                        <select id="select-k-grupos-por-jogo-lotomania">
+                                            <option value="5" selected>5</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Grid dos 10 Conjuntos Interativos da Lotomania -->
+                                <div id="grid-grupos-lotomania" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; margin-bottom: 12px;">
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 1 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-1" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-1" data-grupo="1" value="" placeholder="Ex: 50, 85, 99, 7, 13, 90, 48, 25, 3, 4" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 2 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-2" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-2" data-grupo="2" value="" placeholder="Ex: 32, 98, 29, 70, 6, 80, 91, 12, 5, 22" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 3 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-3" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-3" data-grupo="3" value="" placeholder="Ex: 43, 52, 16, 21, 26, 53, 76, 82, 96, 37" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 4 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-4" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-4" data-grupo="4" value="" placeholder="Ex: 39, 33, 79, 73, 75, 87, 15, 40, 60, 72" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 5 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-5" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-5" data-grupo="5" value="" placeholder="Ex: 86, 23, 24, 36, 69, 74, 8, 20, 66, 63" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 6 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-6" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-6" data-grupo="6" value="" placeholder="Ex: 95, 78, 81, 31, 61, 14, 18, 34, 58, 84" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 7 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-7" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-7" data-grupo="7" value="" placeholder="Ex: 46, 71, 93, 42, 44, 45, 47, 49, 62, 67" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 8 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-8" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-8" data-grupo="8" value="" placeholder="Ex: 11, 19, 27, 35, 77, 92, 28, 89, 97, 38" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 9 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-9" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-9" data-grupo="9" value="" placeholder="Ex: 2, 59, 41, 68, 57, 64, 0, 9, 83, 55" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                    <div class="card-grupo-lotomania" style="background: rgba(15,23,42,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 8px 10px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 800; font-size: 0.8rem; color: #fde68a;">Conjunto 10 (10 dezenas)</span>
+                                            <span class="badge-grupo-count" id="badge-count-grupo-lotomania-10" style="font-size: 0.7rem; color: #94a3b8; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 4px;">0 dezenas</span>
+                                        </div>
+                                        <input type="text" class="input-grupo-dezenas-lotomania" id="input-grupo-lotomania-10" data-grupo="10" value="" placeholder="Ex: 51, 17, 30, 54, 10, 65, 56, 94, 1, 88" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;">
+                                    </div>
+                                </div>
+
+                                <!-- Barra de Diagnóstico da Matriz em Tempo Real -->
+                                <div id="diagnostico-grupos-lotomania" style="padding: 10px 12px; background: rgba(0,0,0,0.35); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; margin-bottom: 12px; font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                    <div>
+                                        <span style="color: #94a3b8;">Dezenas Alocadas: </span>
+                                        <strong id="diag-dezenas-alocadas-lotomania" style="color: #fde68a;">0 / 100</strong>
+                                        <span style="color: #64748b; margin: 0 4px;">|</span>
+                                        <span style="color: #94a3b8;">Ausentes: </span>
+                                        <span id="diag-dezenas-ausentes-lotomania" style="color: #fca5a5;">Todas</span>
+                                    </div>
+                                    <div>
+                                        <span style="color: #94a3b8;">Estimativa de Jogos: </span>
+                                        <strong id="diag-total-jogos-est-lotomania" style="color: #34d399;">0 jogos</strong>
+                                        <span style="color: #94a3b8;"> (R$ <span id="diag-custo-jogos-est-lotomania">0,00</span>)</span>
+                                    </div>
+                                </div>
+
+                                <!-- Botão de Execução Principal -->
+                                <div style="display: flex; gap: 8px;">
+                                    <button id="btn-executar-motor-grupos-lotomania" type="button" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid #fbbf24; color: #1e1b4b; padding: 12px 16px; border-radius: 8px; font-weight: 800; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 15px rgba(245,158,11,0.4);">
+                                        🚀 GERAR JOGOS POR CONJUNTOS 10x10 (HORIZONTAL E VERTICAL)
+                                    </button>
+                                </div>
+
+                                <!-- Container Visual do Desdobramento dos Conjuntos da Lotomania -->
+                                <div id="container-visual-conjuntos-lotomania" style="margin-top: 14px; display: none;"></div>
                             </div>
                         </div>
 
                         <!-- PAINEL MOTOR TIMEMANIA DO B2B LOTERIAS -->
-                        <div id="motor-timemania-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(5, 150, 105, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #10b981; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
-                                <div style="font-size: 1.05rem; font-weight: 800; color: #34d399; display: flex; align-items: center; gap: 8px;">
-                                    🎯 MOTOR TIMEMANIA — B2B LOTERIAS
+                        <div id="motor-timemania-panel" style="display:none; margin-top: 12px; padding: 18px; background: radial-gradient(circle at top left, rgba(5, 150, 105, 0.28), rgba(15, 23, 42, 0.98)); border: 1.5px solid #10b981; border-radius: 14px; box-shadow: 0 10px 35px rgba(0,0,0,0.5);">
+                            <!-- HEADER DO PAINEL MATRIX PRO -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid rgba(52,211,153,0.25); padding-bottom: 10px;">
+                                <div style="font-size: 1.15rem; font-weight: 900; color: #34d399; display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px;">
+                                    🏆 B2B LOTERIAS — TIMEMANIA MATRIX PRO
                                 </div>
-                                <span style="font-size: 0.75rem; background: rgba(52, 211, 153, 0.15); color: #a7f3d0; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(52, 211, 153, 0.3); font-weight: 700;">
-                                    4 Grupos x 20 • 10 Números/Jogo • Time do Coração • SNIPER
-                                </span>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <span style="font-size: 0.72rem; background: rgba(52, 211, 153, 0.2); color: #a7f3d0; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(52, 211, 153, 0.4); font-weight: 700;">
+                                        8 Jogos-Base Disjuntos (80 Dezenas)
+                                    </span>
+                                    <span style="font-size: 0.72rem; background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(59, 130, 246, 0.4); font-weight: 700;">
+                                        6 Blocos Combinatórios (384 Jogos)
+                                    </span>
+                                    <span style="font-size: 0.72rem; background: rgba(245, 158, 11, 0.2); color: #fde68a; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(245, 158, 11, 0.4); font-weight: 700;">
+                                        Base Invertida: 100% de Pares (768 Jogos)
+                                    </span>
+                                </div>
                             </div>
-                            <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.5; margin: 0 0 12px 0;">
-                                Universo de 80 números dividido em 4 grupos (<strong style="color:#34d399;">G1: 01-20, G2: 21-40, G3: 41-60, G4: 61-80</strong>). Gera 10 dezenas por jogo com estruturas centrais (<strong style="color:#fcd34d;">3-3-2-2, 3-2-3-2, 2-3-3-2, 2-2-3-3</strong>), bloqueio de 3 consecutivos por grupo, modelagem estatística do Time do Coração e otimização global de carteira.
+
+                            <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.55; margin: 0 0 14px 0;">
+                                Motor matemático de alta precisão combinatória, estatística e física. Interpreta e reproduz com fidelidade absoluta a matriz de <strong>8 Jogos-Base (80 dezenas disjuntas)</strong> e os <strong>6 Blocos de Desdobramentos</strong> da planilha original. Inclui transposição serpentina <em>boustrophedon</em> (100% de cobertura de pares em 768 apostas), Score IFM multidimensional, modelagem do Time do Coração e comparador analítico.
                             </p>
 
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <!-- CONTROLES PRINCIPAIS: MODO E BASE -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                                 <div>
-                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Tamanho do Pool:</label>
-                                    <select id="select-pool-timemania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(52,211,153,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                        <option value="80" selected>80 Números (Todo o Universo)</option>
-                                        <option value="70">70 Números (Filtro 87.5%)</option>
-                                        <option value="60">60 Números (Filtro 75.0%)</option>
-                                        <option value="50">50 Números (Filtro 62.5%)</option>
-                                        <option value="40">40 Números (Filtro 50.0%)</option>
-                                        <option value="30">30 Números (Filtro 37.5%)</option>
-                                        <option value="20">20 Números (Filtro 25.0%)</option>
+                                    <label style="font-size: 0.76rem; color: #34d399; font-weight: 800; display: block; margin-bottom: 4px;">Modo de Operação (7 Modos Oficiais):</label>
+                                    <select id="select-modo-timemania" style="width: 100%; background: #0f172a; border: 1.5px solid rgba(52,211,153,0.4); color: #f8fafc; padding: 8px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 700;">
+                                        <option value="original" selected>Modo 1 — Original (Matriz Fiel da Planilha)</option>
+                                        <option value="aprimorado">Modo 2 — Original Aprimorado (Alocação Ótima por IFM)</option>
+                                        <option value="matematico_puro">Modo 3 — Matemático Puro (Centroide Simétrico 3-3-2-2)</option>
+                                        <option value="estatistico">Modo 4 — Estatístico (Poisson, Atrasos e Lift/z-score)</option>
+                                        <option value="hibrido">Modo 5 — Híbrido (Desdobramentos + Seleção Submodular)</option>
+                                        <option value="diversificacao">Modo 6 — Máxima Diversificação (Distância de Hamming)</option>
+                                        <option value="experimental">Modo 7 — Experimental (Sniper Adaptativo IA)</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Histórico Utilizado:</label>
-                                    <select id="select-historico-timemania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(52,211,153,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                        <option value="0" selected>Todos os Concursos Disponíveis (2.168+)</option>
-                                        <option value="10">Últimos 10 Concursos</option>
-                                        <option value="20">Últimos 20 Concursos</option>
-                                        <option value="50">Últimos 50 Concursos</option>
-                                        <option value="100">Últimos 100 Concursos</option>
+                                    <label style="font-size: 0.76rem; color: #34d399; font-weight: 800; display: block; margin-bottom: 4px;">Seleção da Matriz Base:</label>
+                                    <select id="select-base-tipo-timemania" style="width: 100%; background: #0f172a; border: 1.5px solid rgba(52,211,153,0.4); color: #f8fafc; padding: 8px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 700;">
+                                        <option value="direta" selected>Base Direta Original (8 Jogos de 10 Dezenas)</option>
+                                        <option value="invertida">Base Invertida (Transposição Serpentina Boustrophedon)</option>
+                                        <option value="ambas">Ambas as Bases Combinadas (768 Jogos: 100% Pares Cobertos)</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <!-- CONTROLES SECUNDÁRIOS: QUANTIDADE, ORÇAMENTO E BLOCOS -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                                 <div>
-                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Estratégia do Motor:</label>
-                                    <select id="select-estrategia-timemania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(52,211,153,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                        <option value="equilibrada" selected>Equilibrada (Score IFM + Cobertura)</option>
-                                        <option value="frequencia">Frequência Histórica Pura</option>
-                                        <option value="frequencia_recente">Frequência Recente (10/20/50)</option>
-                                        <option value="atraso">Atraso & Recuperação (Gap Model)</option>
-                                        <option value="associacao">Associação & Coocorrência (Lift/z-score)</option>
-                                        <option value="diversificacao">Diversificação Máxima de Carteira</option>
-                                        <option value="matematica_pura">Matemática Pura (Centróide Simétrico)</option>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <label style="font-size: 0.76rem; color: #94a3b8; font-weight: 700;">Quantidade de Jogos:</label>
+                                        <span id="badge-custo-timemania" style="font-size: 0.74rem; color: #34d399; font-weight: 800; background: rgba(52,211,153,0.15); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(52,211,153,0.3);">
+                                            Custo: R$ 224,00 (64 Jogos)
+                                        </span>
+                                    </div>
+                                    <select id="select-qtd-jogos-timemania" style="width: 100%; background: #0f172a; border: 1px solid rgba(52,211,153,0.3); color: #e2e8f0; padding: 7px 9px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="8">8 Jogos (1 por Linha da Matriz) — R$ 28,00</option>
+                                        <option value="16">16 Jogos (Amostragem Rápida) — R$ 56,00</option>
+                                        <option value="32">32 Jogos (Meio Bloco Estrutural) — R$ 112,00</option>
+                                        <option value="64" selected>64 Jogos (1 Bloco Completo) — R$ 224,00</option>
+                                        <option value="128">128 Jogos (2 Blocos Combinatórios) — R$ 448,00</option>
+                                        <option value="192">192 Jogos (3 Blocos Combinatórios) — R$ 672,00</option>
+                                        <option value="256">256 Jogos (4 Blocos Combinatórios) — R$ 896,00</option>
+                                        <option value="384">384 Jogos (Matriz Completa 6 Blocos) — R$ 1.344,00</option>
+                                        <option value="768">768 Jogos (Direta + Invertida: 100% de Pares) — R$ 2.688,00</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Time do Coração (80 Clubes):</label>
-                                    <select id="select-estrategia-time-timemania" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(52,211,153,0.3); color: #e2e8f0; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                        <option value="maior_ift" selected>Top Força Estatística (Maior IFT)</option>
-                                        <option value="rotacao">Rotação / Diversificação dos Top 10 Times</option>
+                                    <label style="font-size: 0.76rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Blocos Combinatórios:</label>
+                                    <select id="select-blocos-timemania" style="width: 100%; background: #0f172a; border: 1px solid rgba(52,211,153,0.3); color: #e2e8f0; padding: 7px 9px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="todos" selected>Todos os 6 Blocos Combinatórios (1 a 6)</option>
+                                        <option value="1">Bloco 1 (Partição Fixa 5+5 Rotativa)</option>
+                                        <option value="2">Bloco 2 (Referência 1+7+2 por Inclinação Modular)</option>
+                                        <option value="3">Bloco 3 (Pares 2+2+2+2+2 Deslocados)</option>
+                                        <option value="4">Bloco 4 (Misto Ortogonal Trincas/Pares)</option>
+                                        <option value="5">Bloco 5 (Dual Conjugado Inverso)</option>
+                                        <option value="6">Bloco 6 (Transversal Diagonal Intercalado)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- CONTROLES: TIME DO CORAÇÃO E SNIPER -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                                <div>
+                                    <label style="font-size: 0.76rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Time do Coração (80 Clubes Oficiais):</label>
+                                    <select id="select-estrategia-time-timemania" style="width: 100%; background: #0f172a; border: 1px solid rgba(52,211,153,0.3); color: #e2e8f0; padding: 7px 9px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                        <option value="maior_ift" selected>Top Força Estatística (Maior IFT Histórico)</option>
+                                        <option value="rotacao">Rotação / Diversificação dos Top 10 Clubes</option>
                                         <option value="ponderada">Amostragem Ponderada pelo IFT</option>
                                         <option value="fixo_flamengo">Fixo: FLAMENGO/RJ</option>
                                         <option value="fixo_corinthians">Fixo: CORINTHIANS/SP</option>
@@ -973,23 +1350,67 @@
                                         <option value="fixo_ceara">Fixo: CEARÁ/CE</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-                                <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:6px; border:1px solid rgba(52,211,153,0.2);">
-                                    <span style="font-size:0.78rem; color:#e2e8f0; font-weight:700;">Bloquear 3 Consec. no Grupo:</span>
-                                    <input type="checkbox" id="check-no-consec-timemania" checked style="transform:scale(1.2); cursor:pointer; accent-color:#10b981;">
-                                </div>
-                                <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:6px; border:1px solid rgba(245,158,11,0.2);">
-                                    <span style="font-size:0.78rem; color:#fcd34d; font-weight:700;">🎯 Modo SNIPER Timemania:</span>
-                                    <input type="checkbox" id="check-sniper-timemania" style="transform:scale(1.2); cursor:pointer; accent-color:#f59e0b;">
+                                <div style="display: flex; gap: 8px; align-items: flex-end;">
+                                    <button id="btn-toggle-editor-base" type="button" style="flex: 1; background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(148,163,184,0.3); color: #cbd5e1; padding: 8px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        ⚙️ Editar 8 Jogos-Base
+                                    </button>
+                                    <button id="btn-restaurar-base-timemania" type="button" style="flex: 1; background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(52,211,153,0.3); color: #6ee7b7; padding: 8px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        🔄 Restaurar Original
+                                    </button>
                                 </div>
                             </div>
 
-                            <div style="display: flex; gap: 8px;">
-                                <button id="btn-executar-motor-timemania" style="flex: 2; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 12px rgba(16,185,129,0.4);">
-                                    🎯 GERAR CARTEIRA (MOTOR TIMEMANIA)
+                            <!-- EDITOR RETRÁTIL DOS 8 JOGOS-BASE -->
+                            <div id="editor-base-timemania-container" style="display: none; margin-bottom: 14px; padding: 12px; background: rgba(15, 23, 42, 0.9); border: 1px dashed rgba(52,211,153,0.35); border-radius: 8px;">
+                                <div style="font-size: 0.8rem; font-weight: 800; color: #34d399; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Matriz de 8 Jogos-Base da Planilha (Cada jogo com 10 dezenas disjuntas = 80 dezenas):</span>
+                                    <span style="font-size: 0.72rem; color: #94a3b8;">5 Dezenas Fixas Esquerdas | 5 Dezenas Direitas</span>
+                                </div>
+                                <div id="lista-inputs-jogos-base" style="display: grid; grid-template-columns: 1fr; gap: 6px;">
+                                    <!-- Preenchido dinamicamente via JS com os 8 jogos -->
+                                </div>
+                            </div>
+
+                            <!-- BOTÕES DE AÇÃO PRINCIPAL -->
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button id="btn-executar-motor-timemania" style="flex: 2; min-width: 200px; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; color: white; padding: 11px 16px; border-radius: 8px; font-weight: 900; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16,185,129,0.35); letter-spacing: 0.3px;">
+                                    ⚡ GERAR CARTEIRA (TIMEMANIA MATRIX PRO)
                                 </button>
+                                <button id="btn-comparador-timemania" style="flex: 1; min-width: 170px; background: linear-gradient(135deg, #1e3a8a, #2563eb); border: 1px solid #60a5fa; color: white; padding: 11px 14px; border-radius: 8px; font-weight: 800; font-size: 0.86rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(37,99,235,0.3);">
+                                    📊 COMPARAR DESDOBRAMENTOS
+                                </button>
+                                <button id="btn-cobertura-heatmap-timemania" style="flex: 1; min-width: 160px; background: linear-gradient(135deg, #b45309, #d97706); border: 1px solid #fde68a; color: white; padding: 11px 14px; border-radius: 8px; font-weight: 800; font-size: 0.86rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(217,119,6,0.3);">
+                                    🎯 MATRIZ DE COBERTURA 80
+                                </button>
+                            </div>
+
+                            <!-- ÁREA DE RESULTADOS DO COMPARADOR DE DESDOBRAMENTOS -->
+                            <div id="timemania-comparador-container" style="display: none; margin-top: 14px; padding: 14px; background: rgba(15, 23, 42, 0.95); border: 1px solid #3b82f6; border-radius: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="font-size: 0.95rem; font-weight: 800; color: #60a5fa;">
+                                        📊 LABORATÓRIO E COMPARADOR CIENTÍFICO DE DESDOBRAMENTOS
+                                    </div>
+                                    <button type="button" onclick="document.getElementById('timemania-comparador-container').style.display='none'" style="background: transparent; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer;">✕</button>
+                                </div>
+                                <div id="timemania-comparador-tabela-div" style="overflow-x: auto;">
+                                    <!-- Tabela renderizada dinamicamente -->
+                                </div>
+                            </div>
+
+                            <!-- ÁREA DO HEATMAP DE COBERTURA DAS 80 DEZENAS -->
+                            <div id="timemania-heatmap-container" style="display: none; margin-top: 14px; padding: 14px; background: rgba(15, 23, 42, 0.95); border: 1px solid #f59e0b; border-radius: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="font-size: 0.95rem; font-weight: 800; color: #fbbf24;">
+                                        🎯 HEATMAP DE FREQUÊNCIA E COBERTURA COMBINATÓRIA (01 A 80)
+                                    </div>
+                                    <button type="button" onclick="document.getElementById('timemania-heatmap-container').style.display='none'" style="background: transparent; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer;">✕</button>
+                                </div>
+                                <div id="timemania-heatmap-metricas" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; font-size: 0.78rem;">
+                                    <!-- Métricas rápidas de cobertura -->
+                                </div>
+                                <div id="timemania-heatmap-grid" style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-width: 650px;">
+                                    <!-- 80 células preenchidas via JS -->
+                                </div>
                             </div>
                         </div>
 
@@ -2631,8 +3052,8 @@
 
                         <script src="js/engines/motor_quina_engine.js?v=20260905_V2"></script>
 <script src="js/engines/motor_duplasena_engine.js?v=20260904_V2"></script>
-            <script src="js/engines/motor_lotomania_engine.js?v=1781904545"></script>
-            <script src="js/engines/motor_lotofacil_engine.js?v=20261022_GRUPOS_V4"></script>
+            <script src="js/engines/motor_lotomania_engine.js?v=20261104_FIX_K_REFERENCE"></script>
+            <script src="js/engines/motor_lotofacil_engine.js?v=20261105_CONJUNTOS_FULL"></script>
             <script src="js/engines/motor_diadesorte_engine.js?v=20260903"></script>
             <script src="js/engines/motor_timemania_engine.js?v=1781904590"></script>
             <script src="js/engines/motor_milionaria_engine.js?v=20261014_MILIONARIA_FIX"></script>
@@ -2828,7 +3249,7 @@
                 console.log('[B2B] repairGameLotomania injetado com sucesso no escopo global das classes.');
             })();
             </script>
-            <script src="js/ui.js?v=20261014_MILIONARIA_FIX"></script>
+            <script src="js/ui.js?v=20261105_CONJUNTOS_FULL"></script>
             <script src="js/main.js?v=20261014_MILIONARIA_FIX"></script>
 
     <!-- v11: Coverage handler inline REMOVIDO — handler canônico está em ui.js -->

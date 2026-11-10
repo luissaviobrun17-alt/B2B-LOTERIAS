@@ -58,6 +58,17 @@ class BacktestLotomaniaRequest(BaseModel):
     quantidade_jogos: Optional[int] = 10
     estrategia: Optional[str] = "equilibrada"
 
+class MotorLotomaniaGruposRequest(BaseModel):
+    grupos: Dict[str, List[int]]
+    combinacoes: Optional[List[List[int]]] = None
+    modo: Optional[str] = "planilha_126"
+    qtd_grupos_por_jogo: Optional[int] = 5
+    eliminar_duplicados: Optional[bool] = False
+    ordenar_dezenas: Optional[bool] = True
+    fixas: Optional[List[int]] = None
+    excluidas: Optional[List[int]] = None
+    qtd_conjuntos: Optional[int] = None
+
 class MotorLotofacilRequest(BaseModel):
     quantidade_jogos: int
     historico_limite: Optional[int] = None
@@ -76,15 +87,22 @@ class BacktestLotofacilRequest(BaseModel):
 class MotorLotofacilGruposRequest(BaseModel):
     grupos: Dict[str, List[int]]
     combinacoes: Optional[List[List[int]]] = None
-    qtd_grupos_por_jogo: Optional[int] = 5
+    qtd_grupos_por_jogo: Optional[int] = None
     eliminar_duplicados: Optional[bool] = False
     ordenar_dezenas: Optional[bool] = True
     fixas: Optional[List[int]] = None
     excluidas: Optional[List[int]] = None
+    modo: Optional[str] = None
+    qtd_conjuntos: Optional[int] = None
 
 
 class MotorTimemaniaRequest(BaseModel):
     quantidade_jogos: int
+    modo: Optional[str] = "original"
+    base_games: Optional[List[List[int]]] = None
+    blocos_selecionados: Optional[List[int]] = None
+    usar_base_invertida: Optional[bool] = False
+    ambas_bases: Optional[bool] = False
     historico_limite: Optional[int] = None
     estrategia: Optional[str] = "equilibrada"
     sniper: Optional[bool] = False
@@ -95,6 +113,17 @@ class MotorTimemaniaRequest(BaseModel):
     time_fixo_usuario: Optional[str] = None
     historico: Optional[List[List[int]]] = None
     historico_times: Optional[List[str]] = None
+
+class ComparadorTimemaniaRequest(BaseModel):
+    quantidade_jogos: Optional[int] = 64
+    base_games: Optional[List[List[int]]] = None
+    concursos_backtest: Optional[int] = 50
+
+class CoberturaTimemaniaRequest(BaseModel):
+    jogos: List[List[int]]
+
+class BaseInvertidaRequest(BaseModel):
+    base_games: Optional[List[List[int]]] = None
 
 class BacktestTimemaniaRequest(BaseModel):
     concursos_teste: Optional[int] = 50
@@ -275,6 +304,31 @@ def endpoint_motor_lotomania_backtest(request: BacktestLotomaniaRequest):
         raise HTTPException(status_code=500, detail=f"Erro no Backtest Lotomania: {str(e)}")
 
 
+@app.post("/api/v1/motor-lotomania/grupos")
+def endpoint_motor_lotomania_grupos(request: MotorLotomaniaGruposRequest):
+    """
+    Endpoint do MOTOR DE FECHAMENTO POR GRUPOS DA LOTOMANIA - B2B LOTERIAS.
+    O jogador define os 10 grupos de 10 dezenas e o motor une as combinacoes de 5 grupos (50 dezenas).
+    """
+    try:
+        resultado = MotorLotomaniaB2B.gerar_jogos_por_grupos(
+            grupos=request.grupos,
+            combinacoes=request.combinacoes,
+            modo=request.modo or "fechamento_total",
+            qtd_grupos_por_jogo=request.qtd_grupos_por_jogo or 5,
+            eliminar_duplicados=request.eliminar_duplicados or False,
+            ordenar_dezenas=request.ordenar_dezenas if request.ordenar_dezenas is not None else True,
+            fixas=request.fixas,
+            excluidas=request.excluidas,
+            qtd_conjuntos=request.qtd_conjuntos
+        )
+        return resultado
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Motor Lotomania por Grupos: {str(e)}")
+
+
 # =============================================================================
 # MÓDULO EXCLUSIVO: MOTOR LOTOFÁCIL B2B (VERSÃO 2.5 - AJUSTE FINO)
 # =============================================================================
@@ -348,11 +402,13 @@ def endpoint_motor_lotofacil_grupos(request: MotorLotofacilGruposRequest):
         resultado = MotorLotofacilB2B.gerar_jogos_por_grupos(
             grupos=request.grupos,
             combinacoes=request.combinacoes,
-            qtd_grupos_por_jogo=request.qtd_grupos_por_jogo or 5,
+            qtd_grupos_por_jogo=request.qtd_grupos_por_jogo,
             eliminar_duplicados=request.eliminar_duplicados or False,
             ordenar_dezenas=request.ordenar_dezenas if request.ordenar_dezenas is not None else True,
             fixas=request.fixas,
-            excluidas=request.excluidas
+            excluidas=request.excluidas,
+            modo=request.modo,
+            qtd_conjuntos=request.qtd_conjuntos
         )
         return resultado
     except Exception as e:
@@ -368,10 +424,10 @@ def endpoint_motor_lotofacil_grupos(request: MotorLotofacilGruposRequest):
 @app.post("/api/v1/motor-timemania")
 def endpoint_motor_timemania(request: MotorTimemaniaRequest):
     """
-    Endpoint do MOTOR TIMEMANIA — B2B LOTERIAS.
-    Aplica divisão analítica em 4 grupos (01-20, 21-40, 41-60, 61-80),
-    bloqueio de 3 consecutivos por grupo, IFM 8 dimensões, IFT do Time do Coração,
-    otimização submodular de carteira e auditoria 10 pontos.
+    Endpoint do MOTOR TIMEMANIA MATRIX PRO — B2B LOTERIAS.
+    Suporta os 7 Modos de Operacao, os 6 Blocos de Desdobramentos da Planilha Original,
+    Transposicao Serpentina (Base Invertida) com 100% de cobertura de pares,
+    Score IFM 8D, Time do Coracao e Auditoria 10 pontos.
     """
     try:
         motor = MotorTimemaniaB2B(
@@ -382,11 +438,17 @@ def endpoint_motor_timemania(request: MotorTimemaniaRequest):
             sniper=request.sniper or False,
             no_consecutive_3_in_group=request.no_consecutive_3_in_group if request.no_consecutive_3_in_group is not None else True,
             max_consecutive_total=request.max_consecutive_total or 3,
-            pool=request.pool
+            pool=request.pool,
+            base_games=request.base_games
         )
 
         resultado = motor.gerar_carteira(
             quantidade_jogos=request.quantidade_jogos,
+            modo=request.modo or "original",
+            base_games=request.base_games,
+            blocos_selecionados=request.blocos_selecionados,
+            usar_base_invertida=request.usar_base_invertida or False,
+            ambas_bases=request.ambas_bases or False,
             estrategia_time=request.estrategia_time or "maior_ift",
             time_fixo_usuario=request.time_fixo_usuario
         )
@@ -395,6 +457,59 @@ def endpoint_motor_timemania(request: MotorTimemaniaRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Erro no Motor Timemania: {str(e)}")
+
+
+@app.post("/api/v1/motor-timemania/matriz-pro")
+def endpoint_motor_timemania_matriz_pro(request: MotorTimemaniaRequest):
+    """Gera jogos da Timemania utilizando a matriz combinatoria e os 6 blocos de desdobramentos."""
+    return endpoint_motor_timemania(request)
+
+
+@app.post("/api/v1/motor-timemania/comparador")
+def endpoint_motor_timemania_comparador(request: ComparadorTimemaniaRequest):
+    """Executa confronto comparativo rigoroso entre Modo Original, Aprimorado e Hibrido."""
+    try:
+        motor = MotorTimemaniaB2B(base_games=request.base_games)
+        resultado = motor.comparar_desdobramentos(
+            quantidade_jogos=request.quantidade_jogos or 64,
+            base_games=request.base_games,
+            concursos_backtest=request.concursos_backtest or 50
+        )
+        return resultado
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Comparador Timemania: {str(e)}")
+
+
+@app.post("/api/v1/motor-timemania/matriz-cobertura")
+def endpoint_motor_timemania_cobertura(request: CoberturaTimemaniaRequest):
+    """Calcula a matriz analitica de cobertura das 80 dezenas, pares, trincas e redundancia."""
+    try:
+        motor = MotorTimemaniaB2B()
+        return {
+            "sucesso": True,
+            "analise": motor.calcular_matriz_cobertura_80(request.jogos)
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro na Analise de Cobertura: {str(e)}")
+
+
+@app.post("/api/v1/motor-timemania/base-invertida")
+def endpoint_motor_timemania_base_invertida(request: BaseInvertidaRequest):
+    """Calcula a transposicao serpentina (boustrophedon) dos 8 jogos-base."""
+    try:
+        base_inv = MotorTimemaniaB2B.calcular_base_invertida(request.base_games)
+        return {
+            "sucesso": True,
+            "base_invertida": base_inv
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro ao calcular Base Invertida: {str(e)}")
 
 
 @app.post("/api/v1/motor-timemania/backtest")

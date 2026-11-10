@@ -16,8 +16,8 @@ const GAMES = {
         color: "#209A3C",
         colorGrad: "#0d6b28",
         cols: 10,
-        price: 5.00,
-        // Faixas oficiais Mega Sena (aposta simples R$ 5,00): Sena (6), Quina (5), Quadra (4)
+        price: 6.00,
+        // Faixas oficiais Mega Sena (aposta simples R$ 6,00): Sena (6), Quina (5), Quadra (4)
         // TODAS por ratião. A Sena acumula se não houver ganhador.
         strategies: [
             { id: "sena",   label: "Sena (6 acertos)",   match: 6, prize: 50000000, prizeType: "acumulado",  note: "Rateio — acumula se vazio. Média histórica: R$ 40-80 milhões",  paid: true  },
@@ -40,14 +40,14 @@ const GAMES = {
         color: "#930089",
         colorGrad: "#5e0058",
         cols: 5,
-        price: 3.00,
-        // Faixas oficiais: 15, 14, 13 por rateio (aposta simples R$ 3,00) | 12, 11 FIXO
+        price: 3.50,
+        // Faixas oficiais: 15, 14 por rateio (aposta simples R$ 3,50) | 13, 12, 11 FIXO
         strategies: [
             { id: "15pts", label: "15 Pontos",  match: 15, prize: 2000000, prizeType: "acumulado", note: "Rateio — acumula se vazio. Média: R$ 1,5-4 milhões",         paid: true  },
             { id: "14pts", label: "14 Pontos",  match: 14, prize: 2000,    prizeType: "rateio",    note: "Rateio — ~20% do prêmio total. Média: R$ 1.500-3.000",       paid: true  },
-            { id: "13pts", label: "13 Pontos",  match: 13, prize: 25,      prizeType: "rateio",    note: "Rateio — média histórica R$ 20-35 por vencedor",            paid: true  },
-            { id: "12pts", label: "12 Pontos",  match: 12, prize: 12,      prizeType: "fixo",      note: "FIXO: R$ 12,00 garantido por aposta ganhadora",            paid: true  },
-            { id: "11pts", label: "11 Pontos",  match: 11, prize: 6,       prizeType: "fixo",      note: "FIXO: R$ 6,00 garantido por aposta ganhadora",             paid: true  }
+            { id: "13pts", label: "13 Pontos",  match: 13, prize: 35,      prizeType: "fixo",      note: "FIXO: R$ 35,00 garantido por aposta ganhadora",            paid: true  },
+            { id: "12pts", label: "12 Pontos",  match: 12, prize: 14,      prizeType: "fixo",      note: "FIXO: R$ 14,00 garantido por aposta ganhadora",            paid: true  },
+            { id: "11pts", label: "11 Pontos",  match: 11, prize: 7,       prizeType: "fixo",      note: "FIXO: R$ 7,00 garantido por aposta ganhadora",             paid: true  }
         ],
         closingLevels: [
             { id: "close15", label: "Fechamento 15 Pontos",  guarantee: 15, icon: "🎯" },
@@ -68,8 +68,8 @@ const GAMES = {
         color: "#3062a8",
         colorGrad: "#1a3d6b",
         cols: 10,
-        price: 2.50,
-        // Faixas oficiais: Quina (5), Quadra (4) (aposta simples R$ 2,50), Terno (3) por ratião | Duque (2) FIXO R$ 2
+        price: 3.00,
+        // Faixas oficiais: Quina (5), Quadra (4) (aposta simples R$ 3,00), Terno (3) por ratião | Duque (2) FIXO R$ 2
         strategies: [
             { id: "quina",  label: "Quina (5 acertos)",  match: 5, prize: 6000000, prizeType: "acumulado", note: "Rateio — acumula se vazio. Média: R$ 3-10 milhões",          paid: true  },
             { id: "quadra", label: "Quadra (4 acertos)", match: 4, prize: 7500,    prizeType: "rateio",    note: "Rateio — ~19% da arrecadação. Média: R$ 5k-10k por vencedor", paid: true  },
@@ -92,8 +92,8 @@ const GAMES = {
         color: "#e8000f",
         colorGrad: "#8f0009",
         cols: 10,
-        price: 2.50,
-        // Faixas oficiais (aposta simples R$ 2,50) — todos por ratião
+        price: 3.00,
+        // Faixas oficiais (aposta simples R$ 3,00) — todos por ratião
         // 2 sorteios por concurso — você concorre aos dois simultaneamente
         strategies: [
             { id: "sena",   label: "Sena (6 acertos)",   match: 6, prize: 2500000, prizeType: "acumulado", note: "Rateio em cada sorteio. Média: R$ 1-5 milhões",         paid: true  },
@@ -240,7 +240,7 @@ const GAMES = {
         color: "#0284c7",
         colorGrad: "#0369a1",
         cols: 7,
-        price: 2.50,
+        price: 3.00,
         isColumnGame: true,
         // Faixas oficiais Caixa Econômica Federal:
         strategies: [

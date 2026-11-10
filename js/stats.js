@@ -460,7 +460,8 @@ class StatsService {
             return { number: n, count: countMap[n], delay: delayMap[n] !== undefined ? delayMap[n] : 0 };
         }).sort(function(a, b) {
             if (b.count !== a.count) return b.count - a.count; // mais sorteados primeiro
-            return a.delay - b.delay;                           // desempate: menos atrasado primeiro
+            if (a.delay !== b.delay) return a.delay - b.delay; // desempate: menos atrasado primeiro
+            return a.number - b.number;                         // desempate deterministico por dezena
         });
 
         var half = Math.ceil(sorted.length / 2);
@@ -472,6 +473,24 @@ class StatsService {
         var cold = sorted.slice(half).reverse();
 
         return { hot: hot, cold: cold, totalDraws: analyzesCount };
+    }
+
+    /**
+     * Retorna todas as dezenas ranqueadas rigorosamente da mais sorteada a menos sorteada
+     * para a quantidade especificada de concursos analisados (ex: 3, 5, 10, 15).
+     * @param {string} gameType
+     * @param {number} rangeAnalysis
+     * @returns {Array<number>} Array completo ordenado da 1ª dezena (mais sorteada) ate a ultima (menos sorteada)
+     */
+    static getRankedNumbers(gameType, rangeAnalysis) {
+        if (!this.historyStore[gameType]) {
+            this.ensureHistory(gameType);
+        }
+        var stats = this.getStats(gameType, rangeAnalysis);
+        if (!stats || !stats.hot || stats.hot.length === 0) return [];
+        var coldAscending = (stats.cold || []).slice().reverse();
+        return stats.hot.map(function(s) { return s.number; })
+            .concat(coldAscending.map(function(s) { return s.number; }));
     }
 
     static simulateDraw(game) {

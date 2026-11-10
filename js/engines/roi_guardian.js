@@ -33,13 +33,13 @@ class ROIGuardian {
                 prizes: [
                     { hits: 15, avgPrize: 1500000, name: '15 acertos' },
                     { hits: 14, avgPrize: 1200,    name: '14 acertos' },
-                    { hits: 13, avgPrize: 30,      name: '13 acertos' },
-                    { hits: 12, avgPrize: 12,      name: '12 acertos' },
-                    { hits: 11, avgPrize: 6,       name: '11 acertos' }
+                    { hits: 13, avgPrize: 35,      name: '13 acertos' },
+                    { hits: 12, avgPrize: 14,      name: '12 acertos' },
+                    { hits: 11, avgPrize: 7,       name: '11 acertos' }
                 ]
             },
             quina: {
-                ticketCost: 2.50,
+                ticketCost: 3.00,
                 range: 80, draw: 5,
                 prizes: [
                     { hits: 5, avgPrize: 6000000, name: 'Quina' },
@@ -49,7 +49,7 @@ class ROIGuardian {
                 ]
             },
             duplasena: {
-                ticketCost: 2.50,
+                ticketCost: 3.00,
                 range: 50, draw: 6,
                 prizes: [
                     { hits: 6, avgPrize: 3000000, name: 'Sena' },

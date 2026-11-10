@@ -1,6 +1,6 @@
 ' =====================================================================
-' B2B Loterias â€” Servidor Silencioso v6.3
-' 100% invisivel, sem pop-ups, execucao desacoplada via WMI / PowerShell
+' B2B Loterias — Servidor Silencioso v6.4
+' 100% invisivel, sem pop-ups, execucao desacoplada e auto-recuperavel
 ' =====================================================================
 Option Explicit
 
@@ -16,11 +16,14 @@ Const PORTA = 8777
 Dim h, rodando : rodando = False
 On Error Resume Next
 Set h = CreateObject("MSXML2.ServerXMLHTTP.6.0")
-h.setTimeouts 2000, 2000, 2000, 2000
+h.setTimeouts 800, 800, 800, 800
 h.Open "GET", "http://localhost:" & PORTA & "/", False
 h.Send
-If Err.Number = 0 And h.Status >= 200 And h.Status < 400 Then rodando = True
-Set h = Nothing : Err.Clear
+If Err.Number = 0 Then
+    If h.Status >= 200 And h.Status < 400 Then rodando = True
+End If
+Set h = Nothing
+Err.Clear
 On Error GoTo 0
 
 If rodando Then WScript.Quit
@@ -46,16 +49,13 @@ If nd <> "" Then
     End If
 End If
 
-' Fallback confiavel para PowerShell nativo server.ps1 (desacoplado via WMI)
+' Fallback confiavel para PowerShell nativo server.ps1
 Dim sp : sp = APP_DIR & "\server.ps1"
 If fso.FileExists(sp) Then
     On Error Resume Next
-    Dim wmi, proc, res
-    Set wmi = GetObject("winmgmts:\\.\root\cimv2:Win32_Process")
-    res = wmi.Create("powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & sp & """", Null, Null, proc)
-    If Err.Number <> 0 Or res <> 0 Then
-        sh.Run "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & sp & """", 0, False
-    End If
+    sh.CurrentDirectory = APP_DIR
+    Dim psExe : psExe = sh.ExpandEnvironmentStrings("%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe")
+    sh.Run Chr(34) & psExe & Chr(34) & " -WindowStyle Hidden -ExecutionPolicy Bypass -File " & Chr(34) & sp & Chr(34), 0, False
     On Error GoTo 0
 End If
 

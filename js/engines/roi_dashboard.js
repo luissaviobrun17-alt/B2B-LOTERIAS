@@ -41,7 +41,7 @@ class ROIDashboard {
             duplasena:  { nome: 'Dupla Sena',    N: 50,  K: 6,  n: 6,  custo: 3.00, cor: '#e8000f' },
             lotomania:  { nome: 'Lotomania',     N: 100, K: 20, n: 50, custo: 3.00, cor: '#f07d00' },
             timemania:  { nome: 'Timemania',     N: 80,  K: 7,  n: 10, custo: 3.50, cor: '#00a859' },
-            diadesorte: { nome: 'Dia de Sorte',  N: 31,  K: 7,  n: 7,  custo: 3.00, cor: '#e27820' }
+            diadesorte: { nome: 'Dia de Sorte',  N: 31,  K: 7,  n: 7,  custo: 2.50, cor: '#e27820' }
         };
     }
 

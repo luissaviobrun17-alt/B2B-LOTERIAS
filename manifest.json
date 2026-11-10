@@ -2,8 +2,8 @@
     "name": "B2B Loterias — Loteria Inteligente",
     "short_name": "B2B Loterias",
     "description": "Gerador inteligente de apostas para todas as loterias da Caixa com IA avançada",
-    "start_url": "/loterias-caixa/",
-    "scope": "/loterias-caixa/",
+    "start_url": "./",
+    "scope": "./",
     "display": "standalone",
     "orientation": "portrait",
     "background_color": "#0a1628",
@@ -28,12 +28,12 @@
     "shortcuts": [
         {
             "name": "Mega Sena",
-            "url": "/loterias-caixa/#megasena",
+            "url": "./#megasena",
             "description": "Gerar jogos da Mega Sena"
         },
         {
             "name": "Lotofácil",
-            "url": "/loterias-caixa/#lotofacil",
+            "url": "./#lotofacil",
             "description": "Gerar jogos da Lotofácil"
         }
     ]

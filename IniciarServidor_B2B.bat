@@ -1,13 +1,13 @@
 @echo off
 :: =====================================================================
-:: B2B Loterias â€” Iniciador do Servidor (versao .bat hibrida)
+:: B2B Loterias — Iniciador do Servidor (versao .bat hibrida)
 :: Inicia Node.js se disponivel ou PowerShell server.ps1 automaticamente
 :: =====================================================================
 
 set "APP_DIR=%~dp0"
 
-:: Verificar se servidor ja esta rodando
-curl -s --connect-timeout 2 http://localhost:8777/ >nul 2>&1
+:: Verificar se servidor ja esta rodando e servindo index.html (HTTP 200)
+curl -sf --connect-timeout 2 http://localhost:8777/index.html >nul 2>&1
 if %errorlevel%==0 (
     echo [B2B] Servidor ja esta rodando em http://localhost:8777
     start "" msedge "http://localhost:8777/"
@@ -44,7 +44,7 @@ set /a tentativas=0
 set /a tentativas=%tentativas%+1
 if %tentativas% GTR 15 goto timeout_msg
 timeout /t 1 /nobreak >nul
-curl -s --connect-timeout 1 http://localhost:8777/ >nul 2>&1
+curl -sf --connect-timeout 1 http://localhost:8777/index.html >nul 2>&1
 if %errorlevel% NEQ 0 goto aguardar
 
 echo [B2B] Servidor iniciado com sucesso em http://localhost:8777

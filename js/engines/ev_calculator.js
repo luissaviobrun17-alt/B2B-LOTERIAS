@@ -37,7 +37,7 @@ class EVCalculator {
         K: 15,
         n: 15,
         custo: 3.50,
-        premios: { 15: 1_500_000, 14: 1_200, 13: 30, 12: 12, 11: 6 },
+        premios: { 15: 1_500_000, 14: 1_200, 13: 35, 12: 14, 11: 7 },
         multiplicador: 1,
         descricao: '15 dezenas de 01 a 25'
       },
@@ -91,7 +91,7 @@ class EVCalculator {
         N: 31,
         K: 7,
         n: 7,
-        custo: 3.00,
+        custo: 2.50,
         premios: { 7: 1_500_000, 6: 5_000, 5: 50, 4: 5 },
         multiplicador: 1,
         descricao: '7 dezenas de 01 a 31'

@@ -1001,7 +1001,7 @@ class MotorMegaSenaB2BEngine {
             return { sucesso: false, erro: 'Histórico insuficiente para backtesting.' };
         }
 
-        const PRECO_JOGO = 5.00;
+        const PRECO_JOGO = 6.00;
         let custoTotal = 0;
         let retornoTotal = 0;
         let totalJogosSimulados = 0;

@@ -32,7 +32,7 @@ class CoverageEngine {
                 prizeThresholds: [11, 12, 13, 14, 15],
                 prizeLabels: ['11 ac.', '12 ac.', '13 ac.', '14 ac.', '15 ac.'],
                 candidatesPerSlot: 80,
-                ticketPrice: 3.00,
+                ticketPrice: 3.50,
                 // Micro-Otimização Lotofácil
                 molduraRange: [8, 11],
                 primesRange: [4, 6],
@@ -77,7 +77,7 @@ class CoverageEngine {
                 prizeThresholds: [2, 3, 4, 5],
                 prizeLabels: ['Duque', 'Terno', 'Quadra', 'Quina'],
                 candidatesPerSlot: 1000,
-                ticketPrice: 2.50,
+                ticketPrice: 3.00,
                 // Micro-Otimização Cirurgica Quina (v12.3)
                 maxSameEnding: 2,
                 highLowBalance: [1, 4], // Previne tudo alto ou tudo baixo
@@ -93,7 +93,7 @@ class CoverageEngine {
                 prizeThresholds: [3, 4, 5, 6],
                 prizeLabels: ['Terno', 'Quadra', 'Quina', 'Sena'],
                 candidatesPerSlot: 600,
-                ticketPrice: 2.50,
+                ticketPrice: 3.00,
                 // Micro-Otimização Dupla Sena
                 primesRange: [1, 3],
                 highLowBalance: [2, 4]
@@ -125,7 +125,7 @@ class CoverageEngine {
                 prizeThresholds: [3, 4, 5, 6, 7],
                 prizeLabels: ['3 ac.', '4 ac.', '5 ac.', '6 ac.', '7 ac.'],
                 candidatesPerSlot: 1000,
-                ticketPrice: 3.00,
+                ticketPrice: 3.50,
                 // Micro-Otimização Timemania
                 maxPerColumn: 3
             },
@@ -138,7 +138,7 @@ class CoverageEngine {
                 prizeThresholds: [3, 4, 5, 6, 7],
                 prizeLabels: ['3 ac.', '4 ac.', '5 ac.', '6 ac.', '7 ac.'],
                 candidatesPerSlot: 800,
-                ticketPrice: 2.00,
+                ticketPrice: 2.50,
                 // Micro-Otimização Dia de Sorte
                 sumRangeTight: [100, 140],
                 weekScaleBalance: true
@@ -152,7 +152,7 @@ class CoverageEngine {
                 prizeThresholds: [3, 4, 5, 6, 7],
                 prizeLabels: ['3 Colunas', '4 Colunas', '5 Colunas', '6 Colunas', '7 Colunas'],
                 candidatesPerSlot: 1000,
-                ticketPrice: 2.50,
+                ticketPrice: 3.00,
                 isColumnGame: true,
                 cols: 7
             }

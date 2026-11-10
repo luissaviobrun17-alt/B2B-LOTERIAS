@@ -48,7 +48,7 @@ class MotorSuperSeteB2B:
     NUM_COLUNAS = 7
     DIGITOS_POR_COLUNA = 10  # 0 a 9
     TOTAL_COMBINACOES_TEORICAS = 10000000  # 10^7
-    PRECO_APOSTA_SIMPLES = 2.50
+    PRECO_APOSTA_SIMPLES = 3.00
 
     PROBABILIDADES_TEORICAS = {
         7: {"comb": 1,        "prob": 1 / 10000000,      "odds": 10000000, "rotulo": "7 Acertos (Faixa 1 — Rateio)", "fixo": False},

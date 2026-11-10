@@ -1,4 +1,4 @@
-# server.ps1 - PowerShell HTTP Server for B2B Loterias
+﻿# server.ps1 - PowerShell HTTP Server for B2B Loterias
 # Serves static files and handles API endpoints on http://localhost:8777/
 # v2.1 — Multi-desktop mirroring, anti-collision, and auto-sync
 
@@ -98,20 +98,52 @@ $mimeTypes = @{
     ".txt"  = "text/plain; charset=utf-8"
 }
 
-# Iniciar Listener IMEDIATAMENTE na inicializacao (sem atraso de pastas)
-$listener = New-Object System.Net.HttpListener
-$listener.Prefixes.Add("http://localhost:$port/")
-try {
-    $listener.Prefixes.Add("http://127.0.0.1:$port/")
-} catch {}
-
-try {
-    $listener.Start()
-} catch {
-    Write-Host "Porta $port ja em uso - servidor ativo."
-    exit 0
+# Funcao auxiliar para instanciar e inicializar o HttpListener
+function Initialize-B2BListener($targetPort) {
+    $l = New-Object System.Net.HttpListener
+    $l.Prefixes.Add("http://localhost:$targetPort/")
+    try {
+        $l.Prefixes.Add("http://127.0.0.1:$targetPort/")
+    } catch {}
+    $l.Start()
+    return $l
 }
-Write-Host "Servidor B2B Loterias rodando em http://localhost:$port/"
+
+# Iniciar Listener com auto-recuperacao e deteccao de porta
+$listener = $null
+try {
+    $listener = Initialize-B2BListener $port
+    Write-Host "Servidor B2B Loterias rodando em http://localhost:$port/"
+} catch {
+    try {
+        $testReq = [System.Net.HttpWebRequest]::Create("http://localhost:$port/index.html")
+        $testReq.Timeout = 1500
+        $testResp = $testReq.GetResponse()
+        $statusCode = [int]$testResp.StatusCode
+        $testResp.Close()
+        if ($statusCode -eq 200) {
+            Write-Host "Porta $port ja em uso por instancia valida - mantendo servidor ativo."
+            exit 0
+        }
+        throw "Status invalido: $statusCode"
+    } catch {
+        Write-Host "Instancia orfa ou inativa detectada na porta $port. Encerrando processos antigos para auto-recuperacao..."
+        try {
+            Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+                $_.ProcessId -ne $PID -and $_.CommandLine -match "(^|[\\/\""\s])server\.(ps1|js)"
+            } | ForEach-Object {
+                Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+            }
+        } catch {}
+        Start-Sleep -Seconds 1
+        try {
+            $listener = Initialize-B2BListener $port
+            Write-Host "Servidor B2B Loterias recuperado e rodando em http://localhost:$port/"
+        } catch {
+            Write-Host "Aviso: Nao foi possivel iniciar na porta $port`: $_"
+        }
+    }
+}
 
 # Garantir subpastas no Desktop ativo
 $allSubPastasToEnsure = @($pastaPorJogo.Values) + @("+MILIONARIA") | Select-Object -Unique
@@ -139,46 +171,65 @@ function Get-GameLinesSignature($text) {
     return $text.Trim()
 }
 
-# Função para enviar resposta JSON
+# Função para enviar resposta JSON (com proteção contra conexões abortadas)
 function Send-Json($context, $obj, $statusCode = 200) {
-    $res = $context.Response
-    $res.StatusCode = $statusCode
-    $res.ContentType = "application/json; charset=utf-8"
-    $res.Headers["Access-Control-Allow-Origin"] = "*"
-    $res.Headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    $res.Headers["Access-Control-Allow-Headers"] = "Content-Type"
-    
-    $json = ConvertTo-Json -InputObject $obj -Depth 10
-    $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
-    $res.ContentLength64 = $buffer.Length
-    $res.OutputStream.Write($buffer, 0, $buffer.Length)
-    $res.Close()
+    try {
+        $res = $context.Response
+        $res.StatusCode = $statusCode
+        $res.ContentType = "application/json; charset=utf-8"
+        $res.Headers["Access-Control-Allow-Origin"] = "*"
+        $res.Headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        $res.Headers["Access-Control-Allow-Headers"] = "Content-Type"
+        
+        $json = ConvertTo-Json -InputObject $obj -Depth 10
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
+        $res.ContentLength64 = $buffer.Length
+        $res.OutputStream.Write($buffer, 0, $buffer.Length)
+        $res.Close()
+    } catch {
+        try { $context.Response.Abort() } catch {}
+    }
 }
 
-# Função para enviar resposta estática
+# Função para enviar resposta estática (resiliente a F5 e recargas do navegador)
 function Send-File($context, $filePath) {
-    $res = $context.Response
-    $ext = [System.IO.Path]::GetExtension($filePath).ToLower()
-    $mime = $mimeTypes[$ext]
-    if (-not $mime) { $mime = "application/octet-stream" }
-    
-    $res.StatusCode = 200
-    $res.ContentType = $mime
-    $res.Headers["Access-Control-Allow-Origin"] = "*"
-    $res.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    $res.Headers["Pragma"] = "no-cache"
-    $res.Headers["Expires"] = "0"
-    
-    $bytes = [System.IO.File]::ReadAllBytes($filePath)
-    $res.ContentLength64 = $bytes.Length
-    $res.OutputStream.Write($bytes, 0, $bytes.Length)
-    $res.Close()
+    try {
+        $res = $context.Response
+        $ext = [System.IO.Path]::GetExtension($filePath).ToLower()
+        $mime = $mimeTypes[$ext]
+        if (-not $mime) { $mime = "application/octet-stream" }
+        
+        $res.StatusCode = 200
+        $res.ContentType = $mime
+        $res.Headers["Access-Control-Allow-Origin"] = "*"
+        $res.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        $res.Headers["Pragma"] = "no-cache"
+        $res.Headers["Expires"] = "0"
+        
+        if ($context.Request.HttpMethod -eq "HEAD") {
+            $fi = New-Object System.IO.FileInfo($filePath)
+            $res.ContentLength64 = $fi.Length
+            $res.Close()
+            return
+        }
+        
+        $bytes = [System.IO.File]::ReadAllBytes($filePath)
+        $res.ContentLength64 = $bytes.Length
+        $res.OutputStream.Write($bytes, 0, $bytes.Length)
+        $res.Close()
+    } catch {
+        try { $context.Response.Abort() } catch {}
+    }
 }
 
-# Loop principal
-while ($listener.IsListening) {
+# Loop principal blindado contra quedas (auto-recuperacao continua)
+while ($true) {
     $context = $null
     try {
+        if ($null -eq $listener -or -not $listener.IsListening) {
+            try { if ($listener) { $listener.Close() } } catch {}
+            $listener = Initialize-B2BListener $port
+        }
         $context = $listener.GetContext()
         $req = $context.Request
         $res = $context.Response
@@ -596,6 +647,14 @@ while ($listener.IsListening) {
             $pathName = "/index.html"
         }
         
+        # Suporte a scope do PWA / GitHub (/loterias-caixa/)
+        if ($pathName.StartsWith("/loterias-caixa/")) {
+            $pathName = $pathName.Substring(15)
+            if ($pathName -eq "" -or $pathName -eq "/") { $pathName = "/index.html" }
+        } elseif ($pathName -eq "/loterias-caixa") {
+            $pathName = "/index.html"
+        }
+        
         $normalizedPath = $pathName.Replace("/", [System.IO.Path]::DirectorySeparatorChar)
         if ($normalizedPath.StartsWith([System.IO.Path]::DirectorySeparatorChar)) {
             $normalizedPath = $normalizedPath.Substring(1)
@@ -614,12 +673,19 @@ while ($listener.IsListening) {
             }
         }
         
-    } catch {
-        Write-Error $_.Exception.Message
+    } catch [System.Net.HttpListenerException] {
+        # Conexao cancelada/abortada pelo navegador (comum ao teclar F5 repetidamente)
         if ($context) {
-            try {
-                Send-Json $context @{ "ok" = $false; "error" = $_.Exception.Message } 500
-            } catch {}
+            try { $context.Response.Abort() } catch {}
         }
+        if ($null -ne $listener -and -not $listener.IsListening) {
+            Start-Sleep -Milliseconds 150
+            try { $listener = Initialize-B2BListener $port } catch {}
+        }
+    } catch {
+        if ($context) {
+            try { $context.Response.Abort() } catch {}
+        }
+        Start-Sleep -Milliseconds 50
     }
 }

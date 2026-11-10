@@ -77,7 +77,7 @@ class TestesCientificosSuperSete:
         assert self.motor.NUM_COLUNAS == 7
         assert self.motor.DIGITOS_POR_COLUNA == 10
         assert self.motor.TOTAL_COMBINACOES_TEORICAS == 10_000_000
-        assert self.motor.PRECO_APOSTA_SIMPLES == 2.50
+        assert self.motor.PRECO_APOSTA_SIMPLES == 3.00
         res = self.motor.gerar_carteira(5)
         for j in res["jogos"]:
             assert len(j["jogo"]) == 7
