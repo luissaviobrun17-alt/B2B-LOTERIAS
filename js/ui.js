@@ -1997,7 +1997,7 @@ class UI {
                 const badge = document.getElementById('badge-custo-timemania');
                 if (badge) {
                     badge.textContent = `Custo: R$ ${custo.toFixed(2).replace('.', ',')} (${q} Jogos)`;
-                }}
+                }
             };
         }
 
