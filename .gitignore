@@ -1,2 +1,8 @@
 __pycache__/
 *.pyc
+logs/
+*.log
+!task-3438.log
+*.bak
+*.bak2
+*.backup_*

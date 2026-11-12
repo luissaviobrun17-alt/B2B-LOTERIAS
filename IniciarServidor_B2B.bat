@@ -1,10 +1,22 @@
 @echo off
 :: =====================================================================
-:: B2B Loterias — Iniciador do Servidor (versao .bat hibrida)
+:: B2B Loterias - Iniciador do Servidor (versao .bat hibrida)
 :: Inicia Node.js se disponivel ou PowerShell server.ps1 automaticamente
 :: =====================================================================
 
 set "APP_DIR=%~dp0"
+
+:: Garantir API Python (porta 8000) para MODO 4 v1.2 e demais motores
+netstat -ano | findstr ":8000" | findstr "LISTEN" >nul
+if %errorlevel% neq 0 (
+    if exist "%APP_DIR%api.py" (
+        if exist "%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe" (
+            start "" "%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe" "%APP_DIR%api.py"
+        ) else (
+            start "" /min python "%APP_DIR%api.py"
+        )
+    )
+)
 
 :: Verificar se servidor ja esta rodando e servindo index.html (HTTP 200)
 curl -sf --connect-timeout 2 http://localhost:8777/index.html >nul 2>&1

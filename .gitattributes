@@ -1,2 +1,15 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Preservar bytes exatos dos artefatos criptograficamente selados (MODO 4 v1.2)
+motor_lotomania_modo4.py -text
+verificador_selo_modo4.py -text
+chave_publica_modo4.pem -text
+data/lotomania.json -text
+manifesto_modo4.json -text
+manifesto_modo4.sig -text
+manifesto_evidencia_execucao_modo4.json -text
+manifesto_evidencia_execucao_modo4.sig -text
+relatorio_matriz_modo4.json -text
+dados_brutos_90_saldos_consolidados.json -text
+task-3438.log -text

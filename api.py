@@ -1,22 +1,44 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uvicorn
 import urllib.request
 import json
 import os
-from motor_sugestao import MotorSugestaoLoteria
+import logging
+import uuid
+
+logger = logging.getLogger('api.loteria_b2b')
+try:
+    from motor_sugestao import MotorSugestaoLoteria
+except ImportError:
+    MotorSugestaoLoteria = None
 from motor_lotomania import MotorLotomaniaB2B
-from motor_lotofacil import MotorLotofacilB2B
-from motor_timemania import MotorTimemaniaB2B
-from motor_diadesorte import MotorDiaDeSorteB2B
-from motor_megasena import MotorMegaSenaB2B
+try:
+    from motor_lotofacil import MotorLotofacilB2B
+except ImportError:
+    MotorLotofacilB2B = None
+try:
+    from motor_timemania import MotorTimemaniaB2B
+except ImportError:
+    MotorTimemaniaB2B = None
+try:
+    from motor_diadesorte import MotorDiaDeSorteB2B
+except ImportError:
+    MotorDiaDeSorteB2B = None
+try:
+    from motor_megasena import MotorMegaSenaB2B
+except ImportError:
+    MotorMegaSenaB2B = None
 try:
     from motor_supersete import MotorSuperSeteB2B
 except ImportError:
     MotorSuperSeteB2B = None
-from motor_quina import MotorQuinaB2B
+try:
+    from motor_quina import MotorQuinaB2B
+except ImportError:
+    MotorQuinaB2B = None
 
 app = FastAPI(
     title="Loteria B2B AI Engine API",
@@ -47,6 +69,26 @@ class CoberturaIARequest(BaseModel):
     historico: Optional[List[List[int]]] = None
     is_sniper: Optional[bool] = False
 
+class OtimizarCoberturaRequest(BaseModel):
+    quantidade_jogos: int = Field(default=20, ge=1, le=10000, strict=True, description="Quantidade de jogos (entre 1 e 10000, tipo estrito)")
+    permitir_espelhos: bool = Field(default=True, strict=True, description="Permitir geracao de pares espelho complementares")
+    seed: Optional[int] = Field(default=None, strict=True, description="Semente opcional para reprodutibilidade estocastica (tipo estrito)")
+    trace: Optional[bool] = Field(default=False, strict=True, description="Incluir rastreamento intermediario das etapas de selecao")
+
+class ConferirModo4Request(BaseModel):
+    jogos: List[List[int]] = Field(..., min_length=1, description="Lista nao vazia de bilhetes de 50 dezenas para conferencia")
+    concurso: Optional[int] = Field(default=None, strict=True, description="Numero do concurso na base de referencia (1 a 2699)")
+
+class BacktestCientificoRequest(BaseModel):
+    concursos_teste: Optional[int] = 30
+    quantidade_jogos_por_concurso: Optional[int] = 10
+    modo: Optional[str] = "matematico_puro"
+    seed: Optional[int] = 42
+
+class AnaliseParesTriosRequest(BaseModel):
+    limite_top: Optional[int] = 50
+    janela: Optional[int] = None
+
 class MotorLotomaniaRequest(BaseModel):
     quantidade_jogos: int
     historico_limite: Optional[int] = None
@@ -67,7 +109,6 @@ class MotorLotomaniaGruposRequest(BaseModel):
     ordenar_dezenas: Optional[bool] = True
     fixas: Optional[List[int]] = None
     excluidas: Optional[List[int]] = None
-    qtd_conjuntos: Optional[int] = None
 
 class MotorLotofacilRequest(BaseModel):
     quantidade_jogos: int
@@ -87,13 +128,11 @@ class BacktestLotofacilRequest(BaseModel):
 class MotorLotofacilGruposRequest(BaseModel):
     grupos: Dict[str, List[int]]
     combinacoes: Optional[List[List[int]]] = None
-    qtd_grupos_por_jogo: Optional[int] = None
+    qtd_grupos_por_jogo: Optional[int] = 5
     eliminar_duplicados: Optional[bool] = False
     ordenar_dezenas: Optional[bool] = True
     fixas: Optional[List[int]] = None
     excluidas: Optional[List[int]] = None
-    modo: Optional[str] = None
-    qtd_conjuntos: Optional[int] = None
 
 
 class MotorTimemaniaRequest(BaseModel):
@@ -159,9 +198,17 @@ def obter_historico_caixa(nome_loteria: str) -> List[List[int]]:
             loteria_key = v
             break
 
-    cache_dir = "data"
-    os.makedirs(cache_dir, exist_ok=True)
-    cache_path = os.path.join(cache_dir, f"{loteria_key}.json")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    possible_paths = [
+        os.path.join(base_dir, "data", f"{loteria_key}.json"),
+        os.path.join("data", f"{loteria_key}.json"),
+        os.path.join(base_dir, "..", "data", f"{loteria_key}.json")
+    ]
+    cache_path = os.path.join(base_dir, "data", f"{loteria_key}.json")
+    for p_cand in possible_paths:
+        if os.path.exists(p_cand):
+            cache_path = p_cand
+            break
 
     data = None
     if os.path.exists(cache_path):
@@ -268,10 +315,14 @@ def endpoint_motor_lotomania(request: MotorLotomaniaRequest):
         if not historico:
             historico = obter_historico_caixa("lotomania")
 
+        estrategia_norm = request.estrategia or "equilibrada"
+        if estrategia_norm in ("cobertura_maxima", "modo4", "otimizador_cobertura"):
+            estrategia_norm = "modo_4"
+
         motor = MotorLotomaniaB2B(
             historico=historico,
             limite_historico=request.historico_limite,
-            estrategia=request.estrategia or "equilibrada"
+            estrategia=estrategia_norm
         )
 
         resultado = motor.gerar_carteira(request.quantidade_jogos)
@@ -319,14 +370,293 @@ def endpoint_motor_lotomania_grupos(request: MotorLotomaniaGruposRequest):
             eliminar_duplicados=request.eliminar_duplicados or False,
             ordenar_dezenas=request.ordenar_dezenas if request.ordenar_dezenas is not None else True,
             fixas=request.fixas,
-            excluidas=request.excluidas,
-            qtd_conjuntos=request.qtd_conjuntos
+            excluidas=request.excluidas
         )
         return resultado
     except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Erro no Motor Lotomania por Grupos: {str(e)}")
+
+
+@app.post("/api/v1/motor-lotomania/analise-janelas")
+def endpoint_motor_lotomania_analise_janelas():
+    """Retorna analise detalhada das 4 janelas temporais (3, 5, 10, 15 concursos) e comparativo integrado."""
+    try:
+        historico = obter_historico_caixa("lotomania")
+        motor = MotorLotomaniaB2B(historico=historico)
+        return motor.analisar_quatro_janelas()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro na analise de janelas Lotomania: {str(e)}")
+
+
+@app.post("/api/v1/motor-lotomania/pares-trios")
+def endpoint_motor_lotomania_pares_trios(request: Optional[AnaliseParesTriosRequest] = None):
+    """Retorna investigacao estatistica dos 4.950 pares e 161.700 trios com correcao de Bonferroni."""
+    try:
+        historico = obter_historico_caixa("lotomania")
+        motor = MotorLotomaniaB2B(historico=historico)
+        limite = request.limite_top if request else 50
+        janela = request.janela if request else None
+        res_pares = motor.analisar_pares(limite_top=limite, janela=janela)
+        res_trios = motor.analisar_trios(limite_top=limite, janela=janela)
+        return {
+            "sucesso": True,
+            "pares": res_pares,
+            "trios": res_trios
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro na analise de pares/trios Lotomania: {str(e)}")
+
+
+@app.post("/api/v1/motor-lotomania/ifm")
+def endpoint_motor_lotomania_ifm():
+    """Retorna o Indice de Forca Matematica (IFM) e ranking completo das 100 dezenas."""
+    try:
+        historico = obter_historico_caixa("lotomania")
+        motor = MotorLotomaniaB2B(historico=historico)
+        return motor.calcular_ifm()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no calculo IFM Lotomania: {str(e)}")
+
+
+@app.post("/api/v1/motor-lotomania/backtest-cientifico")
+def endpoint_motor_lotomania_backtest_cientifico(request: BacktestCientificoRequest):
+    """Executa backtesting retrospectivo walk-forward com comparacao Monte Carlo, teste t e intervalos de confianca."""
+    try:
+        historico = obter_historico_caixa("lotomania")
+        motor = MotorLotomaniaB2B(historico=historico)
+        return motor.executar_backtesting_multiplo(
+            concursos_teste=request.concursos_teste or 30,
+            quantidade_jogos_por_concurso=request.quantidade_jogos_por_concurso or 10,
+            modo=request.modo or "matematico_puro",
+            seed=request.seed or 42
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro no Backtest Cientifico Lotomania: {str(e)}")
+
+
+@app.post("/api/v1/motor-lotomania/auditoria")
+def endpoint_motor_lotomania_auditoria():
+    """Retorna relatorio integrado de integridade e honestidade cientifica."""
+    try:
+        historico = obter_historico_caixa("lotomania")
+        motor = MotorLotomaniaB2B(historico=historico)
+        return motor.gerar_relatorio_auditoria_completo()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro na auditoria Lotomania: {str(e)}")
+
+
+# =============================================================================
+# COMPONENTE DE VERIFICACAO DE INICIALIZACAO E NUCLEO ISOLADO MODO 4 (v1.2)
+# =============================================================================
+from verificador_selo_modo4 import (
+    CLAUSULA_OBRIGATORIA_MODO4,
+    IDENTIFICACAO_OFICIAL_MODO4,
+    IntegridadeModo4Error,
+    verificar_selo_modo4,
+)
+
+_MODO4_SELO_INICIAL = None
+_MODO4_ERRO_INICIAL = None
+MotorLotomaniaModo4 = None
+
+try:
+    # Verificacao criptografica realizada ANTES de carregar o nucleo MODO 4
+    _MODO4_SELO_INICIAL = verificar_selo_modo4()
+    from motor_lotomania_modo4 import MotorLotomaniaModo4 as _MotorModo4Cls
+    MotorLotomaniaModo4 = _MotorModo4Cls
+except Exception as _exc_m4:
+    _MODO4_ERRO_INICIAL = str(_exc_m4)
+    logger.error("Bloqueio de inicializacao do MODO 4 v1.2: %s", _exc_m4)
+
+
+@app.get("/health")
+def endpoint_health():
+    """
+    Rota oficial de saude do servidor matematico e verificacao em tempo real
+    do selamento criptografico Ed25519 do motor Lotomania MODO 4 v1.2.
+    """
+    try:
+        parametros_rt = (
+            MotorLotomaniaModo4.obter_parametros_runtime()
+            if MotorLotomaniaModo4 is not None
+            else None
+        )
+        status_selo = verificar_selo_modo4(parametros_runtime=parametros_rt)
+        if MotorLotomaniaModo4 is None:
+            from motor_lotomania_modo4 import MotorLotomaniaModo4 as _M4
+            globals()["MotorLotomaniaModo4"] = _M4
+            status_selo = verificar_selo_modo4(parametros_runtime=_M4.obter_parametros_runtime())
+
+        return {
+            "status": "ok",
+            "api_operacional": True,
+            "modo4_disponivel": True,
+            "modo4": {
+                "disponivel": True,
+                "identificacao_oficial": IDENTIFICACAO_OFICIAL_MODO4,
+                "versao_motor": "1.2",
+                "selo_valido": True,
+                "algoritmo_assinatura": status_selo["algoritmo_assinatura"],
+                "integridade_base_historica": True,
+                "corte_historico_concurso": status_selo["corte_historico_concurso"],
+                "historico_geracao": None,
+                "limite_min_jogos": 1,
+                "limite_max_jogos": 10000,
+                "sha256_manifesto": status_selo["sha256_manifesto"],
+                "arquivos_verificados": status_selo["arquivos_verificados"],
+                "clausula_obrigatoria": CLAUSULA_OBRIGATORIA_MODO4,
+            },
+        }
+    except Exception as exc:
+        logger.error("Falha na verificacao de saude do MODO 4: %s", exc)
+        return {
+            "status": "degraded",
+            "api_operacional": True,
+            "modo4_disponivel": False,
+            "modo4": {
+                "disponivel": False,
+                "identificacao_oficial": IDENTIFICACAO_OFICIAL_MODO4,
+                "versao_motor": "1.2",
+                "selo_valido": False,
+                "integridade_base_historica": False,
+                "motivo_bloqueio": "Selo criptografico invalido ou arquivos de referencia adulterados.",
+                "clausula_obrigatoria": CLAUSULA_OBRIGATORIA_MODO4,
+            },
+        }
+
+
+@app.post("/api/v1/lotomania-modo4/gerar")
+def endpoint_lotomania_modo4_gerar(request: OtimizarCoberturaRequest):
+    """
+    Endpoint exclusivo do OTIMIZADOR COMBINATÓRIO DE DISPERSÃO E COBERTURA CONJUNTA
+    — LOTOMANIA | MODO 4 — v1.2.
+    Opera com verificacao previa de selo Ed25519, historico=None e limite estrito 1..10.000.
+    """
+    try:
+        if type(request.quantidade_jogos) is not int or not (1 <= request.quantidade_jogos <= 10000):
+            raise HTTPException(
+                status_code=422,
+                detail="quantidade_jogos deve ser um inteiro estrito entre 1 e 10.000.",
+            )
+        if request.seed is not None and type(request.seed) is not int:
+            raise HTTPException(
+                status_code=422,
+                detail="seed deve ser um inteiro estrito ou null.",
+            )
+        if type(request.permitir_espelhos) is not bool:
+            raise HTTPException(
+                status_code=422,
+                detail="permitir_espelhos deve ser booleano estrito.",
+            )
+
+        # Verifica o selo antes de instanciar ou executar o motor
+        verificar_selo_modo4(
+            parametros_runtime=(
+                MotorLotomaniaModo4.obter_parametros_runtime()
+                if MotorLotomaniaModo4 is not None
+                else None
+            )
+        )
+        if MotorLotomaniaModo4 is None:
+            from motor_lotomania_modo4 import MotorLotomaniaModo4 as _M4
+            globals()["MotorLotomaniaModo4"] = _M4
+
+        motor = MotorLotomaniaModo4(verificar_selo=True)
+        resultado = motor.gerar_carteira_otimizada_cobertura(
+            quantidade_jogos=request.quantidade_jogos,
+            seed=request.seed,
+            permitir_espelhos=request.permitir_espelhos,
+            trace=bool(request.trace),
+        )
+
+        if not isinstance(resultado, dict) or not resultado.get("sucesso"):
+            raise RuntimeError("Falha estrutural: o motor MODO 4 nao retornou status de sucesso.")
+        jogos = resultado.get("jogos", [])
+        if len(jogos) != request.quantidade_jogos:
+            raise RuntimeError(
+                f"Discrepancia quantitativa: esperados {request.quantidade_jogos} jogos, entregues {len(jogos)}."
+            )
+        for idx, jg in enumerate(jogos):
+            if not isinstance(jg, list) or len(jg) != 50 or len(set(jg)) != 50:
+                raise RuntimeError(f"Jogo {idx + 1} na resposta nao contem 50 dezenas distintas.")
+            if not all(type(n) is int and 1 <= n <= 100 for n in jg):
+                raise RuntimeError(f"Jogo {idx + 1} na resposta contem dezenas fora do dominio [1..100].")
+
+        # Camada de representacao da API: converte float('inf') para None (null no JSON)
+        return MotorLotomaniaModo4.serializar_resposta_api(resultado)
+    except HTTPException:
+        raise
+    except IntegridadeModo4Error as exc_selo:
+        erro_id = str(uuid.uuid4())[:8]
+        logger.critical("BLOQUEIO CRIPTOGRAFICO MODO 4 (ID: %s): %s", erro_id, exc_selo)
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"MODO 4 bloqueado por falha de integridade criptografica (ID: {erro_id}). "
+                "Nenhum jogo foi gerado."
+            ),
+        )
+    except Exception as e:
+        erro_id = str(uuid.uuid4())[:8]
+        logger.exception("Erro no Motor Lotomania MODO 4. ID: %s | Detalhe: %s", erro_id, e)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro interno no processamento do MODO 4 (ID: {erro_id}). Consulte o log do servidor.",
+        )
+
+
+@app.post("/api/v1/lotomania-modo4/conferir")
+def endpoint_lotomania_modo4_conferir(request: ConferirModo4Request):
+    """Confere uma carteira de bilhetes contra a base de referencia selada (concurso 1 a 2699)."""
+    try:
+        if not request.jogos:
+            raise HTTPException(
+                status_code=422,
+                detail="Lista de jogos obrigatoria para conferencia nao pode ser vazia.",
+            )
+        verificar_selo_modo4()
+        if MotorLotomaniaModo4 is None:
+            from motor_lotomania_modo4 import MotorLotomaniaModo4 as _M4
+            globals()["MotorLotomaniaModo4"] = _M4
+        motor = MotorLotomaniaModo4(verificar_selo=True)
+        return motor.conferir_carteira(jogos=request.jogos, concurso=request.concurso)
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+    except IntegridadeModo4Error as exc_selo:
+        erro_id = str(uuid.uuid4())[:8]
+        logger.critical("BLOQUEIO CRIPTOGRAFICO MODO 4 CONFERENCIA (ID: %s): %s", erro_id, exc_selo)
+        raise HTTPException(
+            status_code=503,
+            detail=f"MODO 4 bloqueado por violacao de integridade (ID: {erro_id}).",
+        )
+    except Exception as e:
+        erro_id = str(uuid.uuid4())[:8]
+        logger.exception("Erro na conferencia MODO 4. ID: %s | Detalhe: %s", erro_id, e)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro interno na conferencia do MODO 4 (ID: {erro_id}).",
+        )
+
+
+@app.post("/api/v1/motor-lotomania/otimizar-cobertura")
+def endpoint_motor_lotomania_otimizar_cobertura(request: OtimizarCoberturaRequest):
+    """
+    Rota legada que delega integralmente ao modulo independente e selado
+    MotorLotomaniaModo4 (v1.2), eliminando qualquer duplicidade de motor.
+    """
+    return endpoint_lotomania_modo4_gerar(request)
 
 
 # =============================================================================
@@ -402,13 +732,11 @@ def endpoint_motor_lotofacil_grupos(request: MotorLotofacilGruposRequest):
         resultado = MotorLotofacilB2B.gerar_jogos_por_grupos(
             grupos=request.grupos,
             combinacoes=request.combinacoes,
-            qtd_grupos_por_jogo=request.qtd_grupos_por_jogo,
+            qtd_grupos_por_jogo=request.qtd_grupos_por_jogo or 5,
             eliminar_duplicados=request.eliminar_duplicados or False,
             ordenar_dezenas=request.ordenar_dezenas if request.ordenar_dezenas is not None else True,
             fixas=request.fixas,
-            excluidas=request.excluidas,
-            modo=request.modo,
-            qtd_conjuntos=request.qtd_conjuntos
+            excluidas=request.excluidas
         )
         return resultado
     except Exception as e:
@@ -911,4 +1239,4 @@ def endpoint_motor_supersete_analise(request: AnaliseSuperSeteRequest):
 
 
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("api:app", host="127.0.0.1", port=8000, reload=False)

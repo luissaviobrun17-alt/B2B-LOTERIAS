@@ -1,0 +1,908 @@
+{
+  "sucesso": true,
+  "versao_esquema_relatorio": "1.2.2",
+  "versao_motor": "1.2",
+  "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada.",
+  "metadados_execucao": {
+    "execucao_id": "7b9b2102-82b3-469d-86c1-768c89dab2ea",
+    "timestamp_inicio_utc": "2026-11-12T20:45:40.059059+00:00",
+    "timestamp_fim_utc": "2026-11-12T20:59:14.909156+00:00",
+    "duracao_total_bateria_s": 814.8503,
+    "python_version": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+    "plataforma": "Windows-11-10.0.26200-SP0",
+    "caminho_saida_relatorio": "C:\\Users\\LUISBR~1\\AppData\\Local\\Temp\\homologacao_modo4_v1_2_biea170u\\relatorio_matriz_modo4.json",
+    "caminho_relatorio_persistente_preservado": "relatorio_matriz_modo4.json",
+    "gerado_em_diretorio_temporario": true,
+    "sha256_relatorio_temporario_e_persistente_identicos": true,
+    "referencia_oficial_motor": {
+      "arquivo_fisico_oficial": "motor_lotomania.py",
+      "classe_referencia": "MotorLotomaniaB2B",
+      "sha256": "085d6fa972dfb97576246f26b8687fce35b7dc9199bb30fca61cc348df851d6c",
+      "aliases_historicos_documentais": [
+        "motor_lotomania_referencia_original.py",
+        "motor_lotomania_ref.py"
+      ]
+    },
+    "hashes_sha256_codigo_fonte": {
+      "motor_lotomania_modo4.py": "94a2d1001d235e0e9bd543aeee697bac0ac6c60b1d24654838e452d6f42c68f9",
+      "verificador_selo_modo4.py": "632388d3c58aee37ae41cd33e44ddd8fad78ea22ebdb339f2aff4fae59b89e46",
+      "manifesto_modo4.json": "66e255cd526e2c72ec1fda3d3112cb918b4e678b1f264117593ca7cdf127e57c",
+      "manifesto_modo4.sig": "21e43c7fd670fed1d384bad98344c7daf7f3f1c6fd5405f0dceb64f55fbd453f",
+      "chave_publica_modo4.pem": "d810ed9f31f476b159590cd2e053632dc32e8e6e62a5a17f7c2f371a45084b0f",
+      "data/lotomania.json": "3f11b71e15b936940c8cef40cf39c0a67f5c47f7a15b12a8c2608763ec39f873",
+      "dados_brutos_90_saldos_consolidados.json": "07cbe14c5dc52e4f5b9cc0971f93062e2675bb386cb6e34cd3c490872378fc70",
+      "motor_lotomania.py": "085d6fa972dfb97576246f26b8687fce35b7dc9199bb30fca61cc348df851d6c",
+      "testes/test_modo4_matriz_carteiras.py": "d4644226a5665c514ec286d22a83f117a5ec1ef4f524fffac06a8a986ea21e88",
+      "testes/test_modo4_selo.py": "e4996ca8858cd739fba5b1f1d34e34ee039e2ea20e0e8b9b5592bde3d260a50e",
+      "testes/test_modo4_equivalencia.py": "32793702ecf7a0b306739e64fbddea9c81596c32a3b26207ba2b396196debdfd",
+      "testes/test_modo4_sem_fallback.py": "c5f487125ee6b6b3fd796f54af550856366752ad477a3fabc233ab4f422c5ab0",
+      "procedimento_homologacao_integral.py": "57446e28eb69917b30b0ebec5854b8580ec816862a15a9e87e7b636d3a2e201c"
+    }
+  },
+  "seed_padrao": 330001,
+  "tamanhos_testados": [
+    1,
+    2,
+    10,
+    20,
+    50,
+    80,
+    100,
+    500,
+    1000,
+    5000,
+    10000
+  ],
+  "tamanhos_comparacao_integral_direta_referencia": [
+    1,
+    2,
+    10,
+    20,
+    50,
+    80,
+    100,
+    500,
+    1000
+  ],
+  "rejeicoes_estritas": [
+    {
+      "entrada": "0",
+      "tipo": "int",
+      "rejeitado": true,
+      "erro": "quantidade_jogos fora do intervalo homologado [1..10000]: 0."
+    },
+    {
+      "entrada": "-1",
+      "tipo": "int",
+      "rejeitado": true,
+      "erro": "quantidade_jogos fora do intervalo homologado [1..10000]: -1."
+    },
+    {
+      "entrada": "10001",
+      "tipo": "int",
+      "rejeitado": true,
+      "erro": "quantidade_jogos fora do intervalo homologado [1..10000]: 10001."
+    },
+    {
+      "entrada": "'10'",
+      "tipo": "str",
+      "rejeitado": true,
+      "erro": "Tipo invalido para quantidade_jogos: esperado int estrito, recebido str."
+    },
+    {
+      "entrada": "10.5",
+      "tipo": "float",
+      "rejeitado": true,
+      "erro": "Tipo invalido para quantidade_jogos: esperado int estrito, recebido float."
+    },
+    {
+      "entrada": "True",
+      "tipo": "bool",
+      "rejeitado": true,
+      "erro": "Tipo invalido para quantidade_jogos: esperado int estrito, recebido bool."
+    },
+    {
+      "entrada": "False",
+      "tipo": "bool",
+      "rejeitado": true,
+      "erro": "Tipo invalido para quantidade_jogos: esperado int estrito, recebido bool."
+    },
+    {
+      "entrada": "None",
+      "tipo": "NoneType",
+      "rejeitado": true,
+      "erro": "Tipo invalido para quantidade_jogos: esperado int estrito, recebido NoneType."
+    }
+  ],
+  "teste_reinicializacao_subprocesso": {
+    "sucesso": true,
+    "identidade_absoluta_pos_reinicio": true,
+    "seed": 330001,
+    "quantidade_jogos": 20,
+    "hash_carteira_v1": "a98c0b0267b1c2d91c630b363bb9be6744dd1d2a6d6943d447f869d705844f0f",
+    "hash_carteira_v2": "31a34473b0fe1e09f00dca01cebccc2a96abc59331bb472df926d2735a3b211f",
+    "etapas_identicas": 19
+  },
+  "comparacao_bitmask_histograma_referencia": {
+    "sucesso": true,
+    "nota_alcance_metodologico": "As avaliacoes em alto volume (560 sinteticas + 1.600 da trajetoria real = 2.160 candidatos) constituem uma auditoria amostral deterministica de 80 candidatos por estagio inspecionado. Comprovam equivalencia exata entre SWAR/bitmask e set.intersection nos 2.160 casos testados, nao representando enumeracao universal de todas as combinacoes possiveis.",
+    "comprovacao_fidelidade_reconstrucao_prng": {
+      "j2_espelho_inicial_valido": false,
+      "idx_inicio_greedy": 1,
+      "estagios_trace_confrontados_j20": 19,
+      "candidatos_confrontados_contra_trace_interno_j20": 1520,
+      "identidade_100pct_contra_trace_interno": true,
+      "estagios_gulosos_verificados_em_j10000": 9999,
+      "total_candidatos_reconstruidos_em_j10000": 799920,
+      "todos_vencedores_presentes_nos_80_candidatos_da_etapa": true,
+      "deriva_prng_ao_longo_de_10000_jogos": 0
+    },
+    "estagios_alto_volume_verificados": [
+      100,
+      500,
+      1000,
+      2500,
+      5000,
+      7500,
+      9999
+    ],
+    "total_candidatos_comparados_contra_set_intersection": 560,
+    "divergencias_encontradas": 0,
+    "detalhes_estagios": [
+      {
+        "estagio_m_sel": 100,
+        "candidatos_comparados": 80,
+        "vencedor_idx": 23,
+        "menor_custo_identico": 7357.840821260167,
+        "divergencias": 0
+      },
+      {
+        "estagio_m_sel": 500,
+        "candidatos_comparados": 80,
+        "vencedor_idx": 11,
+        "menor_custo_identico": 47018.01723900321,
+        "divergencias": 0
+      },
+      {
+        "estagio_m_sel": 1000,
+        "candidatos_comparados": 80,
+        "vencedor_idx": 63,
+        "menor_custo_identico": 95238.05445969038,
+        "divergencias": 0
+      },
+      {
+        "estagio_m_sel": 2500,
+        "candidatos_comparados": 80,
+        "vencedor_idx": 12,
+        "menor_custo_identico": 252845.5470368541,
+        "divergencias": 0
+      },
+      {
+        "estagio_m_sel": 5000,
+        "candidatos_comparados": 80,
+        "vencedor_idx": 34,
+        "menor_custo_identico": 507215.6139094503,
+        "divergencias": 0
+      },
+      {
+        "estagio_m_sel": 7500,
+        "candidatos_comparados": 80,
+        "vencedor_idx": 62,
+        "menor_custo_identico": 778136.114814577,
+        "divergencias": 0
+      },
+      {
+        "estagio_m_sel": 9999,
+        "candidatos_comparados": 80,
+        "vencedor_idx": 28,
+        "menor_custo_identico": 1027970.7369048869,
+        "divergencias": 0
+      }
+    ],
+    "auditoria_trajetoria_real_seed_330001": {
+      "estagios_reais_verificados": [
+        100,
+        250,
+        500,
+        750,
+        1000,
+        1500,
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        4500,
+        4999,
+        5000,
+        6000,
+        7000,
+        7500,
+        8000,
+        9000,
+        9999
+      ],
+      "total_estagios_reais": 20,
+      "total_candidatos_reais_comparados": 1600,
+      "divergencias_encontradas": 0,
+      "todos_vencedores_coincidem_com_carteira_10000": true,
+      "detalhes_estagios_reais": [
+        {
+          "estagio_m_sel": 100,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 7,
+          "menor_custo_identico": 7121.164370196843,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 250,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 43,
+          "menor_custo_identico": 22633.922505958482,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 500,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 39,
+          "menor_custo_identico": 46066.73739264946,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 750,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 73,
+          "menor_custo_identico": 71549.96945168155,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 1000,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 42,
+          "menor_custo_identico": 101235.70636057897,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 1500,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 59,
+          "menor_custo_identico": 150884.58709388465,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 2000,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 37,
+          "menor_custo_identico": 203606.76060264494,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 2500,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 20,
+          "menor_custo_identico": 259388.2852690833,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 3000,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 37,
+          "menor_custo_identico": 306998.25095196144,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 3500,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 12,
+          "menor_custo_identico": 362601.98735317873,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 4000,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 58,
+          "menor_custo_identico": 410277.3775950864,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 4500,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 36,
+          "menor_custo_identico": 466657.44557041966,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 4999,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 20,
+          "menor_custo_identico": 514680.40528421884,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 5000,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 51,
+          "menor_custo_identico": 519505.46503189043,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 6000,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 41,
+          "menor_custo_identico": 623306.5614428497,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 7000,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 76,
+          "menor_custo_identico": 734483.3901384351,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 7500,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 36,
+          "menor_custo_identico": 785876.8597743411,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 8000,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 13,
+          "menor_custo_identico": 835387.517127632,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 9000,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 33,
+          "menor_custo_identico": 936271.3803071292,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        },
+        {
+          "estagio_m_sel": 9999,
+          "candidatos_reais_comparados": 80,
+          "vencedor_idx": 51,
+          "menor_custo_identico": 1046044.9062448217,
+          "coincide_com_jogo_carteira_final": true,
+          "divergencias": 0
+        }
+      ]
+    },
+    "total_combinado_avaliacoes_swar_vs_set_intersection": 2160,
+    "metricas_cobertura_1000_jogos_499500_pares_identicas": true
+  },
+  "validacao_serializacao_infinito": {
+    "calculo_interno_preserva_float_inf": true,
+    "conversao_api_null_validada": true,
+    "allow_nan_false_aprovado": true
+  },
+  "matriz_resultados": {
+    "1": {
+      "quantidade_jogos": 1,
+      "tempo_execucao_s": 0.0113,
+      "tempo_execucao_ms": 11.31,
+      "tempo_execucao_referencia_ao_vivo_s": 0.0207,
+      "tempo_execucao_com_tracemalloc_s": 0.0284,
+      "memoria_pico_kb": 212.37,
+      "memoria_pico_mb": 0.207,
+      "memoria_working_set_processo_mb": 75.402,
+      "memoria_peak_working_set_processo_mb": 76.621,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 0.0113,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 11.31,
+        "tempo_execucao_referencia_ao_vivo_s": 0.0207,
+        "memoria_working_set_atual_processo_mb": 75.402,
+        "memoria_peak_working_set_atual_processo_mb": 76.621
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 0.0284,
+        "memoria_pico_historica_tracemalloc_kb": 212.37,
+        "memoria_pico_historica_tracemalloc_mb": 0.207
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 1,
+      "total_pares_carteira": 0,
+      "dezenas_cobertas": 50,
+      "desvio_padrao_alocacao_dezenas": 0.5,
+      "intersecao_media_pares": 0,
+      "intersecao_maxima_pares": 0,
+      "intersecao_minima_pares": 0,
+      "soma_intersecoes_real": 0,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": true,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": true,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "complementar"
+      },
+      "metodo_equivalencia": "comparacao_integral_direta_motor_referencia",
+      "escopo_equivalencia": "Comparacao integral direta ao vivo contra MotorLotomaniaB2B(historico=None) (arquivo fisico motor_lotomania.py) para J=1 jogos e todas as 0 intersecoes de pares.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "bc6d61001403b948676ea512b35c8b7e5dd565676bca00a2f7d29961fe731b8b",
+      "hash_carteira_v2": "6667e2c1bee85775a55bd836c64711aa6aaef59e9943e9357c3d9fc01edef118"
+    },
+    "2": {
+      "quantidade_jogos": 2,
+      "tempo_execucao_s": 0.0127,
+      "tempo_execucao_ms": 12.69,
+      "tempo_execucao_referencia_ao_vivo_s": 0.0208,
+      "tempo_execucao_com_tracemalloc_s": 0.0322,
+      "memoria_pico_kb": 230.68,
+      "memoria_pico_mb": 0.225,
+      "memoria_working_set_processo_mb": 75.422,
+      "memoria_peak_working_set_processo_mb": 76.621,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 0.0127,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 12.69,
+        "tempo_execucao_referencia_ao_vivo_s": 0.0208,
+        "memoria_working_set_atual_processo_mb": 75.422,
+        "memoria_peak_working_set_atual_processo_mb": 76.621
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 0.0322,
+        "memoria_pico_historica_tracemalloc_kb": 230.68,
+        "memoria_pico_historica_tracemalloc_mb": 0.225
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 2,
+      "total_pares_carteira": 1,
+      "dezenas_cobertas": 80,
+      "desvio_padrao_alocacao_dezenas": 0.632,
+      "intersecao_media_pares": 20.0,
+      "intersecao_maxima_pares": 20,
+      "intersecao_minima_pares": 20,
+      "soma_intersecoes_real": 20,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": true,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": true,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "complementar"
+      },
+      "metodo_equivalencia": "comparacao_integral_direta_motor_referencia",
+      "escopo_equivalencia": "Comparacao integral direta ao vivo contra MotorLotomaniaB2B(historico=None) (arquivo fisico motor_lotomania.py) para J=2 jogos e todas as 1 intersecoes de pares.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "a3785f2e56beacb929122689553331207d1de4a1d472f8464c4fdcf69297ee4a",
+      "hash_carteira_v2": "16caa73dba818ee1421186978407d88a89fe1427bd00eb055bd55c255f25b428"
+    },
+    "10": {
+      "quantidade_jogos": 10,
+      "tempo_execucao_s": 0.0968,
+      "tempo_execucao_ms": 96.79,
+      "tempo_execucao_referencia_ao_vivo_s": 0.2434,
+      "tempo_execucao_com_tracemalloc_s": 0.3112,
+      "memoria_pico_kb": 323.46,
+      "memoria_pico_mb": 0.316,
+      "memoria_working_set_processo_mb": 75.441,
+      "memoria_peak_working_set_processo_mb": 76.621,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 0.0968,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 96.79,
+        "tempo_execucao_referencia_ao_vivo_s": 0.2434,
+        "memoria_working_set_atual_processo_mb": 75.441,
+        "memoria_peak_working_set_atual_processo_mb": 76.621
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 0.3112,
+        "memoria_pico_historica_tracemalloc_kb": 323.46,
+        "memoria_pico_historica_tracemalloc_mb": 0.316
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 10,
+      "total_pares_carteira": 45,
+      "dezenas_cobertas": 100,
+      "desvio_padrao_alocacao_dezenas": 1.105,
+      "intersecao_media_pares": 23.5778,
+      "intersecao_maxima_pares": 27,
+      "intersecao_minima_pares": 20,
+      "soma_intersecoes_real": 1061,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": true,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": true,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "complementar"
+      },
+      "metodo_equivalencia": "comparacao_integral_direta_motor_referencia",
+      "escopo_equivalencia": "Comparacao integral direta ao vivo contra MotorLotomaniaB2B(historico=None) (arquivo fisico motor_lotomania.py) para J=10 jogos e todas as 45 intersecoes de pares.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "38737f36bc3aff2fcf2dd17cf59c28a2be7672e2b7220ebc5da6e56937ced344",
+      "hash_carteira_v2": "b23fff3223852da62eb05e175d0c57fb24a42a27cd2ce6483dd3c522ccb40879"
+    },
+    "20": {
+      "quantidade_jogos": 20,
+      "tempo_execucao_s": 0.2041,
+      "tempo_execucao_ms": 204.14,
+      "tempo_execucao_referencia_ao_vivo_s": 0.516,
+      "tempo_execucao_com_tracemalloc_s": 0.7029,
+      "memoria_pico_kb": 440.77,
+      "memoria_pico_mb": 0.43,
+      "memoria_working_set_processo_mb": 75.465,
+      "memoria_peak_working_set_processo_mb": 76.621,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 0.2041,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 204.14,
+        "tempo_execucao_referencia_ao_vivo_s": 0.516,
+        "memoria_working_set_atual_processo_mb": 75.465,
+        "memoria_peak_working_set_atual_processo_mb": 76.621
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 0.7029,
+        "memoria_pico_historica_tracemalloc_kb": 440.77,
+        "memoria_pico_historica_tracemalloc_mb": 0.43
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 20,
+      "total_pares_carteira": 190,
+      "dezenas_cobertas": 100,
+      "desvio_padrao_alocacao_dezenas": 1.249,
+      "intersecao_media_pares": 24.0947,
+      "intersecao_maxima_pares": 28,
+      "intersecao_minima_pares": 19,
+      "soma_intersecoes_real": 4578,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": true,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": true,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "complementar"
+      },
+      "metodo_equivalencia": "comparacao_integral_direta_motor_referencia",
+      "escopo_equivalencia": "Comparacao integral direta ao vivo contra MotorLotomaniaB2B(historico=None) (arquivo fisico motor_lotomania.py) para J=20 jogos e todas as 190 intersecoes de pares.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "a98c0b0267b1c2d91c630b363bb9be6744dd1d2a6d6943d447f869d705844f0f",
+      "hash_carteira_v2": "31a34473b0fe1e09f00dca01cebccc2a96abc59331bb472df926d2735a3b211f"
+    },
+    "50": {
+      "quantidade_jogos": 50,
+      "tempo_execucao_s": 0.5201,
+      "tempo_execucao_ms": 520.14,
+      "tempo_execucao_referencia_ao_vivo_s": 1.594,
+      "tempo_execucao_com_tracemalloc_s": 1.8247,
+      "memoria_pico_kb": 779.09,
+      "memoria_pico_mb": 0.761,
+      "memoria_working_set_processo_mb": 75.465,
+      "memoria_peak_working_set_processo_mb": 76.621,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 0.5201,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 520.14,
+        "tempo_execucao_referencia_ao_vivo_s": 1.594,
+        "memoria_working_set_atual_processo_mb": 75.465,
+        "memoria_peak_working_set_atual_processo_mb": 76.621
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 1.8247,
+        "memoria_pico_historica_tracemalloc_kb": 779.09,
+        "memoria_pico_historica_tracemalloc_mb": 0.761
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 50,
+      "total_pares_carteira": 1225,
+      "dezenas_cobertas": 100,
+      "desvio_padrao_alocacao_dezenas": 1.855,
+      "intersecao_media_pares": 24.6302,
+      "intersecao_maxima_pares": 30,
+      "intersecao_minima_pares": 18,
+      "soma_intersecoes_real": 30172,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": true,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": true,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "complementar"
+      },
+      "metodo_equivalencia": "comparacao_integral_direta_motor_referencia",
+      "escopo_equivalencia": "Comparacao integral direta ao vivo contra MotorLotomaniaB2B(historico=None) (arquivo fisico motor_lotomania.py) para J=50 jogos e todas as 1225 intersecoes de pares.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "7222f54ae7cb576a17c6639b741fdeb6e42eae41dd11c432e138ae520a9ad0b1",
+      "hash_carteira_v2": "9f7fc5c3f5ba9c0dea7563d187ced97e8714d904b1185cfee713d27549e4c3d2"
+    },
+    "80": {
+      "quantidade_jogos": 80,
+      "tempo_execucao_s": 0.8394,
+      "tempo_execucao_ms": 839.45,
+      "tempo_execucao_referencia_ao_vivo_s": 2.9019,
+      "tempo_execucao_com_tracemalloc_s": 2.945,
+      "memoria_pico_kb": 1123.07,
+      "memoria_pico_mb": 1.097,
+      "memoria_working_set_processo_mb": 75.887,
+      "memoria_peak_working_set_processo_mb": 76.621,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 0.8394,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 839.45,
+        "tempo_execucao_referencia_ao_vivo_s": 2.9019,
+        "memoria_working_set_atual_processo_mb": 75.887,
+        "memoria_peak_working_set_atual_processo_mb": 76.621
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 2.945,
+        "memoria_pico_historica_tracemalloc_kb": 1123.07,
+        "memoria_pico_historica_tracemalloc_mb": 1.097
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 80,
+      "total_pares_carteira": 3160,
+      "dezenas_cobertas": 100,
+      "desvio_padrao_alocacao_dezenas": 2.04,
+      "intersecao_media_pares": 24.7494,
+      "intersecao_maxima_pares": 31,
+      "intersecao_minima_pares": 16,
+      "soma_intersecoes_real": 78208,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": true,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": true,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "complementar"
+      },
+      "metodo_equivalencia": "comparacao_integral_direta_motor_referencia",
+      "escopo_equivalencia": "Comparacao integral direta ao vivo contra MotorLotomaniaB2B(historico=None) (arquivo fisico motor_lotomania.py) para J=80 jogos e todas as 3160 intersecoes de pares.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "5fd69de0c937394e6ee0135eda9d355b7502f0a4620db7ee6a93918497d290ae",
+      "hash_carteira_v2": "36b39b5396a9649038d3418dd0f1b9cf6187d832d5d589019eeac364464e0d03"
+    },
+    "100": {
+      "quantidade_jogos": 100,
+      "tempo_execucao_s": 1.0196,
+      "tempo_execucao_ms": 1019.57,
+      "tempo_execucao_referencia_ao_vivo_s": 3.9925,
+      "tempo_execucao_com_tracemalloc_s": 3.7911,
+      "memoria_pico_kb": 1348.57,
+      "memoria_pico_mb": 1.317,
+      "memoria_working_set_processo_mb": 76.562,
+      "memoria_peak_working_set_processo_mb": 76.621,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 1.0196,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 1019.57,
+        "tempo_execucao_referencia_ao_vivo_s": 3.9925,
+        "memoria_working_set_atual_processo_mb": 76.562,
+        "memoria_peak_working_set_atual_processo_mb": 76.621
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 3.7911,
+        "memoria_pico_historica_tracemalloc_kb": 1348.57,
+        "memoria_pico_historica_tracemalloc_mb": 1.317
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 100,
+      "total_pares_carteira": 4950,
+      "dezenas_cobertas": 100,
+      "desvio_padrao_alocacao_dezenas": 1.975,
+      "intersecao_media_pares": 24.7869,
+      "intersecao_maxima_pares": 31,
+      "intersecao_minima_pares": 16,
+      "soma_intersecoes_real": 122695,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": true,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": true,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "complementar"
+      },
+      "metodo_equivalencia": "comparacao_integral_direta_motor_referencia",
+      "escopo_equivalencia": "Comparacao integral direta ao vivo contra MotorLotomaniaB2B(historico=None) (arquivo fisico motor_lotomania.py) para J=100 jogos e todas as 4950 intersecoes de pares.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "2320cefbc0dea8607bdd98f3ae04ac31e52777d4c3fa1b6d65ebd5295dcf8180",
+      "hash_carteira_v2": "dc7d27f82d13f3943d786cf15cbb8019a1d2e1e260dc898519e0c3ccf9d1d62a"
+    },
+    "500": {
+      "quantidade_jogos": 500,
+      "tempo_execucao_s": 5.7042,
+      "tempo_execucao_ms": 5704.23,
+      "tempo_execucao_referencia_ao_vivo_s": 59.8029,
+      "tempo_execucao_com_tracemalloc_s": 19.7748,
+      "memoria_pico_kb": 5050.69,
+      "memoria_pico_mb": 4.932,
+      "memoria_working_set_processo_mb": 77.246,
+      "memoria_peak_working_set_processo_mb": 77.246,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 5.7042,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 5704.23,
+        "tempo_execucao_referencia_ao_vivo_s": 59.8029,
+        "memoria_working_set_atual_processo_mb": 77.246,
+        "memoria_peak_working_set_atual_processo_mb": 77.246
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 19.7748,
+        "memoria_pico_historica_tracemalloc_kb": 5050.69,
+        "memoria_pico_historica_tracemalloc_mb": 4.932
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 500,
+      "total_pares_carteira": 124750,
+      "dezenas_cobertas": 100,
+      "desvio_padrao_alocacao_dezenas": 2.796,
+      "intersecao_media_pares": 24.953,
+      "intersecao_maxima_pares": 35,
+      "intersecao_minima_pares": 14,
+      "soma_intersecoes_real": 3112891,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": true,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": true,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "complementar"
+      },
+      "metodo_equivalencia": "comparacao_integral_direta_motor_referencia",
+      "escopo_equivalencia": "Comparacao integral direta ao vivo contra MotorLotomaniaB2B(historico=None) (arquivo fisico motor_lotomania.py) para J=500 jogos e todas as 124750 intersecoes de pares.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "7618db0ca0423e3e7f5f84300b7322945263324e21c9811f07405cbbaadfdb48",
+      "hash_carteira_v2": "27bf23f226429da6c84ab68cc23f488cb6c83f1a1f5eb5a6255ecc76a9f923a2"
+    },
+    "1000": {
+      "quantidade_jogos": 1000,
+      "tempo_execucao_s": 12.9321,
+      "tempo_execucao_ms": 12932.07,
+      "tempo_execucao_referencia_ao_vivo_s": 216.4916,
+      "tempo_execucao_com_tracemalloc_s": 41.5459,
+      "memoria_pico_kb": 9666.87,
+      "memoria_pico_mb": 9.44,
+      "memoria_working_set_processo_mb": 90.586,
+      "memoria_peak_working_set_processo_mb": 93.312,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 12.9321,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 12932.07,
+        "tempo_execucao_referencia_ao_vivo_s": 216.4916,
+        "memoria_working_set_atual_processo_mb": 90.586,
+        "memoria_peak_working_set_atual_processo_mb": 93.312
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 41.5459,
+        "memoria_pico_historica_tracemalloc_kb": 9666.87,
+        "memoria_pico_historica_tracemalloc_mb": 9.44
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 1000,
+      "total_pares_carteira": 499500,
+      "dezenas_cobertas": 100,
+      "desvio_padrao_alocacao_dezenas": 3.265,
+      "intersecao_media_pares": 24.976,
+      "intersecao_maxima_pares": 36,
+      "intersecao_minima_pares": 14,
+      "soma_intersecoes_real": 12475533,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": true,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": true,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "complementar"
+      },
+      "metodo_equivalencia": "comparacao_integral_direta_motor_referencia",
+      "escopo_equivalencia": "Comparacao integral direta ao vivo contra MotorLotomaniaB2B(historico=None) (arquivo fisico motor_lotomania.py) para J=1000 jogos e todas as 499500 intersecoes de pares.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "502159e747ab689ef9056324ff9327b9c1b962f1856155e37ea5c42a6d15edef",
+      "hash_carteira_v2": "b57d11f5f8ec32ed16898b97620628bff5aa0ad019f5fa82dd0f395bc27d5227"
+    },
+    "5000": {
+      "quantidade_jogos": 5000,
+      "tempo_execucao_s": 95.0281,
+      "tempo_execucao_ms": 95028.09,
+      "tempo_execucao_referencia_ao_vivo_s": null,
+      "tempo_execucao_com_tracemalloc_s": 252.9837,
+      "memoria_pico_kb": 46998.56,
+      "memoria_pico_mb": 45.897,
+      "memoria_working_set_processo_mb": 134.879,
+      "memoria_peak_working_set_processo_mb": 146.395,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 95.0281,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 95028.09,
+        "tempo_execucao_referencia_ao_vivo_s": null,
+        "memoria_working_set_atual_processo_mb": 134.879,
+        "memoria_peak_working_set_atual_processo_mb": 146.395
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 252.9837,
+        "memoria_pico_historica_tracemalloc_kb": 46998.56,
+        "memoria_pico_historica_tracemalloc_mb": 45.897
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 5000,
+      "total_pares_carteira": 12497500,
+      "dezenas_cobertas": 100,
+      "desvio_padrao_alocacao_dezenas": 5.595,
+      "intersecao_media_pares": 24.9951,
+      "intersecao_maxima_pares": 39,
+      "intersecao_minima_pares": 11,
+      "soma_intersecoes_real": 312376565,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": false,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": false,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "primaria_alto_volume"
+      },
+      "metodo_equivalencia": "invariancia_prefixo_ate_1000_e_auditoria_amostral_estagios_reais",
+      "escopo_equivalencia": "A execucao integral O(J^2) com set.intersection de MotorLotomaniaB2B exige ~72 min (J=5.000) e ~4,8 h (J=10.000). Para J=5000, comprovou-se: (1) identidade integral do prefixo J=1.000 contra MotorLotomaniaB2B; (2) igualdade exata do teorema de contagem dupla nas 12497500 intersecoes; e (3) equivalencia exata SWAR vs set.intersection nos 20 estagios reais da trajetoria (incluindo M_sel=4999 e M_sel=9999), sem alegar execucao integral da referencia neste tamanho.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "b5a348df40f6b529f100c8797cc4d1ea95a7190462613446542d19b46f027e2d",
+      "hash_carteira_v2": "aef6aeb7e873176b0979f359b94e5449ed18d930fcefebd0423545ddd244842d"
+    },
+    "10000": {
+      "quantidade_jogos": 10000,
+      "tempo_execucao_s": 271.233,
+      "tempo_execucao_ms": 271232.97,
+      "tempo_execucao_referencia_ao_vivo_s": null,
+      "tempo_execucao_com_tracemalloc_s": 536.1477,
+      "memoria_pico_kb": 93077.99,
+      "memoria_pico_mb": 90.896,
+      "memoria_working_set_processo_mb": 245.703,
+      "memoria_peak_working_set_processo_mb": 275.133,
+      "desempenho_medido_execucao_atual": {
+        "tempo_execucao_atual_sem_tracemalloc_s": 271.233,
+        "tempo_execucao_atual_sem_tracemalloc_ms": 271232.97,
+        "tempo_execucao_referencia_ao_vivo_s": null,
+        "memoria_working_set_atual_processo_mb": 245.703,
+        "memoria_peak_working_set_atual_processo_mb": 275.133
+      },
+      "desempenho_historico_referencia_com_tracemalloc": {
+        "tempo_execucao_historico_com_tracemalloc_s": 536.1477,
+        "memoria_pico_historica_tracemalloc_kb": 93077.99,
+        "memoria_pico_historica_tracemalloc_mb": 90.896
+      },
+      "jogos_validos_pct": 100.0,
+      "jogos_unicos": 10000,
+      "total_pares_carteira": 49995000,
+      "dezenas_cobertas": 100,
+      "desvio_padrao_alocacao_dezenas": 5.453,
+      "intersecao_media_pares": 24.9975,
+      "intersecao_maxima_pares": 39,
+      "intersecao_minima_pares": 11,
+      "soma_intersecoes_real": 1249751487,
+      "equivalente_referencia": true,
+      "equivalencia_integral_direta_comprovada": false,
+      "equivalencia_amostral_alto_volume_comprovada": true,
+      "classificacao_tres_niveis_equivalencia": {
+        "comparacao_integral_direta": false,
+        "verificacao_estrutural": true,
+        "auditoria_amostral": "primaria_alto_volume"
+      },
+      "metodo_equivalencia": "invariancia_prefixo_ate_1000_e_auditoria_amostral_estagios_reais",
+      "escopo_equivalencia": "A execucao integral O(J^2) com set.intersection de MotorLotomaniaB2B exige ~72 min (J=5.000) e ~4,8 h (J=10.000). Para J=10000, comprovou-se: (1) identidade integral do prefixo J=1.000 contra MotorLotomaniaB2B; (2) igualdade exata do teorema de contagem dupla nas 49995000 intersecoes; e (3) equivalencia exata SWAR vs set.intersection nos 20 estagios reais da trajetoria (incluindo M_sel=4999 e M_sel=9999), sem alegar execucao integral da referencia neste tamanho.",
+      "reprodutibilidade_confirmada": true,
+      "serializacao_json_estrita_ok": true,
+      "hash_carteira_v1": "e994c3ca0cd7700ae32772e35979f4c2e2ed2d5a0c08bb512a5333dc55ba0deb",
+      "hash_carteira_v2": "439608f1fc180636de0650c78236cd33ed97c80043e040b1035888e764d97555"
+    }
+  }
+}

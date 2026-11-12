@@ -10994,35 +10994,52 @@ if(pp){
     // MOTOR DE FECHAMENTO POR CONJUNTOS DA LOTOMANIA (10 CONJUNTOS DE 10 DEZENAS)
     // =========================================================================
     _initLotomaniaGruposEngine() {
+        const tabModo4 = document.getElementById('tab-btn-lotomania-modo4');
         const tabEstatistico = document.getElementById('tab-btn-lotomania-estatistico');
         const tabGrupos = document.getElementById('tab-btn-lotomania-grupos');
+        const subModo4 = document.getElementById('subpanel-lotomania-modo4');
         const subEstatistico = document.getElementById('subpanel-lotomania-estatistico');
         const subGrupos = document.getElementById('subpanel-lotomania-grupos');
 
-        if (tabEstatistico && tabGrupos && subEstatistico && subGrupos) {
-            tabEstatistico.onclick = () => {
-                subEstatistico.style.display = 'block';
-                subGrupos.style.display = 'none';
-                tabEstatistico.style.background = 'linear-gradient(135deg, rgba(2,132,199,0.5), rgba(14,116,144,0.35))';
-                tabEstatistico.style.borderColor = '#38bdf8';
-                tabEstatistico.style.color = '#fff';
-                tabGrupos.style.background = 'rgba(15,23,42,0.6)';
-                tabGrupos.style.borderColor = 'rgba(245,158,11,0.4)';
-                tabGrupos.style.color = '#fde68a';
-            };
+        const ativarAbaLotomania = (aba) => {
+            if (subModo4) subModo4.style.display = (aba === 'modo4') ? 'block' : 'none';
+            if (subEstatistico) subEstatistico.style.display = (aba === 'estatistico') ? 'block' : 'none';
+            if (subGrupos) subGrupos.style.display = (aba === 'grupos') ? 'block' : 'none';
 
-            tabGrupos.onclick = () => {
-                subEstatistico.style.display = 'none';
-                subGrupos.style.display = 'block';
-                tabGrupos.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.45), rgba(180,83,9,0.35))';
-                tabGrupos.style.borderColor = '#f59e0b';
-                tabGrupos.style.color = '#fff';
-                tabEstatistico.style.background = 'rgba(15,23,42,0.6)';
-                tabEstatistico.style.borderColor = 'rgba(56,189,248,0.4)';
-                tabEstatistico.style.color = '#7dd3fc';
+            if (tabModo4) {
+                tabModo4.style.background = (aba === 'modo4')
+                    ? 'linear-gradient(135deg, rgba(5,150,105,0.55), rgba(15,23,42,0.85))'
+                    : 'rgba(15,23,42,0.6)';
+                tabModo4.style.borderColor = (aba === 'modo4') ? '#10b981' : 'rgba(16,185,129,0.4)';
+                tabModo4.style.color = (aba === 'modo4') ? '#fff' : '#a7f3d0';
+                tabModo4.style.boxShadow = (aba === 'modo4') ? '0 0 12px rgba(16,185,129,0.3)' : 'none';
+            }
+            if (tabEstatistico) {
+                tabEstatistico.style.background = (aba === 'estatistico')
+                    ? 'linear-gradient(135deg, rgba(2,132,199,0.5), rgba(14,116,144,0.35))'
+                    : 'rgba(15,23,42,0.6)';
+                tabEstatistico.style.borderColor = (aba === 'estatistico') ? '#38bdf8' : 'rgba(56,189,248,0.4)';
+                tabEstatistico.style.color = (aba === 'estatistico') ? '#fff' : '#7dd3fc';
+            }
+            if (tabGrupos) {
+                tabGrupos.style.background = (aba === 'grupos')
+                    ? 'linear-gradient(135deg, rgba(245,158,11,0.45), rgba(180,83,9,0.35))'
+                    : 'rgba(15,23,42,0.6)';
+                tabGrupos.style.borderColor = (aba === 'grupos') ? '#f59e0b' : 'rgba(245,158,11,0.4)';
+                tabGrupos.style.color = (aba === 'grupos') ? '#fff' : '#fde68a';
+            }
+            if (aba === 'grupos') {
                 this._atualizarDiagnosticoGruposLotomania();
-            };
-        }
+            } else if (aba === 'modo4') {
+                this._atualizarStatusServidorModo4();
+            }
+        };
+
+        if (tabModo4) tabModo4.onclick = () => ativarAbaLotomania('modo4');
+        if (tabEstatistico) tabEstatistico.onclick = () => ativarAbaLotomania('estatistico');
+        if (tabGrupos) tabGrupos.onclick = () => ativarAbaLotomania('grupos');
+
+        this._initLotomaniaModo4Controls();
 
         for (let i = 1; i <= 10; i++) {
             const input = document.getElementById(`input-grupo-lotomania-${i}`);
@@ -11460,6 +11477,290 @@ if(pp){
                 btnExecutar.disabled = false;
                 btnExecutar.innerHTML = origText;
             }
+        }
+    }
+
+    _initLotomaniaModo4Controls() {
+        this._lastModo4Games = null;
+        this._lastModo4Response = null;
+
+        const inputQtd = document.getElementById('input-qtd-jogos-modo4');
+        const labelCusto = document.getElementById('label-custo-estimado-modo4');
+        const btnVerificarSelo = document.getElementById('btn-verificar-selo-modo4');
+        const btnExecutarModo4 = document.getElementById('btn-executar-modo4-lotomania');
+        const btnConferirModo4 = document.getElementById('btn-conferir-modo4-lotomania');
+
+        const atualizarLabelCusto = () => {
+            if (!inputQtd || !labelCusto) return;
+            const rawVal = inputQtd.value.trim();
+            const numVal = Number(rawVal);
+            if (!rawVal || !Number.isInteger(numVal) || numVal < 1 || numVal > 10000) {
+                labelCusto.innerText = 'Valor inválido (permitido: 1 a 10.000 jogos)';
+                labelCusto.style.color = '#f87171';
+            } else {
+                const custo = (numVal * 3.0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                labelCusto.innerText = `R$ ${custo} (${numVal.toLocaleString('pt-BR')} ${numVal === 1 ? 'jogo' : 'jogos'})`;
+                labelCusto.style.color = '#34d399';
+            }
+        };
+
+        if (inputQtd) {
+            inputQtd.addEventListener('input', atualizarLabelCusto);
+            inputQtd.addEventListener('change', atualizarLabelCusto);
+        }
+
+        document.querySelectorAll('.btn-preset-qtd-modo4').forEach(btn => {
+            btn.onclick = () => {
+                const q = parseInt(btn.getAttribute('data-qtd'), 10);
+                if (inputQtd && !isNaN(q)) {
+                    inputQtd.value = String(q);
+                    atualizarLabelCusto();
+                }
+                document.querySelectorAll('.btn-preset-qtd-modo4').forEach(b => {
+                    b.style.background = 'rgba(16,185,129,0.12)';
+                    b.style.borderColor = 'rgba(16,185,129,0.35)';
+                    b.style.color = '#a7f3d0';
+                });
+                btn.style.background = 'rgba(16,185,129,0.25)';
+                btn.style.borderColor = '#10b981';
+                btn.style.color = '#fff';
+            };
+        });
+
+        if (btnVerificarSelo) {
+            btnVerificarSelo.onclick = () => this._atualizarStatusServidorModo4();
+        }
+        if (btnExecutarModo4) {
+            btnExecutarModo4.onclick = () => this._executarGeracaoModo4Lotomania();
+        }
+        if (btnConferirModo4) {
+            btnConferirModo4.onclick = () => this._conferirCarteiraModo4Lotomania();
+        }
+
+        this._atualizarStatusServidorModo4();
+    }
+
+    async _atualizarStatusServidorModo4() {
+        const badge = document.getElementById('badge-status-selo-modo4');
+        const alerta = document.getElementById('alerta-indisponivel-modo4');
+        const btnExec = document.getElementById('btn-executar-modo4-lotomania');
+
+        if (typeof MotorLotomaniaModo4Engine === 'undefined') {
+            if (badge) {
+                badge.innerText = '❌ Módulo MODO 4 Não Carregado';
+                badge.style.background = 'rgba(239,68,68,0.2)';
+                badge.style.color = '#fca5a5';
+                badge.style.borderColor = '#ef4444';
+            }
+            return false;
+        }
+
+        const st = await MotorLotomaniaModo4Engine.verificarStatusServidor();
+        if (st.modo4_disponivel && st.selo_valido) {
+            if (badge) {
+                const shortHash = st.hash_nucleo ? st.hash_nucleo.slice(0, 12) : 'OK';
+                badge.innerText = `🔒 Selo Ed25519 Íntegro • v${st.versao} (${shortHash}...)`;
+                badge.style.background = 'rgba(16,185,129,0.18)';
+                badge.style.color = '#a7f3d0';
+                badge.style.borderColor = 'rgba(16,185,129,0.45)';
+            }
+            if (alerta) alerta.style.display = 'none';
+            if (btnExec) {
+                btnExec.disabled = false;
+                btnExec.style.opacity = '1';
+                btnExec.style.cursor = 'pointer';
+            }
+            return true;
+        } else {
+            if (badge) {
+                badge.innerText = '⚠️ API Python Desconectada / Selo Indisponível';
+                badge.style.background = 'rgba(239,68,68,0.2)';
+                badge.style.color = '#fca5a5';
+                badge.style.borderColor = '#ef4444';
+            }
+            if (alerta) {
+                alerta.innerText = '⚠️ ' + MotorLotomaniaModo4Engine.MENSAGEM_INDISPONIVEL;
+                alerta.style.display = 'block';
+            }
+            return false;
+        }
+    }
+
+    async _executarGeracaoModo4Lotomania() {
+        if (this.currentGameKey !== 'lotomania') {
+            const navBtn = document.querySelector(`.nav-btn[data-game="lotomania"]`);
+            if (navBtn) navBtn.click();
+            else this.updateGameInfo('lotomania');
+        }
+
+        const inputQtd = document.getElementById('input-qtd-jogos-modo4');
+        const inputSeed = document.getElementById('input-seed-modo4');
+        const checkEspelho = document.getElementById('check-espelho-modo4');
+        const btnExec = document.getElementById('btn-executar-modo4-lotomania');
+        const containerRes = document.getElementById('container-resultado-modo4');
+        const alerta = document.getElementById('alerta-indisponivel-modo4');
+
+        const rawQtd = inputQtd ? inputQtd.value.trim() : '';
+        const numQtd = Number(rawQtd);
+        if (!rawQtd || !/^\d+$/.test(rawQtd) || !Number.isInteger(numQtd) || numQtd < 1 || numQtd > 10000) {
+            const msgErro = 'Quantidade inválida: o MODO 4 v1.2 exige um número inteiro estrito entre 1 e 10.000 jogos.';
+            this.currentGeneratedGames = [];
+            this._lastGeneratedGames = [];
+            if (this.gamesContainer) {
+                this.gamesContainer.innerHTML = `<div class="empty-state" style="color:#EF4444;font-weight:700;">${msgErro}</div>`;
+            }
+            alert(msgErro);
+            return;
+        }
+
+        const permitirEspelhos = checkEspelho ? Boolean(checkEspelho.checked) : true;
+
+        let seedVal = null;
+        if (inputSeed && inputSeed.value.trim() !== '') {
+            const rawSeed = inputSeed.value.trim();
+            if (!/^-?\d+$/.test(rawSeed)) {
+                alert('A semente (seed) deve ser um número inteiro.');
+                return;
+            }
+            seedVal = parseInt(rawSeed, 10);
+        }
+
+        const origText = btnExec ? btnExec.innerHTML : '';
+        if (btnExec) {
+            btnExec.disabled = true;
+            btnExec.innerHTML = `⏳ Otimizando ${numQtd.toLocaleString('pt-BR')} jogos no Motor Oficial Python (MODO 4 v1.2)...`;
+        }
+        if (this.gamesContainer) {
+            this.gamesContainer.innerHTML = `<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.15em;">Executando ${MotorLotomaniaModo4Engine.NOME_OFICIAL}...</div></div>`;
+        }
+
+        try {
+            const data = await MotorLotomaniaModo4Engine.gerarCarteira(numQtd, {
+                permitirEspelhos: permitirEspelhos,
+                seed: seedVal
+            });
+
+            if (!data || data.sucesso !== true || !Array.isArray(data.jogos) || data.jogos.length === 0) {
+                const msg = (data && data.erro) ? data.erro : 'MODO 4 temporariamente indisponível. O servidor matemático oficial não está conectado. Nenhum jogo foi gerado.';
+                this.currentGeneratedGames = [];
+                this._lastGeneratedGames = [];
+                this._lastModo4Games = null;
+                if (alerta && msg === MotorLotomaniaModo4Engine.MENSAGEM_INDISPONIVEL) {
+                    alerta.innerText = '⚠️ ' + msg;
+                    alerta.style.display = 'block';
+                }
+                if (containerRes) containerRes.style.display = 'none';
+                if (this.gamesContainer) {
+                    this.gamesContainer.innerHTML = `<div class="empty-state" style="color:#EF4444;font-weight:800;padding:24px;border:1px solid #ef4444;border-radius:8px;background:rgba(239,68,68,0.12);">${msg}</div>`;
+                }
+                await this._atualizarStatusServidorModo4();
+                return;
+            }
+
+            if (alerta) alerta.style.display = 'none';
+            this._lastModo4Games = data.jogos;
+            this._lastModo4Response = data;
+            this.currentGeneratedGames = data.jogos;
+            this._lastGeneratedGames = data.jogos;
+
+            const jogosParaRenderizar = data.jogos.length > 500 ? data.jogos.slice(0, 500) : data.jogos;
+            this.renderGames({
+                pool: Array.from({ length: 100 }, (_, i) => i + 1),
+                games: jogosParaRenderizar,
+                smartAnalysis: null,
+                preserveOrder: true
+            }, 'lotomania');
+
+            if (data.jogos.length > 500 && this.gamesContainer) {
+                const avisoAltoVol = document.createElement('div');
+                avisoAltoVol.style.cssText = 'padding:12px 16px;margin-top:10px;border-radius:8px;background:rgba(16,185,129,0.15);border:1px solid #10b981;color:#a7f3d0;font-size:0.82rem;text-align:center;';
+                avisoAltoVol.innerHTML = `<strong>⚡ CARTEIRA DE ALTO VOLUME (${data.jogos.length.toLocaleString('pt-BR')} JOGOS):</strong> Exibindo os primeiros 500 cartões na grade visual para fluidez da interface. Todos os <strong>${data.jogos.length.toLocaleString('pt-BR')} jogos</strong> estão integralmente carregados em memória para conferência, cópia e salvamento.`;
+                this.gamesContainer.appendChild(avisoAltoVol);
+            }
+
+            const cob = data.metricas_cobertura || {};
+            const aud = data.auditoria_carteira || {};
+            const cobGlobal = cob.cobertura_global_sorteios_premiados || {};
+            const qtdEntregue = data.quantidade_entregue || data.jogos.length;
+            const custoReais = (qtdEntregue * 3.0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            const chanceGlobalStr = (cobGlobal.chance_minima_premiacao_1_em === null || cobGlobal.chance_minima_premiacao_1_em === undefined)
+                ? 'null (cota Bonferroni 2ª ordem saturada em zero)'
+                : `1 em ${Number(cobGlobal.chance_minima_premiacao_1_em).toLocaleString('pt-BR')}`;
+
+            if (containerRes) {
+                containerRes.style.display = 'block';
+                containerRes.innerHTML = `
+                    <div style="padding: 14px 16px; border-radius: 10px; background: rgba(2, 6, 23, 0.85); border: 1px solid rgba(16, 185, 129, 0.45); font-size: 0.8rem; color: #e2e8f0; line-height: 1.6;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(16,185,129,0.25); padding-bottom: 6px;">
+                            <strong style="color: #34d399; font-size: 0.9rem;">✅ AUDITORIA MATEMÁTICA E CRIPTOGRÁFICA — MODO 4 v${data.versao || '1.2'}</strong>
+                            <span style="background: rgba(16,185,129,0.2); color: #a7f3d0; padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 0.74rem;">
+                                ${qtdEntregue.toLocaleString('pt-BR')} JOGOS | R$ ${custoReais}
+                            </span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin-bottom: 8px;">
+                            <div>• <strong>Dezenas Distintas:</strong> <span style="color:#34d399;">${aud.numeros_distintos_utilizados || 100}/100</span> (${aud.cobertura_100_pct || 100}%)</div>
+                            <div>• <strong>Desvio-Padrão de Alocação:</strong> <span style="color:#38bdf8;">${cob.desvio_padrao_alocacao_dezenas ?? 0}</span></div>
+                            <div>• <strong>Interseção entre Pares:</strong> Média <strong>${cob.intersecao_media ?? 0}</strong> | Máx <strong>${cob.intersecao_maxima ?? 0}</strong> | Mín <strong>${cob.intersecao_minima ?? 0}</strong></div>
+                            <div>• <strong>Cota Bonferroni Premiação:</strong> ${chanceGlobalStr}</div>
+                        </div>
+                        <div style="font-family: monospace; font-size: 0.72rem; background: rgba(0,0,0,0.5); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); color: #94a3b8; overflow-x: auto;">
+                            <div><strong style="color:#a7f3d0;">SHA-256 Protocolo v1:</strong> ${data.hash_carteira_sha256_v1 || '--'}</div>
+                            <div><strong style="color:#7dd3fc;">SHA-256 Protocolo v2 (Canônico):</strong> ${data.hash_carteira_sha256_v2_canonico || '--'}</div>
+                            <div><strong style="color:#fde68a;">SHA-256 Manifesto Selado Ed25519:</strong> ${(data.selo_criptografico && data.selo_criptografico.sha256_manifesto) || '--'} | Seed: ${data.seed_utilizada !== null && data.seed_utilizada !== undefined ? data.seed_utilizada : '--'} | Corte Histórico: Concurso 2699 (historico=None na geração)</div>
+                        </div>
+                    </div>
+                `;
+            }
+            await this._atualizarStatusServidorModo4();
+        } catch (err) {
+            this.currentGeneratedGames = [];
+            this._lastGeneratedGames = [];
+            if (this.gamesContainer) {
+                this.gamesContainer.innerHTML = `<div class="empty-state" style="color:#EF4444;font-weight:800;">${MotorLotomaniaModo4Engine.MENSAGEM_INDISPONIVEL}</div>`;
+            }
+        } finally {
+            if (btnExec) {
+                btnExec.disabled = false;
+                btnExec.innerHTML = origText;
+            }
+        }
+    }
+
+    async _conferirCarteiraModo4Lotomania() {
+        const jogos = this._lastModo4Games || this.currentGeneratedGames;
+        if (!Array.isArray(jogos) || jogos.length === 0) {
+            alert('Gere uma carteira no MODO 4 v1.2 antes de executar a conferência oficial.');
+            return;
+        }
+        const inputConc = document.getElementById('input-concurso-conferir-modo4');
+        const containerRes = document.getElementById('container-resultado-modo4');
+        let concVal = null;
+        if (inputConc && inputConc.value.trim() !== '') {
+            concVal = parseInt(inputConc.value.trim(), 10);
+        }
+
+        const res = await MotorLotomaniaModo4Engine.conferirCarteira(jogos, concVal);
+        if (!res || res.sucesso !== true) {
+            alert((res && res.erro) ? res.erro : MotorLotomaniaModo4Engine.MENSAGEM_INDISPONIVEL);
+            return;
+        }
+
+        const faixas = res.resumo_faixas_premiadas || {};
+        const qtdConf = res.quantidade_jogos_conferidos || jogos.length;
+
+        if (containerRes) {
+            containerRes.style.display = 'block';
+            const divConf = document.createElement('div');
+            divConf.style.cssText = 'margin-top: 10px; padding: 12px 14px; border-radius: 8px; background: rgba(2, 132, 199, 0.14); border: 1px solid #38bdf8; font-size: 0.79rem; color: #e2e8f0; line-height: 1.6;';
+            divConf.innerHTML = `
+                <div style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">
+                    📋 CONFERÊNCIA OFICIAL — CONCURSO ${res.concurso_conferido} (${qtdConf.toLocaleString('pt-BR')} JOGOS)
+                </div>
+                <div>• <strong>Dezenas Sorteadas:</strong> <span style="font-family:monospace;color:#bae6fd;">${(res.dezenas_sorteadas || []).join(' ')}</span></div>
+                <div>• <strong>Total de Bilhetes Premiados:</strong> <strong style="color:#34d399;">${res.total_bilhetes_premiados || 0}</strong></div>
+                <div>• <strong>Faixas de Premiação:</strong> 20 pts: <strong>${faixas['20'] || 0}</strong> | 19 pts: <strong>${faixas['19'] || 0}</strong> | 18 pts: <strong>${faixas['18'] || 0}</strong> | 17 pts: <strong>${faixas['17'] || 0}</strong> | 16 pts: <strong>${faixas['16'] || 0}</strong> | 15 pts: <strong>${faixas['15'] || 0}</strong> | 0 pts: <strong>${faixas['0'] || 0}</strong></div>
+            `;
+            containerRes.appendChild(divConf);
         }
     }
 

@@ -1,0 +1,112 @@
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 5.706s
+
+OK
+===============================================================================================
+PROCEDIMENTO DE HOMOLOGACAO INTEGRAL EM 7 ETAPAS: LOTOMANIA MODO 4 v1.2 (FAIL-CLOSED)
+Inicio Global UTC: 2026-11-12T20:45:01.004892+00:00 | Modo Otimizado (-O ignora assert): Python 3.12.10
+===============================================================================================
+
+[ETAPA 1/7] Validacao Formal do Nucleo Matematico (Inicio UTC: 2026-11-12T20:45:01.004892+00:00):
+  Toy Model (150 configuracoes = 6 valores de k [0..5] x 5 valores de t1 x 5 valores de t2): 0 divergencias encontradas -> CONFORME
+  Casos-Limite Lotomania (k=0, k=25 conservacao integral, k=50): CONFORME (100% identico)
+  Identidade Delta V = 2*sum(u - m_ant) + 25: CONFORME | Duracao Etapa 1: 0.005s
+
+[ETAPA 2/7] Recalculo Estatistico dos 90 Pares Brutos Individuais (Inicio UTC: 2026-11-12T20:45:01.009686+00:00):
+  Delineamento: Teste t de Student de uma amostra sobre diferencas pareadas D_r = premios_C - premios_A sob CRN (50.000 sorteios/rodada)
+  Proveniencia: Bateria 1 (30 rodadas, seeds 1001..1030/3001..3030/50001..50030) = exploratoria/calibracao;
+                Baterias 2, 3 e 4 (60 rodadas, 3.000.000 sorteios) = parametros congelados (w_inter=30.0, w_uso=0.05).
+  Analise Confirmatoria (60 rodadas congeladas, 90/90 pares brutos integros verificados em JSON):
+    Saldo = +18507 | Media = +308.4500 | s_D = 157.182117 | t(59) = 15.200479
+    Valor-p t de Student unilateral (H1: mu_D > 0):  2.281445e-22
+    Valor-p t de Student bilateral  (H1: mu_D != 0): 4.562890e-22
+    Teste dos Sinais (60/60) unilateral (0.5^60):    8.673617e-19
+    Teste dos Sinais (60/60) bilateral (2*0.5^60):   1.734723e-18
+  Analise Historica Global (90 rodadas = exploratoria + congeladas):
+    Saldo = +28657 | Media = +318.4111 | s_D = 158.010801 | t(89) = 19.117130
+    Valor-p t de Student unilateral (H1: mu_D > 0):  1.446332e-33
+    Valor-p t de Student bilateral  (H1: mu_D != 0): 2.892663e-33
+    Teste dos Sinais (90/90) unilateral (0.5^90):    8.077936e-28
+    Teste dos Sinais (90/90) bilateral (2*0.5^90):   1.615587e-27
+  Nota Metodologica e Ressalva Matematica:
+    Os valores-p acima medem vantagem combinatoria conjunta observada em unidades Monte Carlo
+    independentes sob CRN contra carteiras uniformes aleatorias (nao se referem a concursos reais
+    nem garantem ganho financeiro futuro). O sistema nao preve resultados futuros nem altera a
+    probabilidade matematica individual de premiacao de qualquer bilhete.
+  Status Estatistico: CONFORME (Decimal 100-digitos validado) | Duracao Etapa 2: 0.003s
+
+[ETAPA 3/7] Reproducao da Invariancia do Minimizador (189 Etapas x 79 Concorrentes) (Inicio UTC: 2026-11-12T20:45:01.010711+00:00):
+  Total de Etapas Analisadas:                189 (exigido: exatamente 189)
+  Minimos Estritos (margem > 0):             182 (96.30%)
+  Empates Algebricos Exatos em Q:            7 (3.70%)
+    Etapa   1 (Rodada 1, Bilhete 2): Delta A = 0.000000, Delta B = 0.000000 -> Delta C(alpha) = 0 identico
+    Etapa  20 (Rodada 2, Bilhete 3): Delta A = 0.000000, Delta B = 0.000000 -> Delta C(alpha) = 0 identico
+    Etapa 114 (Rodada 7, Bilhete 2): Delta A = 0.000000, Delta B = 0.000000 -> Delta C(alpha) = 0 identico
+    Etapa 116 (Rodada 7, Bilhete 4): Delta A = 0.000000, Delta B = 0.000000 -> Delta C(alpha) = 0 identico
+    Etapa 133 (Rodada 8, Bilhete 2): Delta A = 0.000000, Delta B = 0.000000 -> Delta C(alpha) = 0 identico
+    Etapa 134 (Rodada 8, Bilhete 3): Delta A = 0.000000, Delta B = 0.000000 -> Delta C(alpha) = 0 identico
+    Etapa 171 (Rodada 10, Bilhete 2): Delta A = 0.000000, Delta B = 0.000000 -> Delta C(alpha) = 0 identico
+  Status Invariancia: CONFORME (182 minimos estritos e 7 empates exatos) | Duracao Etapa 3: 4.53s
+
+[ETAPA 4/7] Recalculo dos Hashes SHA-256 sob Protocolos v1 e v2 (Inicio UTC: 2026-11-12T20:45:05.542809+00:00):
+  Identidade Estrutural das 10 Carteiras sob alpha in {0.5, 1.0, 2.0}: 10/10 CONFORME
+  Status Hashes (v1 e v2): CONFORME | Duracao Etapa 4: 15.17s
+
+[ETAPA 5/7] Execucao da Suite Completa de 20 Testes Unitarios (Inicio UTC: 2026-11-12T20:45:20.711415+00:00):
+  Testes Executados: 20 | Falhas: 0 | Erros: 0
+  Status Testes Unitarios: CONFORME (20/20 aprovados) | Duracao Etapa 5: 5.711s
+
+[ETAPA 6/7] Verificacao do Selo Ed25519 (10 cenarios), Equivalencia (15.120 Delta V + 33 minimizadores), Zero Fallback e Matriz 1..10.000 (Inicio UTC: 2026-11-12T20:45:26.424136+00:00):
+  Selo Ed25519 (10 cenarios incluindo ausencia/chave incompativel/0 jogos): CONFORME (Manifesto: ae7a38f2b80bb07a7b145c570a26d1bc5cd104216b11a785d30f3e28f169fcc2)
+  Equivalencia Registro a Registro (MotorLotomaniaModo4): CONFORME (189 etapas, 15120 candidatos, 33 minimizadores conjuntos em Q, 15.120 verificacoes exatas Delta V, historico=None)
+  [TESTE NEGATIVO CONTROLADO - REJEICAO ESPERADA]: Simulando violacao de selo/manifesto na API (HTTP 503)...
+BLOQUEIO CRIPTOGRAFICO MODO 4 (ID: be54e96f): Manifesto ou selo criptográfico inválido (simulação controlada).
+BLOQUEIO CRIPTOGRAFICO MODO 4 CONFERENCIA (ID: 90f637f7): Manifesto ou selo criptográfico inválido (simulação controlada).
+Falha na verificacao de saude do MODO 4: Manifesto ou selo criptográfico inválido (simulação controlada).
+Erro no Motor Lotomania MODO 4. ID: e4466fb8 | Detalhe: Erro interno simulado no processo de otimização.
+Traceback (most recent call last):
+  File "C:\Users\Luis Brun\.gemini\antigravity\brain\f3af3942-aca3-4c9a-a3dd-e56f90feb848\scratch\ref\api.py", line 573, in endpoint_lotomania_modo4_gerar
+    resultado = motor.gerar_carteira_otimizada_cobertura(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Luis Brun\.gemini\antigravity\brain\f3af3942-aca3-4c9a-a3dd-e56f90feb848\scratch\ref\testes\test_modo4_sem_fallback.py", line 254, in _erro_interno
+    raise RuntimeError("Erro interno simulado no processo de otimização.")
+RuntimeError: Erro interno simulado no processo de otimização.
+Erro no Motor Lotomania MODO 4. ID: 44c91f5b | Detalhe: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.
+Traceback (most recent call last):
+  File "C:\Users\Luis Brun\.gemini\antigravity\brain\f3af3942-aca3-4c9a-a3dd-e56f90feb848\scratch\ref\api.py", line 581, in endpoint_lotomania_modo4_gerar
+    raise RuntimeError("Falha estrutural: o motor MODO 4 nao retornou status de sucesso.")
+RuntimeError: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.
+Erro no Motor Lotomania MODO 4. ID: f3bffc93 | Detalhe: Discrepancia quantitativa: esperados 20 jogos, entregues 19.
+Traceback (most recent call last):
+  File "C:\Users\Luis Brun\.gemini\antigravity\brain\f3af3942-aca3-4c9a-a3dd-e56f90feb848\scratch\ref\api.py", line 584, in endpoint_lotomania_modo4_gerar
+    raise RuntimeError(
+RuntimeError: Discrepancia quantitativa: esperados 20 jogos, entregues 19.
+Erro no Motor Lotomania MODO 4. ID: a657dada | Detalhe: Jogo 1 na resposta nao contem 50 dezenas distintas.
+Traceback (most recent call last):
+  File "C:\Users\Luis Brun\.gemini\antigravity\brain\f3af3942-aca3-4c9a-a3dd-e56f90feb848\scratch\ref\api.py", line 589, in endpoint_lotomania_modo4_gerar
+    raise RuntimeError(f"Jogo {idx + 1} na resposta nao contem 50 dezenas distintas.")
+RuntimeError: Jogo 1 na resposta nao contem 50 dezenas distintas.
+Erro no Motor Lotomania MODO 4. ID: a62fc27f | Detalhe: Jogo 1 na resposta contem dezenas fora do dominio [1..100].
+Traceback (most recent call last):
+  File "C:\Users\Luis Brun\.gemini\antigravity\brain\f3af3942-aca3-4c9a-a3dd-e56f90feb848\scratch\ref\api.py", line 591, in endpoint_lotomania_modo4_gerar
+    raise RuntimeError(f"Jogo {idx + 1} na resposta contem dezenas fora do dominio [1..100].")
+RuntimeError: Jogo 1 na resposta contem dezenas fora do dominio [1..100].
+  [TESTE NEGATIVO CONTROLADO - REJEICAO ESPERADA]: Bloqueios 503/500/422 confirmados com zero jogos entregues.
+  Proibicao de Fallback JS e Resiliencia API (offline/timeout/500/503/422/incompleta = 0 jogos): CONFORME
+  Relatorio Novo Gerado ao Vivo em TempDir (Esquema: 1.2.2, ID: 7b9b2102-82b3-469d-86c1-768c89dab2ea, Duracao: 814.8503s): CONFORME
+  Comparacao Integral Direta contra Referencia ate 1.000 Jogos ([1, 2, 10, 20, 50, 80, 100, 500, 1000]): CONFORME
+  Auditoria Amostral de Alto Volume (560 sinteticos + 1.600 reais = 2.160 candidatos, 0 divergencias, 1520 candidatos trace, 0 deriva PRNG em 9999 estagios) e Reinicializacao a Frio: CONFORME
+  [PRELIMINAR - LOG AINDA ABERTO] Inventario pre-fechamento preparado (Relatorio SHA-256: 67fa82b7c905a4bda18d6802950188d79b47680d7fac8fa88393019d010b7a81, Total Modulos Inventariados: 22). A assinatura Ed25519 definitiva sera executada apos o fechamento do log na Etapa 7.
+  Duracao Etapa 6: 829.209s
+
+[ETAPA 7/7] Emissao do Parecer Conclusivo da Arquitetura Isolada e Selada (UTC: 2026-11-12T20:59:15.631600+00:00):
+===============================================================================================
+PARECER TECNICO CONCLUSIVO: HOMOLOGACAO INTEGRAL MODO 4 v1.2 EXECUTADA COM EXITO (7/7 ETAPAS)
+Execucao ID: 7b9b2102-82b3-469d-86c1-768c89dab2ea | Relatorio SHA-256: 67fa82b7c905a4bda18d6802950188d79b47680d7fac8fa88393019d010b7a81
+Ressalva Matematica Obrigatoria: O sistema nao preve resultados futuros nem altera a
+probabilidade matematica individual de premiacao de qualquer bilhete. Seu objetivo e
+otimizar a distribuicao combinatoria dos bilhetes de uma carteira, buscando reduzir a
+redundancia entre eventos premiados e melhorar a cobertura conjunta observada.
+Fim Global UTC: 2026-11-12T20:59:15.631600+00:00 | Duracao Etapa 7: 0.0s
+===============================================================================================
