@@ -1,0 +1,1341 @@
+{
+  "fase": "REVISAO_FASE_1_MICROCALIBRACAO",
+  "versao_runbook": "1.1.0-fase1-revisada",
+  "versao_avaliada": "5.1.0-promocao-controlada",
+  "executado_em_utc": "2026-11-13T22:04:24.894448+00:00",
+  "fase_2_executada": false,
+  "ativacao_producao": false,
+  "porta_api_isolada_utilizada": 18080,
+  "telemetria_hardware": {
+    "timestamp_utc": "2026-11-13T22:04:08.326190+00:00",
+    "sistema_operacional": "Windows-11-10.0.26200-SP0",
+    "arquitetura": "AMD64",
+    "python_versao": "3.12.10",
+    "cpu_threads_logicas": 16,
+    "ram_total_gb": 29.79,
+    "ram_disponivel_gb": 15.57,
+    "ram_uso_pct": 47,
+    "disco_livre_gb": 803.02,
+    "navegador_headless": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+  },
+  "frente_1_criptografia_pre": {
+    "aprovada": true,
+    "detalhes": {
+      "integro": true,
+      "integro_etapas_1_a_5": true,
+      "historico_geracao_none": true,
+      "verificados_etapas_1_2_3": 20,
+      "verificados_etapa_4": 4,
+      "verificados_bases_externas": 0,
+      "selo_lotomania_valido": true,
+      "erro_selo_lotomania": null,
+      "manifesto_etapa5_presente": true,
+      "manifesto_promocao_presente": true,
+      "verificados_promocao": 7,
+      "hashes_atuais_producao": {
+        "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+        "api.py": "d60cad46afbf563530a77e4950b142c1ebd54bcd2fef2e17bc23d84fc9de7c0b",
+        "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+        "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+        "index.html": "639bf551a59a3eeef9b1ee322ba16e9eeb6bc3477616338fef996fc155a12de0",
+        "js/ui.js": "e11df28bae9c9671b5ea4a69dfd389c8c66663ecf4caf139be56f0b2f14ca427",
+        "B2B_Loterias_Mobile.html": "22d7439d279073dae543eb1a8c89649dd38abe18c5dd76727edfff29b2ac02e3"
+      },
+      "divergencias": [],
+      "timestamp_utc": "2026-11-13T22:04:08.406781+00:00"
+    }
+  },
+  "frente_3_carga_microcalibracao": {
+    "aprovada": true,
+    "uvicorn_workers": 1,
+    "escopo_memoria": "exclusivo_subprocesso_uvicorn_workers_1",
+    "memoria_warmup": {
+      "rss_atual_mb": 61.62,
+      "rss_pico_mb": 61.62,
+      "privado_mb": 49.29
+    },
+    "rss_pico_windows_max_observado_mb": 76.91,
+    "rss_atual_max_observado_mb": 75.95,
+    "delta_rss_baseline_para_max_mb": 4.17,
+    "delta_pico_windows_mb": 15.29,
+    "memoria_dentro_limites": true,
+    "auditoria_sementes_e_estado": {
+      "aprovada": true,
+      "repetibilidade_simples_42_antes_depois": true,
+      "repetibilidade_mult16_42_antes_depois": true,
+      "historico_utilizado_sempre_nulo": true,
+      "semente_propagada_prng_ok": true,
+      "exigir_hashes_diferentes_entre_sementes_distintas": false,
+      "comportamento_sementes_simples": {
+        "hashes_por_semente": {
+          "42": "a21f44e82dac44afdc6eafd251c00d8f121c3d5b6da1f1b947be0e361ff78d6f",
+          "43": "daaf3c40b49b3bae51f39aa6ecb813d3aec0f49850193357d8db88a6ffe98c01",
+          "999": "d64dcc6af3771c4a1ac8eae35449d265d58916d86dda4dc8a1083b99282cdcda"
+        },
+        "hashes_distintos_count": 3,
+        "convergencia_entre_sementes": false
+      },
+      "comportamento_sementes_mult16": {
+        "hashes_por_semente": {
+          "42": "7ca7e5e84228f2b70bef53faacb9f79b187419693a30dcadd106584e1a7fc089",
+          "43": "f27d74815c01cfbd86cccd2f6879b0b443d404b841c97f5cc69e0716f83d9514"
+        },
+        "hashes_distintos_count": 2,
+        "convergencia_entre_sementes": false
+      },
+      "detalhes_sondagens": {
+        "simples_42_antes": {
+          "status_http": 200,
+          "semente": 42,
+          "assinatura_entrada": "a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf",
+          "hash_carteira_sha256": "a21f44e82dac44afdc6eafd251c00d8f121c3d5b6da1f1b947be0e361ff78d6f",
+          "historico_utilizado": null,
+          "algoritmo_utilizado": null,
+          "fallback_executado": false
+        },
+        "simples_43": {
+          "status_http": 200,
+          "semente": 43,
+          "assinatura_entrada": "22746507e14c524b68549ef7c39f1d93874112d72c90b32d665cf0da7031eea8",
+          "hash_carteira_sha256": "daaf3c40b49b3bae51f39aa6ecb813d3aec0f49850193357d8db88a6ffe98c01",
+          "historico_utilizado": null,
+          "algoritmo_utilizado": null,
+          "fallback_executado": false
+        },
+        "simples_42_depois": {
+          "status_http": 200,
+          "semente": 42,
+          "assinatura_entrada": "a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf",
+          "hash_carteira_sha256": "a21f44e82dac44afdc6eafd251c00d8f121c3d5b6da1f1b947be0e361ff78d6f",
+          "historico_utilizado": null,
+          "algoritmo_utilizado": null,
+          "fallback_executado": false
+        },
+        "simples_999": {
+          "status_http": 200,
+          "semente": 999,
+          "assinatura_entrada": "099e3e70d18f244e806a97feeb9e3b2e0c5c4f5858e6b993263ac2a401a09546",
+          "hash_carteira_sha256": "d64dcc6af3771c4a1ac8eae35449d265d58916d86dda4dc8a1083b99282cdcda",
+          "historico_utilizado": null,
+          "algoritmo_utilizado": null,
+          "fallback_executado": false
+        },
+        "mult16_42_antes": {
+          "status_http": 200,
+          "semente": 42,
+          "assinatura_entrada": "351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be",
+          "hash_carteira_sha256": "7ca7e5e84228f2b70bef53faacb9f79b187419693a30dcadd106584e1a7fc089",
+          "historico_utilizado": null,
+          "algoritmo_utilizado": null,
+          "fallback_executado": false
+        },
+        "mult16_43": {
+          "status_http": 200,
+          "semente": 43,
+          "assinatura_entrada": "09dc7d951ef92d385b78f1c4f3b625ce1eb5a057cdb8aa6855ae10b79710bda7",
+          "hash_carteira_sha256": "f27d74815c01cfbd86cccd2f6879b0b443d404b841c97f5cc69e0716f83d9514",
+          "historico_utilizado": null,
+          "algoritmo_utilizado": null,
+          "fallback_executado": false
+        },
+        "mult16_42_depois": {
+          "status_http": 200,
+          "semente": 42,
+          "assinatura_entrada": "351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be",
+          "hash_carteira_sha256": "7ca7e5e84228f2b70bef53faacb9f79b187419693a30dcadd106584e1a7fc089",
+          "historico_utilizado": null,
+          "algoritmo_utilizado": null,
+          "fallback_executado": false
+        }
+      }
+    },
+    "patamares": [
+      {
+        "total_requisicoes": 20,
+        "clientes_simultaneos": 1,
+        "uvicorn_workers": 1,
+        "duracao_total_s": 1.4039,
+        "erros_count": 0,
+        "taxa_erro_pct": 0.0,
+        "amostra_erros": [],
+        "latencias_por_tipo": {
+          "lotofacil_modo4_gerar_simples": {
+            "n": 4,
+            "min_s": 0.1024,
+            "media_s": 0.1155,
+            "p50_s": 0.1111,
+            "p95_s": 0.134,
+            "p99_s": 0.134,
+            "max_s": 0.134
+          },
+          "lotofacil_modo4_gerar_multipla16": {
+            "n": 4,
+            "min_s": 0.0934,
+            "media_s": 0.1098,
+            "p50_s": 0.1125,
+            "p95_s": 0.1206,
+            "p99_s": 0.1206,
+            "max_s": 0.1206
+          },
+          "lotomania_modo4_gerar": {
+            "n": 4,
+            "min_s": 0.0436,
+            "media_s": 0.0498,
+            "p50_s": 0.0455,
+            "p95_s": 0.0558,
+            "p99_s": 0.0558,
+            "max_s": 0.0558
+          },
+          "motores_legados": {
+            "n": 4,
+            "min_s": 0.0259,
+            "media_s": 0.0434,
+            "p50_s": 0.0419,
+            "p95_s": 0.0624,
+            "p99_s": 0.0624,
+            "max_s": 0.0624
+          },
+          "lotofacil_modo4_avaliar": {
+            "n": 2,
+            "min_s": 0.0328,
+            "media_s": 0.0357,
+            "p50_s": 0.0328,
+            "p95_s": 0.0385,
+            "p99_s": 0.0385,
+            "max_s": 0.0385
+          },
+          "lotofacil_modo4_status": {
+            "n": 2,
+            "min_s": 0.02,
+            "media_s": 0.0283,
+            "p50_s": 0.02,
+            "p95_s": 0.0366,
+            "p99_s": 0.0366,
+            "max_s": 0.0366
+          }
+        },
+        "determinismo_por_assinatura": {
+          "total_grupos": 3,
+          "grupos": {
+            "lotofacil_modo4_gerar_simples::a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf": {
+              "tipo": "lotofacil_modo4_gerar_simples",
+              "assinatura_entrada": "a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf",
+              "semente": 42,
+              "amostras": 4,
+              "hashes_validos": 4,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "a21f44e82dac44afdc6eafd251c00d8f121c3d5b6da1f1b947be0e361ff78d6f",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            },
+            "lotofacil_modo4_gerar_multipla16::351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be": {
+              "tipo": "lotofacil_modo4_gerar_multipla16",
+              "assinatura_entrada": "351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be",
+              "semente": 42,
+              "amostras": 4,
+              "hashes_validos": 4,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "7ca7e5e84228f2b70bef53faacb9f79b187419693a30dcadd106584e1a7fc089",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            },
+            "lotomania_modo4_gerar::36402d71d147469457386c3f165b0d8841b62e0448d7f0ed447ebbbee500635e": {
+              "tipo": "lotomania_modo4_gerar",
+              "assinatura_entrada": "36402d71d147469457386c3f165b0d8841b62e0448d7f0ed447ebbbee500635e",
+              "semente": 42,
+              "amostras": 4,
+              "hashes_validos": 4,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            }
+          },
+          "repetibilidade_ok": true,
+          "lotofacil_repetibilidade_ok": true,
+          "lotomania_repetibilidade_ok": true
+        },
+        "memoria_monitorada": {
+          "pid_monitorado": 10872,
+          "escopo_processo": "exclusivo_subprocesso_uvicorn_workers_1",
+          "intervalo_amostragem_s": 0.25,
+          "amostras_count": 7,
+          "rss_atual_antes_mb": 62.2,
+          "rss_atual_depois_mb": 66.13,
+          "rss_atual_max_mb": 66.13,
+          "rss_pico_windows_antes_mb": 62.2,
+          "rss_pico_windows_max_mb": 67.11,
+          "privado_max_mb": 53.34,
+          "amostras": [
+            {
+              "t_s": 0.0,
+              "rss_atual_mb": 62.2,
+              "rss_pico_mb": 62.2,
+              "privado_mb": 49.79
+            },
+            {
+              "t_s": 0.2506,
+              "rss_atual_mb": 62.45,
+              "rss_pico_mb": 62.45,
+              "privado_mb": 49.79
+            },
+            {
+              "t_s": 0.5093,
+              "rss_atual_mb": 64.69,
+              "rss_pico_mb": 66.35,
+              "privado_mb": 51.06
+            },
+            {
+              "t_s": 0.7745,
+              "rss_atual_mb": 66.12,
+              "rss_pico_mb": 67.11,
+              "privado_mb": 53.34
+            },
+            {
+              "t_s": 1.043,
+              "rss_atual_mb": 66.0,
+              "rss_pico_mb": 67.11,
+              "privado_mb": 52.34
+            },
+            {
+              "t_s": 1.2995,
+              "rss_atual_mb": 65.32,
+              "rss_pico_mb": 67.11,
+              "privado_mb": 52.39
+            },
+            {
+              "t_s": 1.4039,
+              "rss_atual_mb": 66.13,
+              "rss_pico_mb": 67.11,
+              "privado_mb": 52.85
+            }
+          ]
+        },
+        "id": "patamar_0_baseline_1_cliente",
+        "violacoes": [],
+        "aprovado": true
+      },
+      {
+        "total_requisicoes": 32,
+        "clientes_simultaneos": 8,
+        "uvicorn_workers": 1,
+        "duracao_total_s": 1.8266,
+        "erros_count": 0,
+        "taxa_erro_pct": 0.0,
+        "amostra_erros": [],
+        "latencias_por_tipo": {
+          "lotofacil_modo4_gerar_simples": {
+            "n": 10,
+            "min_s": 0.4214,
+            "media_s": 0.5361,
+            "p50_s": 0.5246,
+            "p95_s": 0.6804,
+            "p99_s": 0.6804,
+            "max_s": 0.6804
+          },
+          "lotofacil_modo4_gerar_multipla16": {
+            "n": 6,
+            "min_s": 0.4822,
+            "media_s": 0.5398,
+            "p50_s": 0.5052,
+            "p95_s": 0.6338,
+            "p99_s": 0.6338,
+            "max_s": 0.6338
+          },
+          "lotofacil_modo4_avaliar": {
+            "n": 4,
+            "min_s": 0.4253,
+            "media_s": 0.5184,
+            "p50_s": 0.5138,
+            "p95_s": 0.608,
+            "p99_s": 0.608,
+            "max_s": 0.608
+          },
+          "lotofacil_modo4_status": {
+            "n": 4,
+            "min_s": 0.2323,
+            "media_s": 0.3872,
+            "p50_s": 0.2596,
+            "p95_s": 0.54,
+            "p99_s": 0.54,
+            "max_s": 0.54
+          },
+          "lotomania_modo4_gerar": {
+            "n": 4,
+            "min_s": 0.0861,
+            "media_s": 0.1852,
+            "p50_s": 0.0936,
+            "p95_s": 0.4638,
+            "p99_s": 0.4638,
+            "max_s": 0.4638
+          },
+          "motores_legados": {
+            "n": 4,
+            "min_s": 0.0333,
+            "media_s": 0.0454,
+            "p50_s": 0.0385,
+            "p95_s": 0.0692,
+            "p99_s": 0.0692,
+            "max_s": 0.0692
+          }
+        },
+        "determinismo_por_assinatura": {
+          "total_grupos": 3,
+          "grupos": {
+            "lotofacil_modo4_gerar_simples::a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf": {
+              "tipo": "lotofacil_modo4_gerar_simples",
+              "assinatura_entrada": "a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf",
+              "semente": 42,
+              "amostras": 10,
+              "hashes_validos": 10,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "a21f44e82dac44afdc6eafd251c00d8f121c3d5b6da1f1b947be0e361ff78d6f",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            },
+            "lotofacil_modo4_gerar_multipla16::351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be": {
+              "tipo": "lotofacil_modo4_gerar_multipla16",
+              "assinatura_entrada": "351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be",
+              "semente": 42,
+              "amostras": 6,
+              "hashes_validos": 6,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "7ca7e5e84228f2b70bef53faacb9f79b187419693a30dcadd106584e1a7fc089",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            },
+            "lotomania_modo4_gerar::36402d71d147469457386c3f165b0d8841b62e0448d7f0ed447ebbbee500635e": {
+              "tipo": "lotomania_modo4_gerar",
+              "assinatura_entrada": "36402d71d147469457386c3f165b0d8841b62e0448d7f0ed447ebbbee500635e",
+              "semente": 42,
+              "amostras": 4,
+              "hashes_validos": 4,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            }
+          },
+          "repetibilidade_ok": true,
+          "lotofacil_repetibilidade_ok": true,
+          "lotomania_repetibilidade_ok": true
+        },
+        "memoria_monitorada": {
+          "pid_monitorado": 10872,
+          "escopo_processo": "exclusivo_subprocesso_uvicorn_workers_1",
+          "intervalo_amostragem_s": 0.25,
+          "amostras_count": 9,
+          "rss_atual_antes_mb": 66.13,
+          "rss_atual_depois_mb": 68.77,
+          "rss_atual_max_mb": 68.86,
+          "rss_pico_windows_antes_mb": 67.11,
+          "rss_pico_windows_max_mb": 68.99,
+          "privado_max_mb": 55.25,
+          "amostras": [
+            {
+              "t_s": 0.0,
+              "rss_atual_mb": 66.13,
+              "rss_pico_mb": 67.11,
+              "privado_mb": 52.85
+            },
+            {
+              "t_s": 0.2549,
+              "rss_atual_mb": 68.0,
+              "rss_pico_mb": 68.0,
+              "privado_mb": 54.71
+            },
+            {
+              "t_s": 0.5052,
+              "rss_atual_mb": 66.89,
+              "rss_pico_mb": 68.01,
+              "privado_mb": 53.54
+            },
+            {
+              "t_s": 0.7647,
+              "rss_atual_mb": 68.85,
+              "rss_pico_mb": 68.85,
+              "privado_mb": 55.25
+            },
+            {
+              "t_s": 1.0157,
+              "rss_atual_mb": 68.86,
+              "rss_pico_mb": 68.86,
+              "privado_mb": 55.25
+            },
+            {
+              "t_s": 1.2703,
+              "rss_atual_mb": 68.62,
+              "rss_pico_mb": 68.99,
+              "privado_mb": 55.11
+            },
+            {
+              "t_s": 1.5264,
+              "rss_atual_mb": 68.77,
+              "rss_pico_mb": 68.99,
+              "privado_mb": 55.11
+            },
+            {
+              "t_s": 1.7851,
+              "rss_atual_mb": 68.77,
+              "rss_pico_mb": 68.99,
+              "privado_mb": 55.11
+            },
+            {
+              "t_s": 1.8266,
+              "rss_atual_mb": 68.77,
+              "rss_pico_mb": 68.99,
+              "privado_mb": 55.11
+            }
+          ]
+        },
+        "id": "patamar_1_1x_cores_fisicos_8_clientes",
+        "violacoes": [],
+        "aprovado": true
+      },
+      {
+        "total_requisicoes": 48,
+        "clientes_simultaneos": 16,
+        "uvicorn_workers": 1,
+        "duracao_total_s": 2.7517,
+        "erros_count": 0,
+        "taxa_erro_pct": 0.0,
+        "amostra_erros": [],
+        "latencias_por_tipo": {
+          "lotofacil_modo4_gerar_simples": {
+            "n": 16,
+            "min_s": 0.4237,
+            "media_s": 0.9653,
+            "p50_s": 1.049,
+            "p95_s": 1.2087,
+            "p99_s": 1.2087,
+            "max_s": 1.2087
+          },
+          "lotofacil_modo4_gerar_multipla16": {
+            "n": 8,
+            "min_s": 0.5433,
+            "media_s": 0.9582,
+            "p50_s": 0.885,
+            "p95_s": 1.2543,
+            "p99_s": 1.2543,
+            "max_s": 1.2543
+          },
+          "lotofacil_modo4_avaliar": {
+            "n": 6,
+            "min_s": 0.7548,
+            "media_s": 0.9762,
+            "p50_s": 0.9613,
+            "p95_s": 1.1281,
+            "p99_s": 1.1281,
+            "max_s": 1.1281
+          },
+          "lotofacil_modo4_status": {
+            "n": 6,
+            "min_s": 0.7548,
+            "media_s": 0.9572,
+            "p50_s": 0.9526,
+            "p95_s": 1.1131,
+            "p99_s": 1.1131,
+            "max_s": 1.1131
+          },
+          "lotomania_modo4_gerar": {
+            "n": 6,
+            "min_s": 0.1289,
+            "media_s": 0.3841,
+            "p50_s": 0.178,
+            "p95_s": 0.8251,
+            "p99_s": 0.8251,
+            "max_s": 0.8251
+          },
+          "motores_legados": {
+            "n": 6,
+            "min_s": 0.0303,
+            "media_s": 0.1426,
+            "p50_s": 0.0748,
+            "p95_s": 0.326,
+            "p99_s": 0.326,
+            "max_s": 0.326
+          }
+        },
+        "determinismo_por_assinatura": {
+          "total_grupos": 3,
+          "grupos": {
+            "lotofacil_modo4_gerar_simples::a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf": {
+              "tipo": "lotofacil_modo4_gerar_simples",
+              "assinatura_entrada": "a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf",
+              "semente": 42,
+              "amostras": 16,
+              "hashes_validos": 16,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "a21f44e82dac44afdc6eafd251c00d8f121c3d5b6da1f1b947be0e361ff78d6f",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            },
+            "lotofacil_modo4_gerar_multipla16::351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be": {
+              "tipo": "lotofacil_modo4_gerar_multipla16",
+              "assinatura_entrada": "351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be",
+              "semente": 42,
+              "amostras": 8,
+              "hashes_validos": 8,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "7ca7e5e84228f2b70bef53faacb9f79b187419693a30dcadd106584e1a7fc089",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            },
+            "lotomania_modo4_gerar::36402d71d147469457386c3f165b0d8841b62e0448d7f0ed447ebbbee500635e": {
+              "tipo": "lotomania_modo4_gerar",
+              "assinatura_entrada": "36402d71d147469457386c3f165b0d8841b62e0448d7f0ed447ebbbee500635e",
+              "semente": 42,
+              "amostras": 6,
+              "hashes_validos": 6,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            }
+          },
+          "repetibilidade_ok": true,
+          "lotofacil_repetibilidade_ok": true,
+          "lotomania_repetibilidade_ok": true
+        },
+        "memoria_monitorada": {
+          "pid_monitorado": 10872,
+          "escopo_processo": "exclusivo_subprocesso_uvicorn_workers_1",
+          "intervalo_amostragem_s": 0.25,
+          "amostras_count": 12,
+          "rss_atual_antes_mb": 68.77,
+          "rss_atual_depois_mb": 71.46,
+          "rss_atual_max_mb": 72.52,
+          "rss_pico_windows_antes_mb": 68.99,
+          "rss_pico_windows_max_mb": 73.71,
+          "privado_max_mb": 59.14,
+          "amostras": [
+            {
+              "t_s": 0.0,
+              "rss_atual_mb": 68.77,
+              "rss_pico_mb": 68.99,
+              "privado_mb": 55.11
+            },
+            {
+              "t_s": 0.2503,
+              "rss_atual_mb": 71.62,
+              "rss_pico_mb": 71.62,
+              "privado_mb": 58.54
+            },
+            {
+              "t_s": 0.5008,
+              "rss_atual_mb": 70.88,
+              "rss_pico_mb": 72.06,
+              "privado_mb": 57.77
+            },
+            {
+              "t_s": 0.7629,
+              "rss_atual_mb": 69.27,
+              "rss_pico_mb": 72.06,
+              "privado_mb": 56.16
+            },
+            {
+              "t_s": 1.0204,
+              "rss_atual_mb": 70.04,
+              "rss_pico_mb": 72.06,
+              "privado_mb": 57.1
+            },
+            {
+              "t_s": 1.2782,
+              "rss_atual_mb": 71.3,
+              "rss_pico_mb": 72.06,
+              "privado_mb": 57.89
+            },
+            {
+              "t_s": 1.5305,
+              "rss_atual_mb": 72.3,
+              "rss_pico_mb": 72.3,
+              "privado_mb": 58.93
+            },
+            {
+              "t_s": 1.789,
+              "rss_atual_mb": 72.52,
+              "rss_pico_mb": 73.71,
+              "privado_mb": 59.14
+            },
+            {
+              "t_s": 2.0488,
+              "rss_atual_mb": 70.53,
+              "rss_pico_mb": 73.71,
+              "privado_mb": 57.96
+            },
+            {
+              "t_s": 2.3022,
+              "rss_atual_mb": 71.36,
+              "rss_pico_mb": 73.71,
+              "privado_mb": 58.82
+            },
+            {
+              "t_s": 2.5633,
+              "rss_atual_mb": 71.41,
+              "rss_pico_mb": 73.71,
+              "privado_mb": 58.88
+            },
+            {
+              "t_s": 2.7517,
+              "rss_atual_mb": 71.46,
+              "rss_pico_mb": 73.71,
+              "privado_mb": 58.94
+            }
+          ]
+        },
+        "id": "patamar_2_1x_threads_logicas_16_clientes",
+        "violacoes": [],
+        "aprovado": true
+      },
+      {
+        "total_requisicoes": 72,
+        "clientes_simultaneos": 24,
+        "uvicorn_workers": 1,
+        "duracao_total_s": 4.1144,
+        "erros_count": 0,
+        "taxa_erro_pct": 0.0,
+        "amostra_erros": [],
+        "latencias_por_tipo": {
+          "lotofacil_modo4_gerar_simples": {
+            "n": 24,
+            "min_s": 0.5261,
+            "media_s": 1.4315,
+            "p50_s": 1.5237,
+            "p95_s": 1.7405,
+            "p99_s": 1.7723,
+            "max_s": 1.7723
+          },
+          "lotofacil_modo4_gerar_multipla16": {
+            "n": 12,
+            "min_s": 0.8558,
+            "media_s": 1.4586,
+            "p50_s": 1.5355,
+            "p95_s": 1.7827,
+            "p99_s": 1.7827,
+            "max_s": 1.7827
+          },
+          "lotofacil_modo4_avaliar": {
+            "n": 10,
+            "min_s": 0.6126,
+            "media_s": 1.4227,
+            "p50_s": 1.531,
+            "p95_s": 1.7994,
+            "p99_s": 1.7994,
+            "max_s": 1.7994
+          },
+          "lotofacil_modo4_status": {
+            "n": 10,
+            "min_s": 0.8664,
+            "media_s": 1.3778,
+            "p50_s": 1.4409,
+            "p95_s": 1.6339,
+            "p99_s": 1.6339,
+            "max_s": 1.6339
+          },
+          "lotomania_modo4_gerar": {
+            "n": 8,
+            "min_s": 0.194,
+            "media_s": 0.4506,
+            "p50_s": 0.3277,
+            "p95_s": 1.005,
+            "p99_s": 1.005,
+            "max_s": 1.005
+          },
+          "motores_legados": {
+            "n": 8,
+            "min_s": 0.0378,
+            "media_s": 0.1636,
+            "p50_s": 0.1514,
+            "p95_s": 0.3069,
+            "p99_s": 0.3069,
+            "max_s": 0.3069
+          }
+        },
+        "determinismo_por_assinatura": {
+          "total_grupos": 3,
+          "grupos": {
+            "lotofacil_modo4_gerar_simples::a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf": {
+              "tipo": "lotofacil_modo4_gerar_simples",
+              "assinatura_entrada": "a632120602cbf543079284abd4f22262817ea60b09ac09d289915dad7b858caf",
+              "semente": 42,
+              "amostras": 24,
+              "hashes_validos": 24,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "a21f44e82dac44afdc6eafd251c00d8f121c3d5b6da1f1b947be0e361ff78d6f",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            },
+            "lotofacil_modo4_gerar_multipla16::351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be": {
+              "tipo": "lotofacil_modo4_gerar_multipla16",
+              "assinatura_entrada": "351385eade41111e036b986c00c20b244af1c4d4f8c7687632488073e73685be",
+              "semente": 42,
+              "amostras": 12,
+              "hashes_validos": 12,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "7ca7e5e84228f2b70bef53faacb9f79b187419693a30dcadd106584e1a7fc089",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            },
+            "lotomania_modo4_gerar::36402d71d147469457386c3f165b0d8841b62e0448d7f0ed447ebbbee500635e": {
+              "tipo": "lotomania_modo4_gerar",
+              "assinatura_entrada": "36402d71d147469457386c3f165b0d8841b62e0448d7f0ed447ebbbee500635e",
+              "semente": 42,
+              "amostras": 8,
+              "hashes_validos": 8,
+              "hashes_distintos": 1,
+              "hash_saida_unico": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27",
+              "historico_sempre_nulo": true,
+              "repetivel": true
+            }
+          },
+          "repetibilidade_ok": true,
+          "lotofacil_repetibilidade_ok": true,
+          "lotomania_repetibilidade_ok": true
+        },
+        "memoria_monitorada": {
+          "pid_monitorado": 10872,
+          "escopo_processo": "exclusivo_subprocesso_uvicorn_workers_1",
+          "intervalo_amostragem_s": 0.25,
+          "amostras_count": 18,
+          "rss_atual_antes_mb": 71.46,
+          "rss_atual_depois_mb": 70.3,
+          "rss_atual_max_mb": 75.95,
+          "rss_pico_windows_antes_mb": 73.71,
+          "rss_pico_windows_max_mb": 76.91,
+          "privado_max_mb": 62.74,
+          "amostras": [
+            {
+              "t_s": 0.0,
+              "rss_atual_mb": 71.46,
+              "rss_pico_mb": 73.71,
+              "privado_mb": 58.94
+            },
+            {
+              "t_s": 0.2591,
+              "rss_atual_mb": 73.8,
+              "rss_pico_mb": 73.8,
+              "privado_mb": 61.04
+            },
+            {
+              "t_s": 0.5101,
+              "rss_atual_mb": 75.3,
+              "rss_pico_mb": 75.3,
+              "privado_mb": 62.15
+            },
+            {
+              "t_s": 0.7645,
+              "rss_atual_mb": 74.61,
+              "rss_pico_mb": 75.79,
+              "privado_mb": 61.46
+            },
+            {
+              "t_s": 1.0156,
+              "rss_atual_mb": 73.46,
+              "rss_pico_mb": 75.79,
+              "privado_mb": 60.74
+            },
+            {
+              "t_s": 1.2749,
+              "rss_atual_mb": 73.57,
+              "rss_pico_mb": 75.79,
+              "privado_mb": 60.78
+            },
+            {
+              "t_s": 1.525,
+              "rss_atual_mb": 72.38,
+              "rss_pico_mb": 75.79,
+              "privado_mb": 59.65
+            },
+            {
+              "t_s": 1.7846,
+              "rss_atual_mb": 73.61,
+              "rss_pico_mb": 75.79,
+              "privado_mb": 60.8
+            },
+            {
+              "t_s": 2.0361,
+              "rss_atual_mb": 74.75,
+              "rss_pico_mb": 75.79,
+              "privado_mb": 61.79
+            },
+            {
+              "t_s": 2.294,
+              "rss_atual_mb": 75.95,
+              "rss_pico_mb": 75.95,
+              "privado_mb": 62.74
+            },
+            {
+              "t_s": 2.5449,
+              "rss_atual_mb": 75.89,
+              "rss_pico_mb": 76.91,
+              "privado_mb": 62.66
+            },
+            {
+              "t_s": 2.7963,
+              "rss_atual_mb": 74.11,
+              "rss_pico_mb": 76.91,
+              "privado_mb": 61.98
+            },
+            {
+              "t_s": 3.0558,
+              "rss_atual_mb": 74.89,
+              "rss_pico_mb": 76.91,
+              "privado_mb": 62.52
+            },
+            {
+              "t_s": 3.3152,
+              "rss_atual_mb": 74.93,
+              "rss_pico_mb": 76.91,
+              "privado_mb": 62.52
+            },
+            {
+              "t_s": 3.5654,
+              "rss_atual_mb": 73.02,
+              "rss_pico_mb": 76.91,
+              "privado_mb": 60.36
+            },
+            {
+              "t_s": 3.825,
+              "rss_atual_mb": 73.05,
+              "rss_pico_mb": 76.91,
+              "privado_mb": 60.36
+            },
+            {
+              "t_s": 4.0891,
+              "rss_atual_mb": 73.08,
+              "rss_pico_mb": 76.91,
+              "privado_mb": 60.42
+            },
+            {
+              "t_s": 4.1143,
+              "rss_atual_mb": 70.3,
+              "rss_pico_mb": 76.91,
+              "privado_mb": 57.88
+            }
+          ]
+        },
+        "id": "patamar_3_sobrecarga_24_clientes",
+        "violacoes": [],
+        "aprovado": true
+      }
+    ]
+  },
+  "frente_5_nao_interferencia": {
+    "aprovada": true,
+    "carga_concorrente_lotofacil_ok": true,
+    "lotomania_sha256_v2_off": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27",
+    "lotomania_sha256_v2_on_sob_carga": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27",
+    "lotomania_hashes_identicos": true,
+    "integridade_arquivos_legados_disco_ok": true,
+    "arquivos_legados_monitorados_count": 23,
+    "hashes_arquivos_legados": {
+      "motor_diadesorte.py": "fde9dc0eea0dcdeb794066042ce4506021e35b2e6fa5fdd4366b28a7edbfd51b",
+      "motor_duplasena.py": "ea77d26487a540bb99bacfc5a325c31fe919b8c5ed21dbca58db2d72ebf84477",
+      "motor_loteca.py": "8ab255a3be2b3605879560d960c56b09554cd71012a9c2e36be83b4b14bb6698",
+      "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+      "motor_lotomania.py": "085d6fa972dfb97576246f26b8687fce35b7dc9199bb30fca61cc348df851d6c",
+      "motor_lotomania_modo4.py": "94a2d1001d235e0e9bd543aeee697bac0ac6c60b1d24654838e452d6f42c68f9",
+      "motor_megasena.py": "770a4a4f4c3f6c5e387576fb2c1a61adf633a1e0d5d28f7a47aeac91375af22e",
+      "motor_milionaria.py": "f9955543bb4300153e19f47846be5440ab54c902cfa8750dcfe46617217f6296",
+      "motor_quina.py": "0f3fb62673d25f2f7a94aa2cdc36f1ae04c0434bc3b67e91bf9e3e8013adc9c4",
+      "motor_sugestao.py": "2d56227970688e0bdd7746497c6586077e357dece3dfe0115a9d25fe72c7ab4c",
+      "motor_supersete.py": "06a680e4781f7b9ee0200b0d75fbf86e0b558d680ec8c1c1664281bd8f547919",
+      "motor_timemania.py": "605ea91cac7c08380a109704510b21687183fce2e16e23e4bada44f9025f3d6c",
+      "data/diadesorte.json": "c5982cb80ab76032bb04db04cf03e4fda9f88b35df63acfc146599d64a8dea9d",
+      "data/duplasena.json": "9501bf327837eafbafec8149d91258a5eff9bf00b9489123ece6e8876a84330c",
+      "data/loteca_grade_exemplo.json": "30acc0e9904238c75d1eeaa35ad7b98d9e6e7d9d53a6d1a3e371dd6ffe104bd2",
+      "data/lotofacil.json": "e06201401b08b3559c69b6f387e736011ba0816abc4ff0908bd9560817320c8c",
+      "data/lotomania.json": "3f11b71e15b936940c8cef40cf39c0a67f5c47f7a15b12a8c2608763ec39f873",
+      "data/maismilionaria.json": "2ec03eebd301060abd4ba4c64e4a1081fc7f6c95b14db24108ae4fef600f3f69",
+      "data/megasena.json": "d21044ff069bd0e0d4c3917ceca8f18d9ef8db2d1c7aadb8294967d8fe34104f",
+      "data/quina.json": "82686196857689e65f0dfee37dcf9156d0fc1538eb05d413ce4aa67ad9577629",
+      "data/supersete.json": "e5598fa23e48e21d4c45b45b2b1b7ddb6e2a808300bca008b9272c00fd251e71",
+      "data/supersete_planilha_matrix.json": "67e6b46826102c249e01cc12f850dcff7566ecf83776698c05a65f2b06f7e982",
+      "data/timemania.json": "ede900a6fa4e4227ec07291419df87503450a68f12ec574653260fbb9159ee3a"
+    },
+    "legados_status_http": {
+      "/api/v1/motor-lotofacil": 200,
+      "/api/v1/motor-lotomania": 200,
+      "/api/v1/motor-diadesorte": 200,
+      "/api/v1/motor-megasena": 200
+    },
+    "comparacao_legados_off_vs_carga": {
+      "/api/v1/motor-lotofacil": {
+        "off": {
+          "http_1": 200,
+          "http_2": 200,
+          "contrato_ok": true,
+          "motivo": "ok",
+          "sha256_resposta_off_1": "b0c899c854c1a4909af4ae7ab1afd16a9e2b37bee2070a1d2e93b8e6652e48ef",
+          "sha256_resposta_off_2": "e02c3ca5fc560e0504b30348e6dd8235af93d710361b388aec0c766539cffa37",
+          "sha256_jogos_off_1": "d9e724845aee8fbf9fb4418d41b84dc277ef4dacdda3521ce658c5366eec3de5",
+          "sha256_jogos_off_2": "edb0503346783d4df1fba59ed48c8afcbb55f15f5939e072684aef8bc7f8953d",
+          "deterministico_jogos_baseline": false,
+          "deterministico_resposta_baseline": false
+        },
+        "on_sob_carga": {
+          "http_sob_carga": 200,
+          "latencia_s": 0.4385,
+          "contrato_ok": true,
+          "motivo": "ok",
+          "sha256_resposta_sob_carga": "d58fd6184f396008b945185a66e21588774463b8af1fe929dbe4d1fefd60fd98",
+          "sha256_jogos_sob_carga": "799853054b6c4641254b7ba6f13b0949dae33ec39e8c43e57e078f8ae689811a",
+          "preservou_determinismo_se_aplicavel": true
+        },
+        "aprovado": true
+      },
+      "/api/v1/motor-lotomania": {
+        "off": {
+          "http_1": 200,
+          "http_2": 200,
+          "contrato_ok": true,
+          "motivo": "ok",
+          "sha256_resposta_off_1": "15fe262c47d86f0ae893fd9deddcfc1f9cb15add876a90b67a257e6048d62277",
+          "sha256_resposta_off_2": "7fcd807b4986f598f1996381a3b8df53914f68c67701f08c382de24d508b6741",
+          "sha256_jogos_off_1": "804066aa23ef23b9d14e5ad12aab10caa0133dc6501f8ec89e2d2f608a5b5575",
+          "sha256_jogos_off_2": "ab95ad43b17d7dff17652235128d77adaf9cd0c57bedf218188fe71e242f56ed",
+          "deterministico_jogos_baseline": false,
+          "deterministico_resposta_baseline": false
+        },
+        "on_sob_carga": {
+          "http_sob_carga": 200,
+          "latencia_s": 0.438,
+          "contrato_ok": true,
+          "motivo": "ok",
+          "sha256_resposta_sob_carga": "156175861aef7a73fb609920ce0a834c84384bd107baac121856a066f43e64f9",
+          "sha256_jogos_sob_carga": "cc153aff70b1e49b2df6fd15768f8c0e2847639a05122fb896653edeaedb1460",
+          "preservou_determinismo_se_aplicavel": true
+        },
+        "aprovado": true
+      },
+      "/api/v1/motor-diadesorte": {
+        "off": {
+          "http_1": 200,
+          "http_2": 200,
+          "contrato_ok": true,
+          "motivo": "ok",
+          "sha256_resposta_off_1": "b71f36b9822d11b36959fb9fc79efb16c02378da8d382f598e73fed49f74647e",
+          "sha256_resposta_off_2": "b71f36b9822d11b36959fb9fc79efb16c02378da8d382f598e73fed49f74647e",
+          "sha256_jogos_off_1": "98e437c412aca2360238e9192689cc476eb3fc769ecb7c442b5b100c753405b9",
+          "sha256_jogos_off_2": "98e437c412aca2360238e9192689cc476eb3fc769ecb7c442b5b100c753405b9",
+          "deterministico_jogos_baseline": true,
+          "deterministico_resposta_baseline": true
+        },
+        "on_sob_carga": {
+          "http_sob_carga": 200,
+          "latencia_s": 0.2743,
+          "contrato_ok": true,
+          "motivo": "ok",
+          "sha256_resposta_sob_carga": "b71f36b9822d11b36959fb9fc79efb16c02378da8d382f598e73fed49f74647e",
+          "sha256_jogos_sob_carga": "98e437c412aca2360238e9192689cc476eb3fc769ecb7c442b5b100c753405b9",
+          "preservou_determinismo_se_aplicavel": true
+        },
+        "aprovado": true
+      },
+      "/api/v1/motor-megasena": {
+        "off": {
+          "http_1": 200,
+          "http_2": 200,
+          "contrato_ok": true,
+          "motivo": "ok",
+          "sha256_resposta_off_1": "e5fb42bce1606e2a1668cd0ef28af4ee41bd1c72d3640529d4892c1767624107",
+          "sha256_resposta_off_2": "7c074e0174ec247d7845bed670aec5d143a47c9ea87119e696d89cd3e107cffb",
+          "sha256_jogos_off_1": "f1844eb0027d538252080f21ef117d570f49c2389f5a87e74cb4bb43faddc0e1",
+          "sha256_jogos_off_2": "67cf584f4fb450f19272af8f4b829ba79219f892ebd2589c894d84f282bf3feb",
+          "deterministico_jogos_baseline": false,
+          "deterministico_resposta_baseline": false
+        },
+        "on_sob_carga": {
+          "http_sob_carga": 200,
+          "latencia_s": 0.1448,
+          "contrato_ok": true,
+          "motivo": "ok",
+          "sha256_resposta_sob_carga": "acc1c9eae2a7d629b61ea80b819170854c60e1d09a25dc8e72c8ae1e76dfce8f",
+          "sha256_jogos_sob_carga": "a72fa9733840f57be455cf6217e98349a63492780d0e3a4e5c840a2bf10ecbb0",
+          "preservou_determinismo_se_aplicavel": true
+        },
+        "aprovado": true
+      }
+    }
+  },
+  "producao_8000_comparacao": {
+    "preservada": true,
+    "motivo": "ok",
+    "antes_alcancavel": true,
+    "depois_alcancavel": true,
+    "invariantes_off_ok": true,
+    "hashes_identicos": true,
+    "sha256_antes": "42d50331a3cfec6e659ca224e36f996fba5e58611ec9d6b498b1506d337cd2a2",
+    "sha256_depois": "42d50331a3cfec6e659ca224e36f996fba5e58611ec9d6b498b1506d337cd2a2",
+    "antes": {
+      "alcancavel": true,
+      "porta": 8000,
+      "health_http": 200,
+      "status_http": 200,
+      "estado_normalizado": {
+        "api_operacional": true,
+        "modo4_disponivel": true,
+        "lotomania_sha256_manifesto": "ae7a38f2b80bb07a7b145c570a26d1bc5cd104216b11a785d30f3e28f169fcc2",
+        "lotomania_selo_valido": true,
+        "lotofacil_disponivel": false,
+        "health_lotofacil_disponivel": false,
+        "feature_flag_ativa": false,
+        "status": "desativado_por_feature_flag",
+        "experimental_2j_habilitada": false,
+        "politica_micro_padrao": "conservadora_3J",
+        "inicializacao_mista": "padrao",
+        "integridade_verificada": true,
+        "integridade_etapas_1_a_5_valida": true,
+        "selo_lotomania_valido": true,
+        "divergencias_integridade": [],
+        "sha256_modulos_promocao": {
+          "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+          "api.py": "d60cad46afbf563530a77e4950b142c1ebd54bcd2fef2e17bc23d84fc9de7c0b",
+          "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+          "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+          "index.html": "639bf551a59a3eeef9b1ee322ba16e9eeb6bc3477616338fef996fc155a12de0",
+          "js/ui.js": "e11df28bae9c9671b5ea4a69dfd389c8c66663ecf4caf139be56f0b2f14ca427",
+          "B2B_Loterias_Mobile.html": "22d7439d279073dae543eb1a8c89649dd38abe18c5dd76727edfff29b2ac02e3"
+        },
+        "telemetria": {
+          "total_requisicoes_gerar": 0,
+          "total_sucesso_gerar": 0,
+          "total_bloqueios_feature_flag": 0,
+          "total_bloqueios_integridade": 0,
+          "total_bloqueios_politica_experimental": 0,
+          "total_erros_validacao": 0,
+          "total_erros_internos": 0,
+          "total_requisicoes_avaliar": 0,
+          "ultimos_eventos": []
+        }
+      },
+      "sha256_estado_normalizado": "42d50331a3cfec6e659ca224e36f996fba5e58611ec9d6b498b1506d337cd2a2"
+    },
+    "depois": {
+      "alcancavel": true,
+      "porta": 8000,
+      "health_http": 200,
+      "status_http": 200,
+      "estado_normalizado": {
+        "api_operacional": true,
+        "modo4_disponivel": true,
+        "lotomania_sha256_manifesto": "ae7a38f2b80bb07a7b145c570a26d1bc5cd104216b11a785d30f3e28f169fcc2",
+        "lotomania_selo_valido": true,
+        "lotofacil_disponivel": false,
+        "health_lotofacil_disponivel": false,
+        "feature_flag_ativa": false,
+        "status": "desativado_por_feature_flag",
+        "experimental_2j_habilitada": false,
+        "politica_micro_padrao": "conservadora_3J",
+        "inicializacao_mista": "padrao",
+        "integridade_verificada": true,
+        "integridade_etapas_1_a_5_valida": true,
+        "selo_lotomania_valido": true,
+        "divergencias_integridade": [],
+        "sha256_modulos_promocao": {
+          "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+          "api.py": "d60cad46afbf563530a77e4950b142c1ebd54bcd2fef2e17bc23d84fc9de7c0b",
+          "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+          "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+          "index.html": "639bf551a59a3eeef9b1ee322ba16e9eeb6bc3477616338fef996fc155a12de0",
+          "js/ui.js": "e11df28bae9c9671b5ea4a69dfd389c8c66663ecf4caf139be56f0b2f14ca427",
+          "B2B_Loterias_Mobile.html": "22d7439d279073dae543eb1a8c89649dd38abe18c5dd76727edfff29b2ac02e3"
+        },
+        "telemetria": {
+          "total_requisicoes_gerar": 0,
+          "total_sucesso_gerar": 0,
+          "total_bloqueios_feature_flag": 0,
+          "total_bloqueios_integridade": 0,
+          "total_bloqueios_politica_experimental": 0,
+          "total_erros_validacao": 0,
+          "total_erros_internos": 0,
+          "total_requisicoes_avaliar": 0,
+          "ultimos_eventos": []
+        }
+      },
+      "sha256_estado_normalizado": "42d50331a3cfec6e659ca224e36f996fba5e58611ec9d6b498b1506d337cd2a2"
+    }
+  },
+  "frente_1_criptografia_pos": {
+    "aprovada": true,
+    "detalhes": {
+      "integro": true,
+      "integro_etapas_1_a_5": true,
+      "historico_geracao_none": true,
+      "verificados_etapas_1_2_3": 20,
+      "verificados_etapa_4": 4,
+      "verificados_bases_externas": 0,
+      "selo_lotomania_valido": true,
+      "erro_selo_lotomania": null,
+      "manifesto_etapa5_presente": true,
+      "manifesto_promocao_presente": true,
+      "verificados_promocao": 7,
+      "hashes_atuais_producao": {
+        "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+        "api.py": "d60cad46afbf563530a77e4950b142c1ebd54bcd2fef2e17bc23d84fc9de7c0b",
+        "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+        "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+        "index.html": "639bf551a59a3eeef9b1ee322ba16e9eeb6bc3477616338fef996fc155a12de0",
+        "js/ui.js": "e11df28bae9c9671b5ea4a69dfd389c8c66663ecf4caf139be56f0b2f14ca427",
+        "B2B_Loterias_Mobile.html": "22d7439d279073dae543eb1a8c89649dd38abe18c5dd76727edfff29b2ac02e3"
+      },
+      "divergencias": [],
+      "timestamp_utc": "2026-11-13T22:04:24.894448+00:00"
+    }
+  },
+  "calibracao_sugerida_por_patamar": {
+    "patamar_0_baseline_1_cliente": {
+      "lotofacil_modo4_gerar_simples": {
+        "p95_observado_s": 0.134,
+        "p99_observado_s": 0.134,
+        "max_p95_s_sugerido": 0.48,
+        "max_p99_s_sugerido": 0.63
+      },
+      "lotofacil_modo4_gerar_multipla16": {
+        "p95_observado_s": 0.1206,
+        "p99_observado_s": 0.1206,
+        "max_p95_s_sugerido": 0.47,
+        "max_p99_s_sugerido": 0.62
+      },
+      "lotomania_modo4_gerar": {
+        "p95_observado_s": 0.0558,
+        "p99_observado_s": 0.0558,
+        "max_p95_s_sugerido": 0.41,
+        "max_p99_s_sugerido": 0.56
+      },
+      "motores_legados": {
+        "p95_observado_s": 0.0624,
+        "p99_observado_s": 0.0624,
+        "max_p95_s_sugerido": 0.41,
+        "max_p99_s_sugerido": 0.56
+      },
+      "lotofacil_modo4_avaliar": {
+        "p95_observado_s": 0.0385,
+        "p99_observado_s": 0.0385,
+        "max_p95_s_sugerido": 0.39,
+        "max_p99_s_sugerido": 0.54
+      },
+      "lotofacil_modo4_status": {
+        "p95_observado_s": 0.0366,
+        "p99_observado_s": 0.0366,
+        "max_p95_s_sugerido": 0.39,
+        "max_p99_s_sugerido": 0.54
+      }
+    },
+    "patamar_1_1x_cores_fisicos_8_clientes": {
+      "lotofacil_modo4_gerar_simples": {
+        "p95_observado_s": 0.6804,
+        "p99_observado_s": 0.6804,
+        "max_p95_s_sugerido": 1.26,
+        "max_p99_s_sugerido": 1.41
+      },
+      "lotofacil_modo4_gerar_multipla16": {
+        "p95_observado_s": 0.6338,
+        "p99_observado_s": 0.6338,
+        "max_p95_s_sugerido": 1.17,
+        "max_p99_s_sugerido": 1.32
+      },
+      "lotofacil_modo4_avaliar": {
+        "p95_observado_s": 0.608,
+        "p99_observado_s": 0.608,
+        "max_p95_s_sugerido": 1.12,
+        "max_p99_s_sugerido": 1.27
+      },
+      "lotofacil_modo4_status": {
+        "p95_observado_s": 0.54,
+        "p99_observado_s": 0.54,
+        "max_p95_s_sugerido": 1.0,
+        "max_p99_s_sugerido": 1.15
+      },
+      "lotomania_modo4_gerar": {
+        "p95_observado_s": 0.4638,
+        "p99_observado_s": 0.4638,
+        "max_p95_s_sugerido": 0.86,
+        "max_p99_s_sugerido": 1.01
+      },
+      "motores_legados": {
+        "p95_observado_s": 0.0692,
+        "p99_observado_s": 0.0692,
+        "max_p95_s_sugerido": 0.42,
+        "max_p99_s_sugerido": 0.57
+      }
+    },
+    "patamar_2_1x_threads_logicas_16_clientes": {
+      "lotofacil_modo4_gerar_simples": {
+        "p95_observado_s": 1.2087,
+        "p99_observado_s": 1.2087,
+        "max_p95_s_sugerido": 2.24,
+        "max_p99_s_sugerido": 2.39
+      },
+      "lotofacil_modo4_gerar_multipla16": {
+        "p95_observado_s": 1.2543,
+        "p99_observado_s": 1.2543,
+        "max_p95_s_sugerido": 2.32,
+        "max_p99_s_sugerido": 2.47
+      },
+      "lotofacil_modo4_avaliar": {
+        "p95_observado_s": 1.1281,
+        "p99_observado_s": 1.1281,
+        "max_p95_s_sugerido": 2.09,
+        "max_p99_s_sugerido": 2.24
+      },
+      "lotofacil_modo4_status": {
+        "p95_observado_s": 1.1131,
+        "p99_observado_s": 1.1131,
+        "max_p95_s_sugerido": 2.06,
+        "max_p99_s_sugerido": 2.21
+      },
+      "lotomania_modo4_gerar": {
+        "p95_observado_s": 0.8251,
+        "p99_observado_s": 0.8251,
+        "max_p95_s_sugerido": 1.53,
+        "max_p99_s_sugerido": 1.68
+      },
+      "motores_legados": {
+        "p95_observado_s": 0.326,
+        "p99_observado_s": 0.326,
+        "max_p95_s_sugerido": 0.68,
+        "max_p99_s_sugerido": 0.83
+      }
+    },
+    "patamar_3_sobrecarga_24_clientes": {
+      "lotofacil_modo4_gerar_simples": {
+        "p95_observado_s": 1.7405,
+        "p99_observado_s": 1.7723,
+        "max_p95_s_sugerido": 3.22,
+        "max_p99_s_sugerido": 3.37
+      },
+      "lotofacil_modo4_gerar_multipla16": {
+        "p95_observado_s": 1.7827,
+        "p99_observado_s": 1.7827,
+        "max_p95_s_sugerido": 3.3,
+        "max_p99_s_sugerido": 3.45
+      },
+      "lotofacil_modo4_avaliar": {
+        "p95_observado_s": 1.7994,
+        "p99_observado_s": 1.7994,
+        "max_p95_s_sugerido": 3.33,
+        "max_p99_s_sugerido": 3.48
+      },
+      "lotofacil_modo4_status": {
+        "p95_observado_s": 1.6339,
+        "p99_observado_s": 1.6339,
+        "max_p95_s_sugerido": 3.02,
+        "max_p99_s_sugerido": 3.17
+      },
+      "lotomania_modo4_gerar": {
+        "p95_observado_s": 1.005,
+        "p99_observado_s": 1.005,
+        "max_p95_s_sugerido": 1.86,
+        "max_p99_s_sugerido": 2.01
+      },
+      "motores_legados": {
+        "p95_observado_s": 0.3069,
+        "p99_observado_s": 0.3069,
+        "max_p95_s_sugerido": 0.66,
+        "max_p99_s_sugerido": 0.81
+      }
+    }
+  },
+  "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada."
+}

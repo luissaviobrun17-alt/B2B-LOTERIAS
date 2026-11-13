@@ -1,8 +1,8 @@
 {
-  "versao_runbook": "1.0.0-fase1-preparacao",
+  "versao_runbook": "1.1.0-fase1-revisada",
   "versao_alvo_promocao": "5.1.0-promocao-controlada",
-  "data_preparacao_utc": "2026-11-13T18:40:00+00:00",
-  "status_fase": "FASE_1_PREPARACAO_CONCLUIDA_AGUARDANDO_AUTORIZACAO_FASE_2",
+  "data_preparacao_utc": "2026-11-13T22:03:00+00:00",
+  "status_fase": "REVISAO_FASE_1_CALIBRADA_AGUARDANDO_AUTORIZACAO_FASE_2",
   "diretorio_evidencias_isolado": "auditoria/lotofacil_modo4/homologacao_ativacao",
   "preservacao_manifestos": {
     "nao_sobrescrever": [
@@ -24,18 +24,19 @@
     "ram_total_gb": 29.79,
     "ram_disponivel_medida_gb": 16.07,
     "disco_livre_gb": 803.21,
-    "modelo_execucao_api": "uvicorn processo unico (workers=1) com pool de threads AnyIO sob GIL Python 3.12",
+    "modelo_execucao_api": "uvicorn processo unico explicito (workers=1) com pool de threads AnyIO sob GIL Python 3.12",
     "navegador_headless_disponivel": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     "dependencias_automacao": {
       "playwright": false,
       "selenium": false,
       "psutil": false,
       "driver_navegador": "CDP WebSocket sobre stdlib Python pura",
-      "driver_memoria": "Win32 psapi.GetProcessMemoryInfo via ctypes stdlib"
+      "driver_memoria": "Win32 psapi.GetProcessMemoryInfo via ctypes stdlib (WorkingSetSize, PeakWorkingSetSize, PrivateUsage)"
     }
   },
   "ambiente_homologacao_isolada": {
     "host": "127.0.0.1",
+    "uvicorn_workers": 1,
     "porta_api_producao_preservada": 8000,
     "porta_api_isolada_preferencial": 18080,
     "porta_ui_isolada_preferencial": 18081,
@@ -61,48 +62,127 @@
       "tolerancia_divergencia_ast_componentes": 1e-12
     },
     "frente_3_carga_escalonada": {
-      "timeout_por_requisicao_s": 30.0,
+      "uvicorn_workers": 1,
+      "timeout_por_requisicao_s": 45.0,
       "max_taxa_erro_pct": 0.0,
+      "politica_determinismo": {
+        "modo_agrupamento": "por_assinatura_canonica_entrada",
+        "campos_assinatura_canonica": [
+          "endpoint",
+          "metodo",
+          "payload_com_semente"
+        ],
+        "exigir_repetibilidade_entradas_identicas": true,
+        "exigir_hashes_lotomania_repetiveis_sob_carga": true,
+        "exigir_historico_utilizado_nulo": true,
+        "exigir_independencia_estado_anterior": true,
+        "exigir_hashes_diferentes_entre_sementes_distintas": false,
+        "ressalva_matematica_sementes": "Dois processos com sementes distintas podem legitimamente convergir para a mesma carteira; exige-se repetibilidade estrita para entradas identicas, propagacao efetiva da semente e ausencia de dependencia de estado anterior."
+      },
       "patamares": [
         {
-          "id": "patamar_1_1x_cores_fisicos",
-          "descricao": "Concorrencia igual a 8 nucleos fisicos (16 chamadas /gerar homogeneas)",
-          "workers_simultaneos": 8,
-          "total_requisicoes": 16,
-          "max_p95_s": 2.5,
-          "max_p99_s": 3.5,
-          "exigir_determinismo_hash_unico": true
-        },
-        {
-          "id": "patamar_2_1x_threads_logicas",
-          "descricao": "Concorrencia igual a 16 threads logicas (32 chamadas /gerar homogeneas)",
-          "workers_simultaneos": 16,
-          "total_requisicoes": 32,
-          "max_p95_s": 5.0,
-          "max_p99_s": 6.5,
-          "exigir_determinismo_hash_unico": true
-        },
-        {
-          "id": "patamar_3_sobrecarga_controlada_mista",
-          "descricao": "Concorrencia 24 workers (1.5x threads logicas) com carga mista /gerar, /avaliar, /status, Lotomania MODO 4 e legados",
-          "workers_simultaneos": 24,
-          "total_requisicoes": 60,
+          "id": "patamar_0_baseline_1_cliente",
+          "descricao": "Baseline unitario (1 cliente simultaneo, 20 requisicoes cobrindo todas as rotas e multipla 16 dezenas)",
+          "clientes_simultaneos": 1,
+          "total_requisicoes": 20,
           "distribuicao": {
-            "lotofacil_modo4_gerar": 24,
-            "lotofacil_modo4_avaliar": 12,
-            "lotofacil_modo4_status": 12,
+            "lotofacil_modo4_gerar_simples": 4,
+            "lotofacil_modo4_gerar_multipla16": 4,
+            "lotofacil_modo4_avaliar": 2,
+            "lotofacil_modo4_status": 2,
+            "lotomania_modo4_gerar": 4,
+            "motores_legados": 4
+          },
+          "limites_latencia_por_tipo_s": {
+            "lotofacil_modo4_gerar_simples": {"max_p95_s": 0.50, "max_p99_s": 0.65},
+            "lotofacil_modo4_gerar_multipla16": {"max_p95_s": 0.50, "max_p99_s": 0.65},
+            "lotofacil_modo4_avaliar": {"max_p95_s": 0.40, "max_p99_s": 0.55},
+            "lotofacil_modo4_status": {"max_p95_s": 0.40, "max_p99_s": 0.55},
+            "lotomania_modo4_gerar": {"max_p95_s": 0.45, "max_p99_s": 0.60},
+            "motores_legados": {"max_p95_s": 0.45, "max_p99_s": 0.60}
+          },
+          "exigir_determinismo_por_assinatura": true,
+          "exigir_determinismo_lotomania": true
+        },
+        {
+          "id": "patamar_1_1x_cores_fisicos_8_clientes",
+          "descricao": "Concorrencia igual a 8 nucleos fisicos (8 clientes simultaneos, 32 requisicoes mistas intercaladas)",
+          "clientes_simultaneos": 8,
+          "total_requisicoes": 32,
+          "distribuicao": {
+            "lotofacil_modo4_gerar_simples": 10,
+            "lotofacil_modo4_gerar_multipla16": 6,
+            "lotofacil_modo4_avaliar": 4,
+            "lotofacil_modo4_status": 4,
+            "lotomania_modo4_gerar": 4,
+            "motores_legados": 4
+          },
+          "limites_latencia_por_tipo_s": {
+            "lotofacil_modo4_gerar_simples": {"max_p95_s": 1.50, "max_p99_s": 1.75},
+            "lotofacil_modo4_gerar_multipla16": {"max_p95_s": 1.35, "max_p99_s": 1.60},
+            "lotofacil_modo4_avaliar": {"max_p95_s": 1.35, "max_p99_s": 1.60},
+            "lotofacil_modo4_status": {"max_p95_s": 1.15, "max_p99_s": 1.40},
+            "lotomania_modo4_gerar": {"max_p95_s": 1.00, "max_p99_s": 1.25},
+            "motores_legados": {"max_p95_s": 0.75, "max_p99_s": 0.95}
+          },
+          "exigir_determinismo_por_assinatura": true,
+          "exigir_determinismo_lotomania": true
+        },
+        {
+          "id": "patamar_2_1x_threads_logicas_16_clientes",
+          "descricao": "Concorrencia igual a 16 threads logicas (16 clientes simultaneos, 48 requisicoes mistas intercaladas)",
+          "clientes_simultaneos": 16,
+          "total_requisicoes": 48,
+          "distribuicao": {
+            "lotofacil_modo4_gerar_simples": 16,
+            "lotofacil_modo4_gerar_multipla16": 8,
+            "lotofacil_modo4_avaliar": 6,
+            "lotofacil_modo4_status": 6,
             "lotomania_modo4_gerar": 6,
             "motores_legados": 6
           },
-          "max_p95_gerar_s": 8.0,
-          "max_p95_status_s": 0.75,
-          "max_p95_legados_s": 2.0,
-          "exigir_determinismo_hash_unico": true
+          "limites_latencia_por_tipo_s": {
+            "lotofacil_modo4_gerar_simples": {"max_p95_s": 2.35, "max_p99_s": 2.65},
+            "lotofacil_modo4_gerar_multipla16": {"max_p95_s": 2.35, "max_p99_s": 2.65},
+            "lotofacil_modo4_avaliar": {"max_p95_s": 2.20, "max_p99_s": 2.50},
+            "lotofacil_modo4_status": {"max_p95_s": 2.20, "max_p99_s": 2.50},
+            "lotomania_modo4_gerar": {"max_p95_s": 1.60, "max_p99_s": 1.85},
+            "motores_legados": {"max_p95_s": 0.75, "max_p99_s": 0.95}
+          },
+          "exigir_determinismo_por_assinatura": true,
+          "exigir_determinismo_lotomania": true
+        },
+        {
+          "id": "patamar_3_sobrecarga_24_clientes",
+          "descricao": "Sobrecarga controlada 1.5x threads logicas (24 clientes simultaneos, 72 requisicoes mistas intercaladas)",
+          "clientes_simultaneos": 24,
+          "total_requisicoes": 72,
+          "distribuicao": {
+            "lotofacil_modo4_gerar_simples": 24,
+            "lotofacil_modo4_gerar_multipla16": 12,
+            "lotofacil_modo4_avaliar": 10,
+            "lotofacil_modo4_status": 10,
+            "lotomania_modo4_gerar": 8,
+            "motores_legados": 8
+          },
+          "limites_latencia_por_tipo_s": {
+            "lotofacil_modo4_gerar_simples": {"max_p95_s": 3.25, "max_p99_s": 3.60},
+            "lotofacil_modo4_gerar_multipla16": {"max_p95_s": 3.25, "max_p99_s": 3.60},
+            "lotofacil_modo4_avaliar": {"max_p95_s": 3.25, "max_p99_s": 3.60},
+            "lotofacil_modo4_status": {"max_p95_s": 3.20, "max_p99_s": 3.55},
+            "lotomania_modo4_gerar": {"max_p95_s": 2.00, "max_p99_s": 2.30},
+            "motores_legados": {"max_p95_s": 1.10, "max_p99_s": 1.35}
+          },
+          "exigir_determinismo_por_assinatura": true,
+          "exigir_determinismo_lotomania": true
         }
       ],
       "limites_memoria_processo_isolado": {
-        "max_rss_absoluto_mb": 1024.0,
-        "max_crescimento_rss_patamar1_para_patamar3_mb": 150.0
+        "escopo_processo": "exclusivo_subprocesso_uvicorn_workers_1",
+        "metrica_pico": "PeakWorkingSetSize",
+        "intervalo_amostragem_s": 0.25,
+        "max_rss_pico_absoluto_mb": 1024.0,
+        "max_crescimento_rss_baseline_para_max_mb": 150.0
       }
     },
     "frente_4_navegador_web_mobile": {
@@ -125,12 +205,19 @@
         "/api/v1/motor-megasena"
       ],
       "exigir_lotomania_hash_v2_identico_off_vs_on": true,
-      "exigir_http_200_todos_legados": true
+      "exigir_http_200_todos_legados": true,
+      "comparar_off_vs_carga_concorrente_lotofacil": true,
+      "exigir_contrato_e_faixas_legados": true,
+      "exigir_hashes_arquivos_legados_disco_inalterados": true,
+      "registrar_hashes_sha256_respostas_e_jogos_legados": true,
+      "exigir_igualdade_hash_jogos_se_deterministico_no_baseline": true
     },
     "frente_6_rollback_e_preservacao": {
       "exigir_rollback_runtime_imediato_503_zero_jogos": true,
       "exigir_reinicio_subprocesso_env_off_503_zero_jogos": true,
-      "exigir_producao_8000_inalterada_off": true
+      "exigir_producao_8000_inalterada_off": true,
+      "exigir_producao_8000_alcancavel": true,
+      "comparar_estado_8000_antes_e_depois_via_sha256": true
     }
   },
   "casos_repetibilidade": {
@@ -166,9 +253,11 @@
     "Qualquer resposta diferente de HTTP 503 ou entrega > 0 jogos com flag OFF ou pos-rollback.",
     "Qualquer aceitacao de experimental_2J sem habilitacao, inicializacao_mista='mista_equilibrada' ou payload com historico.",
     "Qualquer divergencia numerica > 1e-12 entre motor principal e referencia AST independente.",
-    "Qualquer erro HTTP inesperado, timeout ou violacao de p95/p99/RSS/determinismo nos patamares de carga.",
+    "Qualquer erro HTTP inesperado, timeout ou violacao dos limites p95/p99 por rota nos patamares de 1, 8, 16 e 24 clientes simultaneos.",
+    "Estouro de PeakWorkingSetSize > 1024.0 MB ou crescimento de WorkingSetSize > 150.0 MB no subprocesso Uvicorn workers=1 isolado.",
+    "Perda de repetibilidade para entradas canonicas identicas (Lotofacil simples, multipla 16 dezenas ou Lotomania) ou dependencia de estado anterior entre sementes.",
     "Qualquer excecao JS nao capturada ou ausencia da clausula obrigatoria nas interfaces Web e Mobile.",
-    "Qualquer degradacao ou alteracao de hash na Lotomania MODO 4 ou erro nos motores legados.",
-    "Qualquer alteracao observada no estado do servico de producao (127.0.0.1:8000)."
+    "Qualquer violacao de contrato/faixa nos motores legados, alteracao de hash da Lotomania sob carga ou mudanca em motor_*.py / data/*.json em disco.",
+    "Indisponibilidade da porta 127.0.0.1:8000 ou qualquer divergencia SHA-256 entre o estado capturado antes e depois da janela."
   ]
 }

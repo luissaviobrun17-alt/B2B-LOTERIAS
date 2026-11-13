@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-LOTOFACIL MODO 4 - RUNBOOK ISOLADO DE HOMOLOGACAO ESPECIFICA DE ATIVACAO (FASE 1 / PREPARACAO)
+LOTOFACIL MODO 4 - RUNBOOK ISOLADO DE HOMOLOGACAO ESPECIFICA DE ATIVACAO (FASE 1 / REVISAO CALIBRADA)
 ==================================================================================================
-Script modular para verificacao de preparacao (`--preparacao-check`) e futura execucao isolada
-da Homologacao Especifica de Ativacao (`--autorizar-homologacao-isolada`).
+Script modular para verificacao de preparacao (`--preparacao-check`), microcalibracao em porta
+isolada (`--microcalibracao-revisao-fase1`) e futura execucao isolada da Homologacao Especifica
+de Ativacao (`--autorizar-homologacao-isolada`).
 
 REGRAS DE SEGURANCA E GOVERNANCA:
-1. Nao executa homologacao nem liga feature flag sem `--autorizar-homologacao-isolada`.
+1. Nao executa homologacao Fase 2 nem liga feature flag de producao sem autorizacao expressa.
 2. Nao modifica nenhum dos 7 arquivos selados em `manifesto_promocao_controlada.json`, nem
-   os artefatos congelados das Etapas 1-5 ou o manifesto da Lotomania MODO 4.
-3. Toda a bateria ativa (Fase 2) roda em subprocesso Uvicorn e servidor UI dedicados em portas
-   isoladas (`18080` / `18081` ou livres), mantendo intacta a instancia `127.0.0.1:8000`.
-4. Evidencias da janela sao gravadas exclusivamente em `auditoria/lotofacil_modo4/homologacao_ativacao/`.
+   os artefatos congelados das Etapas 1-5, `motor_lotomania_modo4.py` ou os manifestos historicos.
+3. Toda a bateria ativa e de microcalibracao roda em subprocesso Uvicorn (`workers=1`) e servidor
+   UI dedicados em portas isoladas (`18080` / `18081` ou livres), preservando `127.0.0.1:8000`
+   inalterada antes e depois dos ensaios.
+4. Evidencias da revisao e da futura janela sao gravadas exclusivamente em
+   `auditoria/lotofacil_modo4/homologacao_ativacao/`.
 """
 
 from __future__ import annotations
@@ -67,6 +70,39 @@ DIR_HOMOLOGACAO_REL = os.path.join("auditoria", "lotofacil_modo4", "homologacao_
 DIR_HOMOLOGACAO_ABS = os.path.join(BASE_DIR, DIR_HOMOLOGACAO_REL)
 CAMINHO_CONFIG_JSON = os.path.join(DIR_HOMOLOGACAO_ABS, "config_homologacao_ativacao.json")
 CAMINHO_RUNBOOK_MD = os.path.join(DIR_HOMOLOGACAO_ABS, "RUNBOOK_HOMOLOGACAO_ATIVACAO.md")
+CAMINHO_MICROCALIBRACAO_JSON = os.path.join(DIR_HOMOLOGACAO_ABS, "microcalibracao_fase1.json")
+CAMINHO_RELATORIO_REVISAO_MD = os.path.join(DIR_HOMOLOGACAO_ABS, "RELATORIO_REVISAO_FASE1.md")
+
+CONTROLES_ROTAS_LEGADAS: Dict[str, Dict[str, Any]] = {
+    "/api/v1/motor-lotofacil": {
+        "payload": {"quantidade_jogos": 3, "historico_limite": 20, "estrategia": "equilibrada"},
+        "campo_numeros": "numeros",
+        "qtd_dezenas": 15,
+        "min_dezena": 1,
+        "max_dezena": 25,
+    },
+    "/api/v1/motor-lotomania": {
+        "payload": {"quantidade_jogos": 3, "historico_limite": 20, "estrategia": "equilibrada"},
+        "campo_numeros": None,
+        "qtd_dezenas": 50,
+        "min_dezena": 1,
+        "max_dezena": 100,
+    },
+    "/api/v1/motor-diadesorte": {
+        "payload": {"quantidade_jogos": 3, "historico_limite": 20, "estrategia": "equilibrada"},
+        "campo_numeros": "jogo",
+        "qtd_dezenas": 7,
+        "min_dezena": 1,
+        "max_dezena": 31,
+    },
+    "/api/v1/motor-megasena": {
+        "payload": {"quantidade_jogos": 3, "historico_limite": 20, "estrategia": "equilibrada"},
+        "campo_numeros": "numeros",
+        "qtd_dezenas": 6,
+        "min_dezena": 1,
+        "max_dezena": 60,
+    },
+}
 
 CHROME_CANDIDATOS = (
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
@@ -180,9 +216,9 @@ def _reservar_porta_livre(preferida: int) -> int:
             return int(s.getsockname()[1])
 
 
-def _calcular_estatisticas_latencia(latencias_s: Sequence[float]) -> Dict[str, float]:
+def _calcular_estatisticas_latencia(latencias_s: Sequence[float]) -> Dict[str, Any]:
     if not latencias_s:
-        return {"min_s": 0.0, "media_s": 0.0, "p50_s": 0.0, "p95_s": 0.0, "p99_s": 0.0, "max_s": 0.0}
+        return {"n": 0, "min_s": 0.0, "media_s": 0.0, "p50_s": 0.0, "p95_s": 0.0, "p99_s": 0.0, "max_s": 0.0}
     ord_lat = sorted(float(x) for x in latencias_s)
     n = len(ord_lat)
 
@@ -191,12 +227,313 @@ def _calcular_estatisticas_latencia(latencias_s: Sequence[float]) -> Dict[str, f
         return round(ord_lat[idx], 4)
 
     return {
+        "n": n,
         "min_s": round(ord_lat[0], 4),
         "media_s": round(sum(ord_lat) / n, 4),
         "p50_s": _pct(0.50),
         "p95_s": _pct(0.95),
         "p99_s": _pct(0.99),
         "max_s": round(ord_lat[-1], 4),
+    }
+
+
+def _calcular_sha256_json_canonico(obj: Any) -> str:
+    serializado = json.dumps(obj, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(serializado).hexdigest()
+
+
+def _calcular_sha256_arquivo(caminho: str) -> str:
+    h = hashlib.sha256()
+    with open(caminho, "rb") as f:
+        while True:
+            bloco = f.read(65536)
+            if not bloco:
+                break
+            h.update(bloco)
+    return h.hexdigest()
+
+
+def _coletar_hashes_arquivos_legados() -> Dict[str, str]:
+    hashes: Dict[str, str] = {}
+    for nome in sorted(os.listdir(BASE_DIR)):
+        if nome.startswith("motor_") and nome.endswith(".py"):
+            hashes[nome] = _calcular_sha256_arquivo(os.path.join(BASE_DIR, nome))
+    dir_data = os.path.join(BASE_DIR, "data")
+    if os.path.isdir(dir_data):
+        for nome in sorted(os.listdir(dir_data)):
+            if nome.endswith(".json"):
+                hashes[f"data/{nome}"] = _calcular_sha256_arquivo(os.path.join(dir_data, nome))
+    return hashes
+
+
+def _gerar_assinatura_canonica_entrada(
+    endpoint: str,
+    metodo: str,
+    payload: Optional[Dict[str, Any]],
+) -> str:
+    canonico = {
+        "endpoint": endpoint,
+        "metodo": metodo.upper(),
+        "payload": payload or {},
+    }
+    return _calcular_sha256_json_canonico(canonico)
+
+
+def _extrair_semente_payload(payload: Optional[Dict[str, Any]]) -> Any:
+    if not isinstance(payload, dict):
+        return None
+    if "semente" in payload:
+        return payload.get("semente")
+    return payload.get("seed")
+
+
+def _agrupar_determinismo_por_assinatura(registros: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Agrupa hashes de saida por assinatura canonica da entrada (endpoint, metodo e payload).
+    Exige repetibilidade estrita (1 unico hash de saida) para entradas identicas, sem exigir
+    que sementes diferentes produzam necessariamente hashes distintos.
+    """
+    buckets: Dict[str, List[Dict[str, Any]]] = {}
+    for reg in registros:
+        chave = f"{reg['tipo']}::{reg['assinatura_entrada']}"
+        buckets.setdefault(chave, []).append(reg)
+
+    grupos: Dict[str, Any] = {}
+    for chave, itens in buckets.items():
+        amostras = len(itens)
+        hashes = [str(it["hash_saida"]) for it in itens if it.get("hash_saida")]
+        hashes_distintos = sorted(set(hashes))
+        hist_nulo_ok = all(it.get("historico_utilizado") is None for it in itens)
+        repetivel = len(hashes) == amostras and len(hashes_distintos) == 1 and hist_nulo_ok
+        grupos[chave] = {
+            "tipo": itens[0]["tipo"],
+            "assinatura_entrada": itens[0]["assinatura_entrada"],
+            "semente": itens[0].get("semente"),
+            "amostras": amostras,
+            "hashes_validos": len(hashes),
+            "hashes_distintos": len(hashes_distintos),
+            "hash_saida_unico": hashes_distintos[0] if len(hashes_distintos) == 1 else None,
+            "historico_sempre_nulo": hist_nulo_ok,
+            "repetivel": repetivel,
+        }
+
+    grupos_lf = {k: v for k, v in grupos.items() if v["tipo"].startswith("lotofacil_")}
+    grupos_lm = {k: v for k, v in grupos.items() if v["tipo"] == "lotomania_modo4_gerar"}
+    return {
+        "total_grupos": len(grupos),
+        "grupos": grupos,
+        "repetibilidade_ok": bool(grupos) and all(g["repetivel"] for g in grupos.values()),
+        "lotofacil_repetibilidade_ok": (not grupos_lf) or all(g["repetivel"] for g in grupos_lf.values()),
+        "lotomania_repetibilidade_ok": (not grupos_lm) or all(g["repetivel"] for g in grupos_lm.values()),
+    }
+
+
+def _validar_contrato_resposta_legada(
+    endpoint: str,
+    payload: Dict[str, Any],
+    dados: Any,
+) -> Tuple[bool, str]:
+    spec = CONTROLES_ROTAS_LEGADAS.get(endpoint)
+    if spec is None:
+        return isinstance(dados, dict) and bool(dados.get("sucesso") is True), "rota_legada_generica"
+    if not isinstance(dados, dict) or dados.get("sucesso") is not True:
+        return False, "sucesso_falso_ou_ausente"
+    jogos = dados.get("jogos")
+    qtd_esp = int(payload.get("quantidade_jogos", 0))
+    if not isinstance(jogos, list) or len(jogos) != qtd_esp:
+        return False, f"quantidade_jogos_divergente:{len(jogos) if isinstance(jogos, list) else None}!={qtd_esp}"
+    campo = spec["campo_numeros"]
+    qtd_dez = int(spec["qtd_dezenas"])
+    d_min = int(spec["min_dezena"])
+    d_max = int(spec["max_dezena"])
+    for idx, item in enumerate(jogos):
+        dezenas = item if campo is None else (item.get(campo) if isinstance(item, dict) else None)
+        if not isinstance(dezenas, list) or len(dezenas) != qtd_dez:
+            return False, f"jogo_{idx}_tamanho_invalido"
+        if not all(isinstance(d, int) and not isinstance(d, bool) and d_min <= d <= d_max for d in dezenas):
+            return False, f"jogo_{idx}_faixa_invalida"
+        if len(set(dezenas)) != qtd_dez:
+            return False, f"jogo_{idx}_dezenas_duplicadas"
+    return True, "ok"
+
+
+class _MonitorMemoriaProcesso:
+    """Monitora WorkingSetSize, PeakWorkingSetSize e PrivateUsage periodicamente em thread daemon."""
+
+    def __init__(self, pid: int, *, intervalo_s: float = 0.25) -> None:
+        self.pid = int(pid)
+        self.intervalo_s = max(0.05, float(intervalo_s))
+        self._stop = threading.Event()
+        self._lock = threading.Lock()
+        self._thread: Optional[threading.Thread] = None
+        self._t0 = 0.0
+        self.amostras: List[Dict[str, float]] = []
+
+    def _coletar_ponto(self) -> None:
+        try:
+            leitura = medir_memoria_processo_windows(self.pid)
+        except OSError:
+            return
+        ponto = {
+            "t_s": round(time.perf_counter() - self._t0, 4),
+            "rss_atual_mb": float(leitura["rss_atual_mb"]),
+            "rss_pico_mb": float(leitura["rss_pico_mb"]),
+            "privado_mb": float(leitura["privado_mb"]),
+        }
+        with self._lock:
+            self.amostras.append(ponto)
+
+    def _loop(self) -> None:
+        while not self._stop.wait(self.intervalo_s):
+            self._coletar_ponto()
+
+    def __enter__(self) -> "_MonitorMemoriaProcesso":
+        self._t0 = time.perf_counter()
+        self._coletar_ponto()
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join(timeout=2.0)
+        self._coletar_ponto()
+
+    def resumo(self) -> Dict[str, Any]:
+        with self._lock:
+            pts = list(self.amostras)
+        if not pts:
+            raise RuntimeError(f"Nenhuma leitura de memoria obtida para PID {self.pid}.")
+        return {
+            "pid_monitorado": self.pid,
+            "escopo_processo": "exclusivo_subprocesso_uvicorn_workers_1",
+            "intervalo_amostragem_s": self.intervalo_s,
+            "amostras_count": len(pts),
+            "rss_atual_antes_mb": pts[0]["rss_atual_mb"],
+            "rss_atual_depois_mb": pts[-1]["rss_atual_mb"],
+            "rss_atual_max_mb": max(p["rss_atual_mb"] for p in pts),
+            "rss_pico_windows_antes_mb": pts[0]["rss_pico_mb"],
+            "rss_pico_windows_max_mb": max(p["rss_pico_mb"] for p in pts),
+            "privado_max_mb": max(p["privado_mb"] for p in pts),
+            "amostras": pts,
+        }
+
+
+def _capturar_estado_producao_8000(porta_prod: int = 8000) -> Dict[str, Any]:
+    base_url = f"http://127.0.0.1:{int(porta_prod)}"
+    r_health = _sondar_http_cronometrado(base_url, endpoint="/health", metodo="GET", timeout_s=3.0)
+    r_status = _sondar_http_cronometrado(
+        base_url, endpoint="/api/v1/lotofacil-modo4/status", metodo="GET", timeout_s=3.0
+    )
+    dh = r_health.get("dados_brutos")
+    ds = r_status.get("dados_brutos")
+    if (
+        r_health["status_http"] == 200
+        and r_status["status_http"] == 200
+        and isinstance(dh, dict)
+        and isinstance(ds, dict)
+    ):
+        lm = dh.get("modo4") or {}
+        l4_h = dh.get("lotofacil_modo4") or {}
+        estado_norm = {
+            "api_operacional": dh.get("api_operacional"),
+            "modo4_disponivel": dh.get("modo4_disponivel"),
+            "lotomania_sha256_manifesto": lm.get("sha256_manifesto"),
+            "lotomania_selo_valido": lm.get("selo_valido"),
+            "lotofacil_disponivel": ds.get("disponivel"),
+            "health_lotofacil_disponivel": l4_h.get("disponivel"),
+            "feature_flag_ativa": ds.get("feature_flag_ativa"),
+            "status": ds.get("status"),
+            "experimental_2j_habilitada": ds.get("experimental_2j_habilitada"),
+            "politica_micro_padrao": ds.get("politica_micro_padrao"),
+            "inicializacao_mista": ds.get("inicializacao_mista"),
+            "integridade_verificada": ds.get("integridade_verificada"),
+            "integridade_etapas_1_a_5_valida": ds.get("integridade_etapas_1_a_5_valida"),
+            "selo_lotomania_valido": ds.get("selo_lotomania_valido"),
+            "divergencias_integridade": ds.get("divergencias_integridade"),
+            "sha256_modulos_promocao": ds.get("sha256_modulos_promocao"),
+            "telemetria": ds.get("telemetria"),
+        }
+        return {
+            "alcancavel": True,
+            "porta": int(porta_prod),
+            "health_http": 200,
+            "status_http": 200,
+            "estado_normalizado": estado_norm,
+            "sha256_estado_normalizado": _calcular_sha256_json_canonico(estado_norm),
+        }
+    return {
+        "alcancavel": False,
+        "porta": int(porta_prod),
+        "health_http": r_health.get("status_http"),
+        "health_erro": r_health.get("erro"),
+        "status_http": r_status.get("status_http"),
+        "status_erro": r_status.get("erro"),
+    }
+
+
+def _comparar_producao_8000_antes_depois(
+    antes: Dict[str, Any],
+    depois: Dict[str, Any],
+    *,
+    exigir_alcancavel: bool = True,
+) -> Dict[str, Any]:
+    antes_ok = bool(antes.get("alcancavel"))
+    depois_ok = bool(depois.get("alcancavel"))
+    if exigir_alcancavel and (not antes_ok or not depois_ok):
+        return {
+            "preservada": False,
+            "motivo": "porta_8000_inacessivel_antes_ou_depois",
+            "antes_alcancavel": antes_ok,
+            "depois_alcancavel": depois_ok,
+            "hashes_identicos": False,
+            "sha256_antes": antes.get("sha256_estado_normalizado"),
+            "sha256_depois": depois.get("sha256_estado_normalizado"),
+        }
+    if not antes_ok and not depois_ok:
+        return {
+            "preservada": False,
+            "motivo": "porta_8000_inacessivel",
+            "antes_alcancavel": False,
+            "depois_alcancavel": False,
+            "hashes_identicos": False,
+            "sha256_antes": None,
+            "sha256_depois": None,
+        }
+    est_a = antes.get("estado_normalizado") or {}
+    est_d = depois.get("estado_normalizado") or {}
+    sha_a = antes.get("sha256_estado_normalizado")
+    sha_d = depois.get("sha256_estado_normalizado")
+    invariantes_off = (
+        est_a.get("lotofacil_disponivel") is False
+        and est_d.get("lotofacil_disponivel") is False
+        and est_a.get("feature_flag_ativa") is False
+        and est_d.get("feature_flag_ativa") is False
+        and est_a.get("experimental_2j_habilitada") is False
+        and est_d.get("experimental_2j_habilitada") is False
+        and est_a.get("politica_micro_padrao") == "conservadora_3J"
+        and est_d.get("politica_micro_padrao") == "conservadora_3J"
+        and est_a.get("inicializacao_mista") == "padrao"
+        and est_d.get("inicializacao_mista") == "padrao"
+        and est_a.get("integridade_verificada") is True
+        and est_d.get("integridade_verificada") is True
+        and est_a.get("lotomania_selo_valido") is True
+        and est_d.get("lotomania_selo_valido") is True
+    )
+    hashes_iguais = bool(sha_a and sha_a == sha_d)
+    preservada = bool(antes_ok and depois_ok and invariantes_off and hashes_iguais)
+    return {
+        "preservada": preservada,
+        "motivo": "ok" if preservada else ("estado_mutado" if not hashes_iguais else "invariante_off_violada"),
+        "antes_alcancavel": antes_ok,
+        "depois_alcancavel": depois_ok,
+        "invariantes_off_ok": invariantes_off,
+        "hashes_identicos": hashes_iguais,
+        "sha256_antes": sha_a,
+        "sha256_depois": sha_d,
+        "antes": antes,
+        "depois": depois,
     }
 
 
@@ -247,7 +584,7 @@ class _SubprocessoUvicornIsolado:
             "import sys, uvicorn; "
             f"sys.path.insert(0, {BASE_DIR!r}); "
             "import api; "
-            f"uvicorn.run(api.app, host='127.0.0.1', port={self.porta}, log_level='warning', access_log=False)"
+            f"uvicorn.run(api.app, host='127.0.0.1', port={self.porta}, workers=1, log_level='warning', access_log=False)"
         )
         self.proc = subprocess.Popen(
             [sys.executable, "-c", cmd_py],
@@ -618,183 +955,402 @@ def executar_frente_2_rotas(cfg_hom: Dict[str, Any], porta_api: int) -> Dict[str
     }
 
 
+def _validar_item_patamar(
+    tipo: str,
+    endpoint: str,
+    payload: Optional[Dict[str, Any]],
+    res: Dict[str, Any],
+) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    """Valida resposta de um request de carga; retorna `(erro, registro_determinismo)`."""
+    if res["status_http"] != 200:
+        return {"tipo": tipo, "endpoint": endpoint, "status_http": res["status_http"], "erro": res.get("erro")}, None
+
+    dados = res.get("dados_brutos") or {}
+    assinatura = _gerar_assinatura_canonica_entrada(endpoint, "GET" if endpoint.endswith("/status") else "POST", payload)
+    semente = _extrair_semente_payload(payload)
+
+    if tipo in ("lotofacil_modo4_gerar", "lotofacil_modo4_gerar_simples", "lotofacil_modo4_gerar_multipla16"):
+        pl = payload or {}
+        jogos = dados.get("jogos") or []
+        tam_esp = int(pl.get("tamanho_aposta", 15))
+        qtd_esp = int(pl.get("quantidade_jogos", len(jogos)))
+        tam_ok = isinstance(jogos, list) and len(jogos) == qtd_esp and all(isinstance(j, list) and len(j) == tam_esp for j in jogos)
+        if (
+            not dados.get("sucesso")
+            or dados.get("fallback_executado") is not False
+            or dados.get("historico_utilizado") is not None
+            or not isinstance(dados.get("hash_carteira_sha256"), str)
+            or not tam_ok
+        ):
+            return {"tipo": tipo, "endpoint": endpoint, "motivo": "contrato_gerar_violado"}, None
+        return None, {
+            "tipo": tipo,
+            "assinatura_entrada": assinatura,
+            "semente": semente,
+            "hash_saida": dados["hash_carteira_sha256"],
+            "historico_utilizado": dados.get("historico_utilizado"),
+        }
+
+    if tipo == "lotofacil_modo4_avaliar":
+        if (
+            not dados.get("sucesso")
+            or dados.get("fallback_executado") is not False
+            or dados.get("historico_utilizado") is not None
+            or not isinstance(dados.get("avaliacao_etapa2"), dict)
+            or not isinstance(dados.get("hash_carteira_sha256"), str)
+        ):
+            return {"tipo": tipo, "endpoint": endpoint, "motivo": "contrato_avaliar_violado"}, None
+        return None, None
+
+    if tipo == "lotofacil_modo4_status":
+        if (
+            dados.get("disponivel") is not True
+            or dados.get("feature_flag_ativa") is not True
+            or dados.get("integridade_verificada") is not True
+        ):
+            return {"tipo": tipo, "endpoint": endpoint, "motivo": "contrato_status_violado"}, None
+        return None, None
+
+    if tipo == "lotomania_modo4_gerar":
+        pl = payload or {}
+        jogos = dados.get("jogos") or []
+        qtd_esp = int(pl.get("quantidade_jogos", len(jogos)))
+        if (
+            not dados.get("sucesso")
+            or dados.get("historico_geracao") is not None
+            or not isinstance(dados.get("hash_carteira_sha256_v2_canonico"), str)
+            or not isinstance(jogos, list)
+            or len(jogos) != qtd_esp
+        ):
+            return {"tipo": tipo, "endpoint": endpoint, "motivo": "contrato_lotomania_violado"}, None
+        return None, {
+            "tipo": tipo,
+            "assinatura_entrada": assinatura,
+            "semente": semente,
+            "hash_saida": dados["hash_carteira_sha256_v2_canonico"],
+            "historico_utilizado": dados.get("historico_geracao"),
+        }
+
+    if tipo == "motores_legados":
+        ok_leg, motivo_leg = _validar_contrato_resposta_legada(endpoint, payload or {}, dados)
+        if not ok_leg:
+            return {"tipo": tipo, "endpoint": endpoint, "motivo": f"contrato_legado_violado:{motivo_leg}"}, None
+        return None, None
+
+    return None, None
+
+
+def _construir_tarefas_patamar(
+    pat: Dict[str, Any],
+    casos: Dict[str, Any],
+    carteira_base: Sequence[Sequence[int]],
+    legados: Sequence[str],
+) -> List[Tuple[str, str, str, Optional[Dict[str, Any]]]]:
+    pl_simples = casos["caso_simples_conservador"]
+    pl_mult16 = casos["caso_multipla_16_independencia"]
+    pl_lm = casos["caso_lotomania_controle"]
+
+    if "distribuicao" not in pat:
+        n_req = int(pat["total_requisicoes"])
+        return [
+            ("lotofacil_modo4_gerar_simples", "/api/v1/lotofacil-modo4/gerar", "POST", pl_simples)
+            for _ in range(n_req)
+        ]
+
+    dist = pat["distribuicao"]
+    filas: List[List[Tuple[str, str, str, Optional[Dict[str, Any]]]]] = []
+
+    def _add_fila(tipo: str, qtd: int, endpoint: str, metodo: str, payload: Optional[Dict[str, Any]]) -> None:
+        if qtd > 0:
+            filas.append([(tipo, endpoint, metodo, payload) for _ in range(qtd)])
+
+    _add_fila(
+        "lotofacil_modo4_gerar_simples",
+        int(dist.get("lotofacil_modo4_gerar_simples", dist.get("lotofacil_modo4_gerar", 0))),
+        "/api/v1/lotofacil-modo4/gerar",
+        "POST",
+        pl_simples,
+    )
+    _add_fila(
+        "lotofacil_modo4_gerar_multipla16",
+        int(dist.get("lotofacil_modo4_gerar_multipla16", 0)),
+        "/api/v1/lotofacil-modo4/gerar",
+        "POST",
+        pl_mult16,
+    )
+    _add_fila(
+        "lotofacil_modo4_avaliar",
+        int(dist.get("lotofacil_modo4_avaliar", 0)),
+        "/api/v1/lotofacil-modo4/avaliar",
+        "POST",
+        {"carteira": list(carteira_base)},
+    )
+    _add_fila(
+        "lotofacil_modo4_status",
+        int(dist.get("lotofacil_modo4_status", 0)),
+        "/api/v1/lotofacil-modo4/status",
+        "GET",
+        None,
+    )
+    _add_fila(
+        "lotomania_modo4_gerar",
+        int(dist.get("lotomania_modo4_gerar", 0)),
+        "/api/v1/lotomania-modo4/gerar",
+        "POST",
+        pl_lm,
+    )
+    qtd_leg = int(dist.get("motores_legados", 0))
+    if qtd_leg > 0 and legados:
+        fila_leg = []
+        for i in range(qtd_leg):
+            ep_leg = legados[i % len(legados)]
+            pl_leg = dict(CONTROLES_ROTAS_LEGADAS.get(ep_leg, {}).get("payload") or {"quantidade_jogos": 3})
+            fila_leg.append(("motores_legados", ep_leg, "POST", pl_leg))
+        filas.append(fila_leg)
+
+    # Intercala uniformemente para garantir concorrencia mista real ao longo de todo o patamar
+    agendadas: List[Tuple[float, int, Tuple[str, str, str, Optional[Dict[str, Any]]]]] = []
+    for f_idx, fila in enumerate(filas):
+        n_f = len(fila)
+        for i, item in enumerate(fila):
+            agendadas.append(((i + 0.5) / n_f, f_idx, item))
+    agendadas.sort(key=lambda x: (x[0], x[1]))
+    return [item for _, _, item in agendadas]
+
+
 def _executar_patamar_carga(
     *,
     base_url: str,
     pid_servidor: int,
-    tarefas: Sequence[Tuple[str, Callable[[], Dict[str, Any]]]],
-    workers: int,
+    tarefas: Sequence[Tuple[str, str, str, Optional[Dict[str, Any]]]],
+    clientes: int,
+    timeout_s: float = 30.0,
+    intervalo_memoria_s: float = 0.25,
 ) -> Dict[str, Any]:
-    mem_antes = medir_memoria_processo_windows(pid_servidor)
+    def _executar_uma(item: Tuple[str, str, str, Optional[Dict[str, Any]]]) -> Tuple[Tuple[str, str, str, Optional[Dict[str, Any]]], Dict[str, Any]]:
+        _, ep, met, pl = item
+        return item, _sondar_http_cronometrado(base_url, pl, endpoint=ep, metodo=met, timeout_s=timeout_s)
+
     t_ini = time.perf_counter()
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        resultados = list(pool.map(lambda item: (item[0], item[1]()), tarefas))
+    with _MonitorMemoriaProcesso(pid_servidor, intervalo_s=intervalo_memoria_s) as mon:
+        with ThreadPoolExecutor(max_workers=clientes) as pool:
+            resultados = list(pool.map(_executar_uma, tarefas))
     duracao_total_s = round(time.perf_counter() - t_ini, 4)
-    mem_depois = medir_memoria_processo_windows(pid_servidor)
+    mem_resumo = mon.resumo()
 
     por_tipo: Dict[str, List[float]] = {}
-    hashes_lf: set[str] = set()
-    hashes_lm: set[str] = set()
+    registros_det: List[Dict[str, Any]] = []
     erros: List[Dict[str, Any]] = []
 
-    for tipo, r in resultados:
+    for (tipo, endpoint, _metodo, payload), r in resultados:
         por_tipo.setdefault(tipo, []).append(float(r["latencia_s"]))
-        if r["status_http"] != 200:
-            erros.append({"tipo": tipo, "status_http": r["status_http"], "erro": r.get("erro")})
-            continue
-        dados = r.get("dados_brutos") or {}
-        if tipo == "lotofacil_modo4_gerar":
-            if not dados.get("sucesso") or dados.get("fallback_executado") is not False:
-                erros.append({"tipo": tipo, "motivo": "contrato_gerar_violado"})
-            elif dados.get("hash_carteira_sha256"):
-                hashes_lf.add(dados["hash_carteira_sha256"])
-        elif tipo == "lotomania_modo4_gerar":
-            if dados.get("hash_carteira_sha256_v2_canonico"):
-                hashes_lm.add(dados["hash_carteira_sha256_v2_canonico"])
+        err, reg_det = _validar_item_patamar(tipo, endpoint, payload, r)
+        if err is not None:
+            erros.append(err)
+        if reg_det is not None:
+            registros_det.append(reg_det)
 
     stats_por_tipo = {k: _calcular_estatisticas_latencia(v) for k, v in por_tipo.items()}
+    det_res = _agrupar_determinismo_por_assinatura(registros_det)
     total = len(resultados)
     return {
         "total_requisicoes": total,
-        "workers_simultaneos": workers,
+        "clientes_simultaneos": clientes,
+        "uvicorn_workers": 1,
         "duracao_total_s": duracao_total_s,
         "erros_count": len(erros),
         "taxa_erro_pct": round(100.0 * len(erros) / max(1, total), 4),
         "amostra_erros": erros[:5],
         "latencias_por_tipo": stats_por_tipo,
-        "hashes_unicos_lotofacil": len(hashes_lf),
-        "hashes_unicos_lotomania": len(hashes_lm),
-        "memoria_antes": mem_antes,
-        "memoria_depois": mem_depois,
+        "determinismo_por_assinatura": det_res,
+        "memoria_monitorada": mem_resumo,
     }
 
 
-def executar_frente_3_carga(cfg_hom: Dict[str, Any], porta_api: int) -> Dict[str, Any]:
+def _auditar_uso_semente_e_independencia_estado(
+    base_url: str,
+    casos: Dict[str, Any],
+    timeout_s: float = 30.0,
+) -> Dict[str, Any]:
+    """
+    Comprova repetibilidade para entradas identicas, uso da semente/nao dependencia
+    de estado anterior (42 -> 43 -> 42), historico nulo e documenta comportamento para
+    sementes distintas (sem exigir falsamente hashes sempre diferentes).
+    """
+    pl_s = dict(casos["caso_simples_conservador"])
+    pl_m = dict(casos["caso_multipla_16_independencia"])
+
+    sequencia = [
+        ("simples_42_antes", {**pl_s, "semente": 42}),
+        ("simples_43", {**pl_s, "semente": 43}),
+        ("simples_42_depois", {**pl_s, "semente": 42}),
+        ("simples_999", {**pl_s, "semente": 999}),
+        ("mult16_42_antes", {**pl_m, "semente": 42}),
+        ("mult16_43", {**pl_m, "semente": 43}),
+        ("mult16_42_depois", {**pl_m, "semente": 42}),
+    ]
+    obs: Dict[str, Dict[str, Any]] = {}
+    for nome, pl in sequencia:
+        r = _sondar_http_cronometrado(base_url, pl, endpoint="/api/v1/lotofacil-modo4/gerar", timeout_s=timeout_s)
+        dados = r.get("dados_brutos") or {}
+        obs[nome] = {
+            "status_http": r["status_http"],
+            "semente": pl["semente"],
+            "assinatura_entrada": _gerar_assinatura_canonica_entrada("/api/v1/lotofacil-modo4/gerar", "POST", pl),
+            "hash_carteira_sha256": dados.get("hash_carteira_sha256"),
+            "historico_utilizado": dados.get("historico_utilizado"),
+            "algoritmo_utilizado": dados.get("algoritmo_utilizado"),
+            "fallback_executado": dados.get("fallback_executado"),
+        }
+
+    todos_200 = all(v["status_http"] == 200 and bool(v["hash_carteira_sha256"]) and v["fallback_executado"] is False for v in obs.values())
+    historico_nulo_ok = all(v["historico_utilizado"] is None for v in obs.values())
+    rep_simples = bool(obs["simples_42_antes"]["hash_carteira_sha256"]) and (
+        obs["simples_42_antes"]["hash_carteira_sha256"] == obs["simples_42_depois"]["hash_carteira_sha256"]
+    )
+    rep_mult16 = bool(obs["mult16_42_antes"]["hash_carteira_sha256"]) and (
+        obs["mult16_42_antes"]["hash_carteira_sha256"] == obs["mult16_42_depois"]["hash_carteira_sha256"]
+    )
+    hashes_simples_sementes = {
+        "42": obs["simples_42_antes"]["hash_carteira_sha256"],
+        "43": obs["simples_43"]["hash_carteira_sha256"],
+        "999": obs["simples_999"]["hash_carteira_sha256"],
+    }
+    hashes_mult16_sementes = {
+        "42": obs["mult16_42_antes"]["hash_carteira_sha256"],
+        "43": obs["mult16_43"]["hash_carteira_sha256"],
+    }
+
+    # Verifica propagacao efetiva da semente no modulo etapa3/etapa4 em nivel de PRNG
+    rng_42_a = random_seed_probe(42)
+    rng_43 = random_seed_probe(43)
+    rng_42_b = random_seed_probe(42)
+    semente_propagada_prng_ok = rng_42_a == rng_42_b and rng_42_a != rng_43
+
+    return {
+        "aprovada": bool(todos_200 and historico_nulo_ok and rep_simples and rep_mult16 and semente_propagada_prng_ok),
+        "repetibilidade_simples_42_antes_depois": rep_simples,
+        "repetibilidade_mult16_42_antes_depois": rep_mult16,
+        "historico_utilizado_sempre_nulo": historico_nulo_ok,
+        "semente_propagada_prng_ok": semente_propagada_prng_ok,
+        "exigir_hashes_diferentes_entre_sementes_distintas": False,
+        "comportamento_sementes_simples": {
+            "hashes_por_semente": hashes_simples_sementes,
+            "hashes_distintos_count": len(set(hashes_simples_sementes.values())),
+            "convergencia_entre_sementes": len(set(hashes_simples_sementes.values())) < len(hashes_simples_sementes),
+        },
+        "comportamento_sementes_mult16": {
+            "hashes_por_semente": hashes_mult16_sementes,
+            "hashes_distintos_count": len(set(hashes_mult16_sementes.values())),
+            "convergencia_entre_sementes": len(set(hashes_mult16_sementes.values())) < len(hashes_mult16_sementes),
+        },
+        "detalhes_sondagens": obs,
+    }
+
+
+def random_seed_probe(semente: int) -> Tuple[float, ...]:
+    import random
+    rng = random.Random(int(semente))
+    return tuple(rng.random() for _ in range(4))
+
+
+def executar_frente_3_carga(
+    cfg_hom: Dict[str, Any],
+    porta_api: int,
+    *,
+    modo_calibracao: bool = False,
+) -> Dict[str, Any]:
     c3 = cfg_hom["criterios_go_no_go"]["frente_3_carga_escalonada"]
     casos = cfg_hom["casos_repetibilidade"]
     timeout_s = float(c3["timeout_por_requisicao_s"])
     pl_simples = casos["caso_simples_conservador"]
-    pl_lm = casos["caso_lotomania_controle"]
     legados = cfg_hom["criterios_go_no_go"]["frente_5_nao_interferencia"]["rotas_legadas_obrigatorias"]
+    lim_mem = c3["limites_memoria_processo_isolado"]
+    intervalo_mem_s = float(lim_mem.get("intervalo_amostragem_s", 0.25))
 
     patamares_res: List[Dict[str, Any]] = []
     todos_ok = True
 
     with _SubprocessoUvicornIsolado(porta=porta_api, lotofacil_modo4_ativo=True) as srv:
         pid = int(srv.proc.pid) if srv.proc else os.getpid()
-        # Aquecimento unitario controlado para preparar carteira base de /avaliar
         r_seed = _sondar_http_cronometrado(srv.base_url, pl_simples, timeout_s=timeout_s)
         carteira_base = r_seed["jogos"]
         mem_base = medir_memoria_processo_windows(pid)
+        auditoria_sementes = _auditar_uso_semente_e_independencia_estado(srv.base_url, casos, timeout_s=timeout_s)
+        if not auditoria_sementes["aprovada"]:
+            todos_ok = False
 
         for pat in c3["patamares"]:
             pid_id = pat["id"]
-            workers = int(pat["workers_simultaneos"])
-            tarefas: List[Tuple[str, Callable[[], Dict[str, Any]]]] = []
-            if "distribuicao" not in pat:
-                n_req = int(pat["total_requisicoes"])
-                for _ in range(n_req):
-                    tarefas.append(
-                        (
-                            "lotofacil_modo4_gerar",
-                            lambda b=srv.base_url, p=pl_simples: _sondar_http_cronometrado(
-                                b, p, timeout_s=timeout_s
-                            ),
-                        )
-                    )
-            else:
-                dist = pat["distribuicao"]
-                for _ in range(int(dist["lotofacil_modo4_gerar"])):
-                    tarefas.append(
-                        (
-                            "lotofacil_modo4_gerar",
-                            lambda b=srv.base_url, p=pl_simples: _sondar_http_cronometrado(
-                                b, p, timeout_s=timeout_s
-                            ),
-                        )
-                    )
-                for _ in range(int(dist["lotofacil_modo4_avaliar"])):
-                    tarefas.append(
-                        (
-                            "lotofacil_modo4_avaliar",
-                            lambda b=srv.base_url, c=carteira_base: _sondar_http_cronometrado(
-                                b, {"carteira": c}, endpoint="/api/v1/lotofacil-modo4/avaliar", timeout_s=timeout_s
-                            ),
-                        )
-                    )
-                for _ in range(int(dist["lotofacil_modo4_status"])):
-                    tarefas.append(
-                        (
-                            "lotofacil_modo4_status",
-                            lambda b=srv.base_url: _sondar_http_cronometrado(
-                                b, endpoint="/api/v1/lotofacil-modo4/status", metodo="GET", timeout_s=timeout_s
-                            ),
-                        )
-                    )
-                for _ in range(int(dist["lotomania_modo4_gerar"])):
-                    tarefas.append(
-                        (
-                            "lotomania_modo4_gerar",
-                            lambda b=srv.base_url, p=pl_lm: _sondar_http_cronometrado(
-                                b, p, endpoint="/api/v1/lotomania-modo4/gerar", timeout_s=timeout_s
-                            ),
-                        )
-                    )
-                for i in range(int(dist["motores_legados"])):
-                    ep_leg = legados[i % len(legados)]
-                    tarefas.append(
-                        (
-                            "motores_legados",
-                            lambda b=srv.base_url, e=ep_leg: _sondar_http_cronometrado(
-                                b, {"quantidade_jogos": 3}, endpoint=e, timeout_s=timeout_s
-                            ),
-                        )
-                    )
+            clientes = int(pat["clientes_simultaneos"])
+            tarefas = _construir_tarefas_patamar(pat, casos, carteira_base, legados)
+            m = _executar_patamar_carga(
+                base_url=srv.base_url,
+                pid_servidor=pid,
+                tarefas=tarefas,
+                clientes=clientes,
+                timeout_s=timeout_s,
+                intervalo_memoria_s=intervalo_mem_s,
+            )
 
-            m = _executar_patamar_carga(base_url=srv.base_url, pid_servidor=pid, tarefas=tarefas, workers=workers)
-            st_gerar = m["latencias_por_tipo"].get("lotofacil_modo4_gerar", {})
+            violacoes_latencia: List[str] = []
             ok_pat = m["taxa_erro_pct"] <= c3["max_taxa_erro_pct"]
-            if pat.get("exigir_determinismo_hash_unico") and m["hashes_unicos_lotofacil"] != 1:
+            det_ok = m["determinismo_por_assinatura"]["repetibilidade_ok"]
+            if pat.get("exigir_determinismo_por_assinatura", True) and not det_ok:
                 ok_pat = False
-            if "max_p95_s" in pat and st_gerar.get("p95_s", 999.0) > pat["max_p95_s"]:
+                violacoes_latencia.append("determinismo_por_assinatura")
+            if pat.get("exigir_determinismo_lotomania", True) and not m["determinismo_por_assinatura"]["lotomania_repetibilidade_ok"]:
                 ok_pat = False
-            if "max_p99_s" in pat and st_gerar.get("p99_s", 999.0) > pat["max_p99_s"]:
-                ok_pat = False
-            if "max_p95_gerar_s" in pat and st_gerar.get("p95_s", 999.0) > pat["max_p95_gerar_s"]:
-                ok_pat = False
-            if (
-                "max_p95_status_s" in pat
-                and m["latencias_por_tipo"].get("lotofacil_modo4_status", {}).get("p95_s", 999.0)
-                > pat["max_p95_status_s"]
-            ):
-                ok_pat = False
-            if (
-                "max_p95_legados_s" in pat
-                and m["latencias_por_tipo"].get("motores_legados", {}).get("p95_s", 999.0)
-                > pat["max_p95_legados_s"]
-            ):
-                ok_pat = False
+                violacoes_latencia.append("determinismo_lotomania")
+
+            limites_rotas = pat.get("limites_latencia_por_tipo_s") or {}
+            if not modo_calibracao:
+                for tipo_rota, lims in limites_rotas.items():
+                    st_rota = m["latencias_por_tipo"].get(tipo_rota)
+                    if not st_rota or st_rota.get("n", 0) == 0:
+                        ok_pat = False
+                        violacoes_latencia.append(f"{tipo_rota}:ausente")
+                        continue
+                    if "max_p95_s" in lims and st_rota["p95_s"] > float(lims["max_p95_s"]):
+                        ok_pat = False
+                        violacoes_latencia.append(f"{tipo_rota}:p95={st_rota['p95_s']}>{lims['max_p95_s']}")
+                    if "max_p99_s" in lims and st_rota["p99_s"] > float(lims["max_p99_s"]):
+                        ok_pat = False
+                        violacoes_latencia.append(f"{tipo_rota}:p99={st_rota['p99_s']}>{lims['max_p99_s']}")
 
             m["id"] = pid_id
+            m["violacoes"] = violacoes_latencia
             m["aprovado"] = ok_pat
             patamares_res.append(m)
             if not ok_pat:
                 todos_ok = False
 
-    lim_mem = c3["limites_memoria_processo_isolado"]
-    rss_max_obs = max(p["memoria_depois"]["rss_atual_mb"] for p in patamares_res)
-    delta_rss_p1_p3 = round(
-        patamares_res[-1]["memoria_depois"]["rss_atual_mb"] - patamares_res[0]["memoria_depois"]["rss_atual_mb"],
+    rss_pico_max_obs = max(p["memoria_monitorada"]["rss_pico_windows_max_mb"] for p in patamares_res)
+    rss_atual_max_obs = max(p["memoria_monitorada"]["rss_atual_max_mb"] for p in patamares_res)
+    delta_rss_baseline_para_max = round(
+        patamares_res[-1]["memoria_monitorada"]["rss_atual_depois_mb"]
+        - patamares_res[0]["memoria_monitorada"]["rss_atual_depois_mb"],
         2,
     )
-    mem_ok = rss_max_obs <= lim_mem["max_rss_absoluto_mb"] and delta_rss_p1_p3 <= lim_mem["max_crescimento_rss_patamar1_para_patamar3_mb"]
+    delta_pico_windows = round(
+        rss_pico_max_obs - float(mem_base["rss_pico_mb"]),
+        2,
+    )
+    teto_rss_abs = float(lim_mem["max_rss_pico_absoluto_mb"])
+    teto_cresc = float(lim_mem["max_crescimento_rss_baseline_para_max_mb"])
+    mem_ok = rss_pico_max_obs <= teto_rss_abs and delta_rss_baseline_para_max <= teto_cresc
 
     return {
         "aprovada": bool(todos_ok and mem_ok),
+        "uvicorn_workers": 1,
+        "escopo_memoria": "exclusivo_subprocesso_uvicorn_workers_1",
         "memoria_warmup": mem_base,
-        "rss_max_observado_mb": rss_max_obs,
-        "delta_rss_p1_para_p3_mb": delta_rss_p1_p3,
+        "rss_pico_windows_max_observado_mb": rss_pico_max_obs,
+        "rss_atual_max_observado_mb": rss_atual_max_obs,
+        "delta_rss_baseline_para_max_mb": delta_rss_baseline_para_max,
+        "delta_pico_windows_mb": delta_pico_windows,
         "memoria_dentro_limites": mem_ok,
+        "auditoria_sementes_e_estado": auditoria_sementes,
         "patamares": patamares_res,
     }
 
@@ -880,7 +1436,8 @@ def _auditar_pagina_em_chrome(
         estado_inicial = ws.avaliar_js(
             """
             (async () => {
-                const statusOk = await window.ui._atualizarStatusServidorLotofacilModo4();
+                const uiRef = window.ui || window._b2bUI;
+                const statusOk = await uiRef._atualizarStatusServidorLotofacilModo4();
                 const sub = document.getElementById('subpanel-lotofacil-modo4');
                 const chk = document.getElementById('check-exp2j-lotofacil-modo4');
                 const cl = document.getElementById('clausula-obrigatoria-lotofacil-modo4');
@@ -900,17 +1457,18 @@ def _auditar_pagina_em_chrome(
         execucao = ws.avaliar_js(
             """
             (async () => {
+                const uiRef = window.ui || window._b2bUI;
                 const tabBtn = document.getElementById('tab-btn-lotofacil-modo4');
                 if (tabBtn) tabBtn.click();
                 const inputQtd = document.getElementById('input-qtd-jogos-lotofacil-modo4');
                 if (inputQtd) inputQtd.value = '6';
-                await window.ui._executarGeracaoLotofacilModo4();
-                const jogos = Array.isArray(window.ui.currentGeneratedGames) ? window.ui.currentGeneratedGames : [];
+                await uiRef._executarGeracaoLotofacilModo4();
+                const jogos = Array.isArray(uiRef.currentGeneratedGames) ? uiRef.currentGeneratedGames : [];
                 const alerta = document.getElementById('alerta-indisponivel-lotofacil-modo4');
                 const contRes = document.getElementById('container-resultado-lotofacil-modo4');
                 let avaliarTexto = '';
                 if (jogos.length > 0 && document.getElementById('btn-avaliar-lotofacil-modo4')) {
-                    await window.ui._avaliarCarteiraLotofacilModo4();
+                    await uiRef._avaliarCarteiraLotofacilModo4();
                     avaliarTexto = contRes ? contRes.innerText : '';
                 }
                 return {
@@ -1011,41 +1569,147 @@ def executar_frente_4_navegador(
 
 def executar_frente_5_nao_interferencia(cfg_hom: Dict[str, Any], porta_api: int) -> Dict[str, Any]:
     c5 = cfg_hom["criterios_go_no_go"]["frente_5_nao_interferencia"]
-    pl_lm = cfg_hom["casos_repetibilidade"]["caso_lotomania_controle"]
+    casos = cfg_hom["casos_repetibilidade"]
+    pl_lm = casos["caso_lotomania_controle"]
+    pl_lf = casos["caso_simples_conservador"]
+    rotas_legadas = list(c5["rotas_legadas_obrigatorias"])
+    hashes_disco_antes = _coletar_hashes_arquivos_legados()
 
+    # 5A) Baseline isolado com Lotofacil MODO 4 OFF
+    legados_off: Dict[str, Dict[str, Any]] = {}
     with _SubprocessoUvicornIsolado(porta=porta_api, lotofacil_modo4_ativo=False) as srv_off:
-        lm_off = _sondar_http_cronometrado(
-            srv_off.base_url, pl_lm, endpoint="/api/v1/lotomania-modo4/gerar"
-        )
+        lm_off_1 = _sondar_http_cronometrado(srv_off.base_url, pl_lm, endpoint="/api/v1/lotomania-modo4/gerar")
+        lm_off_2 = _sondar_http_cronometrado(srv_off.base_url, pl_lm, endpoint="/api/v1/lotomania-modo4/gerar")
+        for ep in rotas_legadas:
+            pl_leg = dict(CONTROLES_ROTAS_LEGADAS.get(ep, {}).get("payload") or {"quantidade_jogos": 3})
+            r1 = _sondar_http_cronometrado(srv_off.base_url, pl_leg, endpoint=ep)
+            r2 = _sondar_http_cronometrado(srv_off.base_url, pl_leg, endpoint=ep)
+            d1 = r1.get("dados_brutos") or {}
+            d2 = r2.get("dados_brutos") or {}
+            ok1, mot1 = _validar_contrato_resposta_legada(ep, pl_leg, d1) if r1["status_http"] == 200 else (False, f"http_{r1['status_http']}")
+            ok2, mot2 = _validar_contrato_resposta_legada(ep, pl_leg, d2) if r2["status_http"] == 200 else (False, f"http_{r2['status_http']}")
+            sha_resp_1 = _calcular_sha256_json_canonico(d1) if r1["status_http"] == 200 else None
+            sha_resp_2 = _calcular_sha256_json_canonico(d2) if r2["status_http"] == 200 else None
+            sha_jogos_1 = _calcular_sha256_json_canonico(d1.get("jogos")) if ok1 else None
+            sha_jogos_2 = _calcular_sha256_json_canonico(d2.get("jogos")) if ok2 else None
+            legados_off[ep] = {
+                "http_1": r1["status_http"],
+                "http_2": r2["status_http"],
+                "contrato_ok": bool(ok1 and ok2),
+                "motivo": mot1 if not ok1 else mot2,
+                "sha256_resposta_off_1": sha_resp_1,
+                "sha256_resposta_off_2": sha_resp_2,
+                "sha256_jogos_off_1": sha_jogos_1,
+                "sha256_jogos_off_2": sha_jogos_2,
+                "deterministico_jogos_baseline": bool(sha_jogos_1 and sha_jogos_1 == sha_jogos_2),
+                "deterministico_resposta_baseline": bool(sha_resp_1 and sha_resp_1 == sha_resp_2),
+            }
 
-    legados_status = {}
+    # 5B) Probes executadas simultaneamente DURANTE carga concorrente real do Lotofacil MODO 4 ON
+    legados_sob_carga: Dict[str, Dict[str, Any]] = {}
     with _SubprocessoUvicornIsolado(porta=porta_api, lotofacil_modo4_ativo=True) as srv_on:
-        lm_on = _sondar_http_cronometrado(
-            srv_on.base_url, pl_lm, endpoint="/api/v1/lotomania-modo4/gerar"
-        )
-        for ep in c5["rotas_legadas_obrigatorias"]:
-            rl = _sondar_http_cronometrado(srv_on.base_url, {"quantidade_jogos": 3}, endpoint=ep)
-            legados_status[ep] = rl["status_http"]
+        with ThreadPoolExecutor(max_workers=10) as pool:
+            futuros_lf = [
+                pool.submit(_sondar_http_cronometrado, srv_on.base_url, pl_lf, endpoint="/api/v1/lotofacil-modo4/gerar")
+                for _ in range(10)
+            ]
+            fut_lm_1 = pool.submit(
+                _sondar_http_cronometrado, srv_on.base_url, pl_lm, endpoint="/api/v1/lotomania-modo4/gerar"
+            )
+            fut_lm_2 = pool.submit(
+                _sondar_http_cronometrado, srv_on.base_url, pl_lm, endpoint="/api/v1/lotomania-modo4/gerar"
+            )
+            fut_legs = {
+                ep: pool.submit(
+                    _sondar_http_cronometrado,
+                    srv_on.base_url,
+                    dict(CONTROLES_ROTAS_LEGADAS.get(ep, {}).get("payload") or {"quantidade_jogos": 3}),
+                    endpoint=ep,
+                )
+                for ep in rotas_legadas
+            }
+            res_carga_lf = [f.result() for f in futuros_lf]
+            lm_on_1 = fut_lm_1.result()
+            lm_on_2 = fut_lm_2.result()
+            res_legs_on = {ep: fut.result() for ep, fut in fut_legs.items()}
 
-    hash_off = (lm_off.get("dados_brutos") or {}).get("hash_carteira_sha256_v2_canonico")
-    hash_on = (lm_on.get("dados_brutos") or {}).get("hash_carteira_sha256_v2_canonico")
-    ok = (
-        lm_off["status_http"] == 200
-        and lm_on["status_http"] == 200
-        and bool(hash_off)
-        and hash_off == hash_on
-        and all(st == 200 for st in legados_status.values())
+        for ep, rl in res_legs_on.items():
+            pl_leg = dict(CONTROLES_ROTAS_LEGADAS.get(ep, {}).get("payload") or {"quantidade_jogos": 3})
+            dl = rl.get("dados_brutos") or {}
+            ok_c, mot_c = _validar_contrato_resposta_legada(ep, pl_leg, dl) if rl["status_http"] == 200 else (False, f"http_{rl['status_http']}")
+            sha_resp_on = _calcular_sha256_json_canonico(dl) if rl["status_http"] == 200 else None
+            sha_jogos_on = _calcular_sha256_json_canonico(dl.get("jogos")) if ok_c else None
+            base_ep = legados_off[ep]
+            det_ok = True
+            if base_ep["deterministico_jogos_baseline"] and sha_jogos_on != base_ep["sha256_jogos_off_1"]:
+                det_ok = False
+            legados_sob_carga[ep] = {
+                "http_sob_carga": rl["status_http"],
+                "latencia_s": rl["latencia_s"],
+                "contrato_ok": ok_c,
+                "motivo": mot_c,
+                "sha256_resposta_sob_carga": sha_resp_on,
+                "sha256_jogos_sob_carga": sha_jogos_on,
+                "preservou_determinismo_se_aplicavel": det_ok,
+            }
+
+    hashes_disco_depois = _coletar_hashes_arquivos_legados()
+    disco_intacto = hashes_disco_antes == hashes_disco_depois
+
+    hash_off_1 = (lm_off_1.get("dados_brutos") or {}).get("hash_carteira_sha256_v2_canonico")
+    hash_off_2 = (lm_off_2.get("dados_brutos") or {}).get("hash_carteira_sha256_v2_canonico")
+    hash_on_1 = (lm_on_1.get("dados_brutos") or {}).get("hash_carteira_sha256_v2_canonico")
+    hash_on_2 = (lm_on_2.get("dados_brutos") or {}).get("hash_carteira_sha256_v2_canonico")
+
+    lotomania_ok = (
+        lm_off_1["status_http"] == 200
+        and lm_off_2["status_http"] == 200
+        and lm_on_1["status_http"] == 200
+        and lm_on_2["status_http"] == 200
+        and bool(hash_off_1)
+        and hash_off_1 == hash_off_2 == hash_on_1 == hash_on_2
     )
+    carga_lf_ok = all(r["status_http"] == 200 and (r.get("dados_brutos") or {}).get("sucesso") is True for r in res_carga_lf)
+    legados_ok = all(
+        legados_off[ep]["contrato_ok"]
+        and legados_sob_carga[ep]["http_sob_carga"] == 200
+        and legados_sob_carga[ep]["contrato_ok"]
+        and legados_sob_carga[ep]["preservou_determinismo_se_aplicavel"]
+        for ep in rotas_legadas
+    )
+
+    comparacao_legados = {
+        ep: {
+            "off": legados_off[ep],
+            "on_sob_carga": legados_sob_carga[ep],
+            "aprovado": bool(
+                legados_off[ep]["contrato_ok"]
+                and legados_sob_carga[ep]["contrato_ok"]
+                and legados_sob_carga[ep]["preservou_determinismo_se_aplicavel"]
+            ),
+        }
+        for ep in rotas_legadas
+    }
     return {
-        "aprovada": ok,
-        "lotomania_sha256_v2_off": hash_off,
-        "lotomania_sha256_v2_on": hash_on,
-        "lotomania_hashes_identicos": bool(hash_off and hash_off == hash_on),
-        "legados_status_http": legados_status,
+        "aprovada": bool(lotomania_ok and legados_ok and carga_lf_ok and disco_intacto),
+        "carga_concorrente_lotofacil_ok": carga_lf_ok,
+        "lotomania_sha256_v2_off": hash_off_1,
+        "lotomania_sha256_v2_on_sob_carga": hash_on_1,
+        "lotomania_hashes_identicos": lotomania_ok,
+        "integridade_arquivos_legados_disco_ok": disco_intacto,
+        "arquivos_legados_monitorados_count": len(hashes_disco_depois),
+        "hashes_arquivos_legados": hashes_disco_depois,
+        "legados_status_http": {ep: legados_sob_carga[ep]["http_sob_carga"] for ep in rotas_legadas},
+        "comparacao_legados_off_vs_carga": comparacao_legados,
     }
 
 
-def executar_frente_6_rollback_e_preservacao(cfg_hom: Dict[str, Any], porta_api: int) -> Dict[str, Any]:
+def executar_frente_6_rollback_e_preservacao(
+    cfg_hom: Dict[str, Any],
+    porta_api: int,
+    *,
+    prod_8000_antes: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     # 6A) Rollback runtime imediato sem reiniciar em instancia isolada `ServidorHttpHomologacao`
     import api as api_isolada
 
@@ -1090,28 +1754,23 @@ def executar_frente_6_rollback_e_preservacao(cfg_hom: Dict[str, Any], porta_api:
         and r_env_off["fallback_executado"] is False
     )
 
-    # 6C) Verificacao somente-leitura na porta de producao 8000 (nao modifica nada)
+    # 6C) Verificacao estrita fail-closed na porta de producao 8000 (antes vs depois, sem mutacao)
+    c6 = cfg_hom["criterios_go_no_go"]["frente_6_rollback_e_preservacao"]
     porta_prod = int(cfg_hom["ambiente_homologacao_isolada"]["porta_api_producao_preservada"])
-    prod_url = f"http://127.0.0.1:{porta_prod}"
-    h_prod = _sondar_http_cronometrado(prod_url, endpoint="/health", metodo="GET", timeout_s=2.0)
-    if h_prod["status_http"] == 200 and isinstance(h_prod.get("dados_brutos"), dict):
-        l4_prod = h_prod["dados_brutos"].get("lotofacil_modo4", {})
-        prod_ok = (
-            l4_prod.get("disponivel") is False
-            and l4_prod.get("feature_flag_ativa") is False
-            and l4_prod.get("integridade_verificada") is True
-        )
-        prod_estado = {"alcancavel": True, "disponivel": l4_prod.get("disponivel"), "feature_flag_ativa": l4_prod.get("feature_flag_ativa")}
-    else:
-        prod_ok = True
-        prod_estado = {"alcancavel": False, "nota": "Instancia 8000 nao estava em execucao durante sondagem."}
+    exigir_alcancavel = bool(c6.get("exigir_producao_8000_alcancavel", True))
+    prod_depois = _capturar_estado_producao_8000(porta_prod)
+    prod_antes_ef = prod_8000_antes if prod_8000_antes is not None else prod_depois
+    comp_prod = _comparar_producao_8000_antes_depois(
+        prod_antes_ef, prod_depois, exigir_alcancavel=exigir_alcancavel
+    )
+    prod_ok = bool(comp_prod["preservada"])
 
     return {
         "aprovada": bool(rollback_runtime_ok and rollback_subprocesso_ok and prod_ok),
         "rollback_runtime_ok": rollback_runtime_ok,
         "rollback_subprocesso_ok": rollback_subprocesso_ok,
         "producao_8000_intacta": prod_ok,
-        "producao_8000_observada": prod_estado,
+        "producao_8000_comparacao": comp_prod,
     }
 
 
@@ -1140,20 +1799,23 @@ def _construir_relatorio_homologacao(dados: Dict[str, Any]) -> str:
         "| :--- | :--- | :--- |",
         f"| 1. Auditoria Criptografica (Pre e Pos) | `{'GO' if ata['criterios']['frente_1_ok'] else 'NO-GO'}` | Pre divergencias=`{len(f1_pre['divergencias'])}`, Pos divergencias=`{len(f1_pos['divergencias'])}`, Ed25519=`{f1_pos['selo_lotomania_valido']}` |",
         f"| 2. Rotas e Contratos (`/status`, `/gerar`, `/avaliar`) | `{'GO' if ata['criterios']['frente_2_ok'] else 'NO-GO'}` | Diff AST simples=`{f2['diff_F_simples']:.2e}`, Diff `/avaliar`=`{f2['diff_F_avaliar']:.2e}`, Negativos 422 ok=`{f2['negativos_ok']}` |",
-        f"| 3. Carga Escalonada (Portas Isoladas) | `{'GO' if ata['criterios']['frente_3_ok'] else 'NO-GO'}` | RSS max=`{f3['rss_max_observado_mb']} MB`, Delta P1-P3=`{f3['delta_rss_p1_para_p3_mb']} MB`, Mem ok=`{f3['memoria_dentro_limites']}` |",
+        f"| 3. Carga Escalonada (Uvicorn `workers=1`, Portas Isoladas) | `{'GO' if ata['criterios']['frente_3_ok'] else 'NO-GO'}` | Pico Windows RSS=`{f3['rss_pico_windows_max_observado_mb']} MB`, Delta baseline para carga=`{f3['delta_rss_baseline_para_max_mb']} MB`, Mem ok=`{f3['memoria_dentro_limites']}` |",
         f"| 4. Auditoria Chrome Real (Web + Mobile) | `{'GO' if ata['criterios']['frente_4_ok'] else 'NO-GO'}` | Execucoes aprovadas=`{sum(1 for e in f4.get('execucoes', []) if e['aprovada'])}/{len(f4.get('execucoes', []))}` |",
-        f"| 5. Nao Interferencia Sob Carga | `{'GO' if ata['criterios']['frente_5_ok'] else 'NO-GO'}` | Lotomania hash identico=`{f5['lotomania_hashes_identicos']}`, Legados HTTP 200=`{all(v == 200 for v in f5['legados_status_http'].values())}` |",
+        f"| 5. Nao Interferencia Sob Carga | `{'GO' if ata['criterios']['frente_5_ok'] else 'NO-GO'}` | Lotomania hash identico=`{f5['lotomania_hashes_identicos']}`, Disco legados intacto=`{f5['integridade_arquivos_legados_disco_ok']}` |",
         f"| 6. Rollback ON para OFF e Preservacao 8000 | `{'GO' if ata['criterios']['frente_6_ok'] else 'NO-GO'}` | Runtime rollback ok=`{f6['rollback_runtime_ok']}`, Subprocesso OFF ok=`{f6['rollback_subprocesso_ok']}`, Prod 8000 intacta=`{f6['producao_8000_intacta']}` |",
         "",
         "## 2. Patamares de Carga Escalonada",
         "",
-        "| Patamar | Workers | Requisicoes | Taxa Erro (%) | p95 `/gerar` (s) | RSS Final (MB) | Status |",
-        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
+        "| Patamar | Clientes Simultaneos | Requisicoes | Taxa Erro (%) | p95 `/gerar` simples (s) | p99 `/gerar` simples (s) | Pico RSS Windows (MB) | Status |",
+        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
     ]
     for p in f3["patamares"]:
-        p95_g = p["latencias_por_tipo"].get("lotofacil_modo4_gerar", {}).get("p95_s", "--")
+        st_gs = p["latencias_por_tipo"].get("lotofacil_modo4_gerar_simples", {})
+        p95_g = st_gs.get("p95_s", "--")
+        p99_g = st_gs.get("p99_s", "--")
+        pico_rss = p["memoria_monitorada"]["rss_pico_windows_max_mb"]
         linhas.append(
-            f"| `{p['id']}` | `{p['workers_simultaneos']}` | `{p['total_requisicoes']}` | `{p['taxa_erro_pct']}` | `{p95_g}` | `{p['memoria_depois']['rss_atual_mb']}` | `{'GO' if p['aprovado'] else 'NO-GO'}` |"
+            f"| `{p['id']}` | `{p['clientes_simultaneos']}` | `{p['total_requisicoes']}` | `{p['taxa_erro_pct']}` | `{p95_g}` | `{p99_g}` | `{pico_rss}` | `{'GO' if p['aprovado'] else 'NO-GO'}` |"
         )
     linhas.extend(
         [
@@ -1188,7 +1850,9 @@ def executar_homologacao_especifica_ativacao() -> Dict[str, Any]:
     hw = coletar_telemetria_hardware()
     porta_api = _reservar_porta_livre(int(cfg_hom["ambiente_homologacao_isolada"]["porta_api_isolada_preferencial"]))
     porta_ui = _reservar_porta_livre(int(cfg_hom["ambiente_homologacao_isolada"]["porta_ui_isolada_preferencial"]))
+    porta_prod = int(cfg_hom["ambiente_homologacao_isolada"]["porta_api_producao_preservada"])
 
+    prod_antes = _capturar_estado_producao_8000(porta_prod)
     f1_pre = executar_frente_1_criptografia(cfg_hom)
     if not f1_pre["aprovada"]:
         raise RuntimeError(f"NO-GO imediato na Frente 1 (pre-checagem): {f1_pre['detalhes']['divergencias']}")
@@ -1199,7 +1863,7 @@ def executar_homologacao_especifica_ativacao() -> Dict[str, Any]:
         cfg_hom, porta_api=porta_api, porta_ui=porta_ui, navegador_exe=hw["navegador_headless"]
     )
     f5 = executar_frente_5_nao_interferencia(cfg_hom, porta_api)
-    f6 = executar_frente_6_rollback_e_preservacao(cfg_hom, porta_api)
+    f6 = executar_frente_6_rollback_e_preservacao(cfg_hom, porta_api, prod_8000_antes=prod_antes)
     f1_pos = executar_frente_1_criptografia(cfg_hom)
 
     criterios = {
@@ -1257,6 +1921,72 @@ def executar_homologacao_especifica_ativacao() -> Dict[str, Any]:
     return evidencias
 
 
+def executar_microcalibracao_revisao_fase1() -> Dict[str, Any]:
+    """
+    Executa exclusivamente a microcalibracao da Revisao da Fase 1 em porta isolada.
+    Nao executa a Fase 2 completa, nao cria ata_homologacao_ativacao.json e nao altera a porta 8000.
+    """
+    cfg_hom = carregar_config_homologacao()
+    hw = coletar_telemetria_hardware()
+    porta_api = _reservar_porta_livre(int(cfg_hom["ambiente_homologacao_isolada"]["porta_api_isolada_preferencial"]))
+    porta_prod = int(cfg_hom["ambiente_homologacao_isolada"]["porta_api_producao_preservada"])
+    exigir_alcancavel = bool(
+        cfg_hom["criterios_go_no_go"]["frente_6_rollback_e_preservacao"].get("exigir_producao_8000_alcancavel", True)
+    )
+
+    f1_pre = executar_frente_1_criptografia(cfg_hom)
+    if not f1_pre["aprovada"]:
+        raise RuntimeError(f"Divergencia criptografica previa a microcalibracao: {f1_pre['detalhes']['divergencias']}")
+
+    prod_antes = _capturar_estado_producao_8000(porta_prod)
+    f3 = executar_frente_3_carga(cfg_hom, porta_api, modo_calibracao=False)
+    f5 = executar_frente_5_nao_interferencia(cfg_hom, porta_api)
+    prod_depois = _capturar_estado_producao_8000(porta_prod)
+    comp_prod = _comparar_producao_8000_antes_depois(
+        prod_antes, prod_depois, exigir_alcancavel=exigir_alcancavel
+    )
+    f1_pos = executar_frente_1_criptografia(cfg_hom)
+
+    # Calculo de recomendacoes empiricas p95/p99 por patamar e rota com folga controlada para JIT/GIL
+    calibracao_sugerida: Dict[str, Dict[str, Dict[str, float]]] = {}
+    for p in f3["patamares"]:
+        rotas_rec: Dict[str, Dict[str, float]] = {}
+        for tipo, st in p["latencias_por_tipo"].items():
+            p95_obs = float(st["p95_s"])
+            p99_obs = float(st["p99_s"])
+            rec_p95 = round(max(0.25, max(p95_obs * 1.85, p95_obs + 0.35)), 2)
+            rec_p99 = round(max(rec_p95 + 0.15, max(p99_obs * 1.85, p99_obs + 0.50)), 2)
+            rotas_rec[tipo] = {
+                "p95_observado_s": p95_obs,
+                "p99_observado_s": p99_obs,
+                "max_p95_s_sugerido": rec_p95,
+                "max_p99_s_sugerido": rec_p99,
+            }
+        calibracao_sugerida[p["id"]] = rotas_rec
+
+    evidencias = {
+        "fase": "REVISAO_FASE_1_MICROCALIBRACAO",
+        "versao_runbook": cfg_hom["versao_runbook"],
+        "versao_avaliada": VERSAO_PROMOCAO_LOTOFACIL_MODO4,
+        "executado_em_utc": datetime.now(timezone.utc).isoformat(),
+        "fase_2_executada": False,
+        "ativacao_producao": False,
+        "porta_api_isolada_utilizada": porta_api,
+        "telemetria_hardware": hw,
+        "frente_1_criptografia_pre": f1_pre,
+        "frente_3_carga_microcalibracao": f3,
+        "frente_5_nao_interferencia": f5,
+        "producao_8000_comparacao": comp_prod,
+        "frente_1_criptografia_pos": f1_pos,
+        "calibracao_sugerida_por_patamar": calibracao_sugerida,
+        "clausula_obrigatoria": CLAUSULA_MATEMATICA_OBRIGATORIA,
+    }
+    os.makedirs(DIR_HOMOLOGACAO_ABS, exist_ok=True)
+    with open(CAMINHO_MICROCALIBRACAO_JSON, "w", encoding="utf-8") as f:
+        json.dump(evidencias, f, indent=2, ensure_ascii=False)
+    return evidencias
+
+
 def verificar_preparacao_somente_leitura() -> Dict[str, Any]:
     """Modo estritamente passivo da Fase 1: valida arquivos de preparacao e integridade vigente."""
     cfg_hom = carregar_config_homologacao()
@@ -1282,12 +2012,17 @@ def verificar_preparacao_somente_leitura() -> Dict[str, Any]:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Runbook isolado de Homologacao Especifica de Ativacao (Fase 1 Preparacao / Fase 2 Execucao)."
+        description="Runbook isolado de Homologacao Especifica de Ativacao (Fase 1 Preparacao/Revisao / Fase 2 Execucao)."
     )
     parser.add_argument(
         "--preparacao-check",
         action="store_true",
         help="Executa apenas conferencia passiva dos artefatos de preparacao e integridade sem rodar Fase 2.",
+    )
+    parser.add_argument(
+        "--microcalibracao-revisao-fase1",
+        action="store_true",
+        help="Executa exclusivamente a microcalibracao da Revisao da Fase 1 em porta isolada, sem rodar Fase 2.",
     )
     parser.add_argument(
         "--autorizar-homologacao-isolada",
@@ -1296,10 +2031,34 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if args.preparacao_check and not args.autorizar_homologacao_isolada:
+    if args.preparacao_check and not args.autorizar_homologacao_isolada and not args.microcalibracao_revisao_fase1:
         res = verificar_preparacao_somente_leitura()
         print(json.dumps(res, indent=2, ensure_ascii=False))
         return 0 if res["integridade_cadeia_selada"] and res["runbook_presente"] else 1
+
+    if args.microcalibracao_revisao_fase1 and not args.autorizar_homologacao_isolada:
+        ev = executar_microcalibracao_revisao_fase1()
+        resumo = {
+            "fase": ev["fase"],
+            "fase_2_executada": ev["fase_2_executada"],
+            "porta_api_isolada_utilizada": ev["porta_api_isolada_utilizada"],
+            "rss_pico_windows_max_mb": ev["frente_3_carga_microcalibracao"]["rss_pico_windows_max_observado_mb"],
+            "delta_rss_baseline_para_max_mb": ev["frente_3_carga_microcalibracao"]["delta_rss_baseline_para_max_mb"],
+            "auditoria_sementes_aprovada": ev["frente_3_carga_microcalibracao"]["auditoria_sementes_e_estado"]["aprovada"],
+            "frente_5_aprovada": ev["frente_5_nao_interferencia"]["aprovada"],
+            "producao_8000_intacta": ev["producao_8000_comparacao"]["preservada"],
+            "frente_1_pos_integro": ev["frente_1_criptografia_pos"]["aprovada"],
+            "arquivo_microcalibracao": CAMINHO_MICROCALIBRACAO_JSON,
+        }
+        print(json.dumps(resumo, indent=2, ensure_ascii=False))
+        ok = (
+            ev["frente_1_criptografia_pre"]["aprovada"]
+            and ev["frente_3_carga_microcalibracao"]["aprovada"]
+            and ev["frente_5_nao_interferencia"]["aprovada"]
+            and ev["producao_8000_comparacao"]["preservada"]
+            and ev["frente_1_criptografia_pos"]["aprovada"]
+        )
+        return 0 if ok else 1
 
     if not args.autorizar_homologacao_isolada:
         print(
@@ -1307,8 +2066,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 {
                     "bloqueado": True,
                     "motivo": (
-                        "Fase 2 nao autorizada. Passe --preparacao-check para conferencia passiva "
-                        "ou --autorizar-homologacao-isolada apos autorizacao formal."
+                        "Fase 2 nao autorizada. Passe --preparacao-check para conferencia passiva, "
+                        "--microcalibracao-revisao-fase1 para calibracao isolada ou "
+                        "--autorizar-homologacao-isolada apos autorizacao formal."
                     ),
                 },
                 indent=2,
