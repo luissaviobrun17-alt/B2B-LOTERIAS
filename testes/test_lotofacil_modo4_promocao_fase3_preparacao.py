@@ -31,7 +31,9 @@ from lotofacil_modo4.promocao_fase3_runbook import (
     CAMINHO_CONFIG_FASE3_JSON,
     CAMINHO_RUNBOOK_FASE3_MD,
     DIR_FASE3_ABS,
+    MODO_POS_ROLLBACK_DESIGNADO,
     TOKEN_CONFIRMACAO_HUMANA_FASE3,
+    capturar_snapshot_producao_somente_leitura,
     carregar_config_fase3,
     executar_protocolo_fase3_controlado,
     parsear_pid_netstat_tcp,
@@ -137,9 +139,25 @@ class TestLotofacilModo4PromocaoFase3Preparacao(unittest.TestCase):
             "Teste controlado inicial deve comecar pequeno.",
         )
 
+        allow_cfg = cfg["allowlist_variaveis_snapshot"]
+        _exigir("chaves_constantes_governanca" not in allow_cfg, "Chave generica antiga deve dar lugar a configuracao_interna_imutavel.")
+        _exigir("configuracao_interna_imutavel" in allow_cfg, "Secao configuracao_interna_imutavel obrigatoria na configuracao.")
+        inic_cfg = allow_cfg["configuracao_interna_imutavel"]["inicializacao_mista"]
+        _exigir(inic_cfg["valor"] == "padrao", "Valor da constante inicializacao_mista deve ser 'padrao'.")
+        _exigir(inic_cfg["origem"] == "constante_interna_imutavel_codigo_selado", "Origem do quarto parametro nao identificada.")
+        _exigir(
+            inic_cfg["referencia_codigo"] == "lotofacil_modo4/promocao_producao.py:INICIALIZACAO_MISTA_FIXA",
+            "Referencia de codigo do quarto parametro incorreta.",
+        )
+        _exigir(inic_cfg["suporta_override_env"] is False, "Quarto parametro nao suporta override por variavel de ambiente.")
+
         defs = cfg["tres_definicoes_operacionais"]
         _exigir("1_escopo_snapshot_ambiente" in defs, "Definicao 1 ausente.")
         _exigir("2_ordem_rollback_e_estado_final" in defs, "Definicao 2 ausente.")
+        _exigir(
+            defs["2_ordem_rollback_e_estado_final"].get("modo_pos_rollback_designado") == MODO_POS_ROLLBACK_DESIGNADO,
+            "Estado final designado apos rollback deve ser formalmente 'encerrar_em_off_standby'.",
+        )
         _exigir("3_contingencia_reinicio_8000" in defs, "Definicao 3 ausente.")
 
     def test_02_travas_fail_closed_cli_e_executor(self) -> None:
@@ -207,6 +225,7 @@ class TestLotofacilModo4PromocaoFase3Preparacao(unittest.TestCase):
     def test_03_snapshot_allowlist_nunca_expoe_segredos_ou_variaveis_extras(self) -> None:
         env_simulado = {
             "LOTOFACIL_MODO4_ATIVO": "false",
+            "LOTOFACIL_MODO4_INICIALIZACAO": "tentativa_override_nao_suportada",
             "GITHUB_TOKEN": "ghp_SEGREDO_CRITICO_NAO_VAZAR",
             "AWS_SECRET_ACCESS_KEY": "aws_segredo_nao_vazar",
             "DATABASE_URL": "postgresql://user:senha@host/db",
@@ -215,9 +234,29 @@ class TestLotofacilModo4PromocaoFase3Preparacao(unittest.TestCase):
         snap_env = sanitizar_variaveis_ambiente_snapshot(environ_map=env_simulado)
         bruto = json.dumps(snap_env)
         _exigir(snap_env["proibir_dump_ambiente_completo"] is True, "Flag de proibicao de dump completo obrigatoria.")
-        _exigir(set(snap_env["variaveis_permitidas"].keys()) == set(ALLOWLIST_ENV_FASE3), "Snapshot deve conter somente allowlist.")
-        _exigir(snap_env["total_variaveis_omitidas_por_seguranca"] == 4, "Contagem de variaveis omitidas divergente.")
-        for segredo in ("GITHUB_TOKEN", "AWS_SECRET_ACCESS_KEY", "DATABASE_URL", "API_SECRET_KEY", "ghp_SEGREDO", "senha@host"):
+        _exigir(set(snap_env["variaveis_permitidas"].keys()) == set(ALLOWLIST_ENV_FASE3), "Snapshot deve conter somente as 3 chaves da allowlist.")
+        _exigir(len(snap_env["allowlist_aplicada"]) == 3, "Allowlist de ambiente deve conter exatamente 3 chaves de os.environ.")
+        _exigir(snap_env["total_variaveis_omitidas_por_seguranca"] == 5, "Contagem de variaveis omitidas divergente.")
+
+        const_int = snap_env["configuracao_interna_imutavel"]["inicializacao_mista"]
+        _exigir(const_int["valor"] == "padrao", "Constante interna inicializacao_mista deve permanecer 'padrao'.")
+        _exigir(const_int["suporta_override_env"] is False, "Quarto parametro nao pode aceitar override por env.")
+        _exigir(const_int["origem"] == "constante_interna_imutavel_codigo_selado", "Origem do quarto parametro divergente.")
+        _exigir(
+            const_int["referencia_codigo"] == "lotofacil_modo4/promocao_producao.py:INICIALIZACAO_MISTA_FIXA",
+            "Referencia de codigo do quarto parametro divergente.",
+        )
+
+        for segredo in (
+            "GITHUB_TOKEN",
+            "AWS_SECRET_ACCESS_KEY",
+            "DATABASE_URL",
+            "API_SECRET_KEY",
+            "LOTOFACIL_MODO4_INICIALIZACAO",
+            "tentativa_override_nao_suportada",
+            "ghp_SEGREDO",
+            "senha@host",
+        ):
             _exigir(segredo not in bruto, f"Segredo/chave nao permitida vazou no snapshot: {segredo}")
 
     def test_04_maquina_contingencia_e_parser_netstat(self) -> None:
@@ -262,6 +301,9 @@ class TestLotofacilModo4PromocaoFase3Preparacao(unittest.TestCase):
         prep = verificar_preparacao_fase3_somente_leitura()
         _exigir(prep["fase3_executada"] is False, "Preparacao nao pode indicar Fase 3 executada.")
         _exigir(prep["pronto_para_deliberacao"] is True, f"Preparacao deve estar pronta: {prep}")
+        _exigir(prep["regras_governanca_fase3_ok"] is True, "Regras de governanca da Fase 3 devem estar conformes.")
+        _exigir(prep["quatro_parametros_governanca_esclarecidos"] is True, "Quatro parametros de governanca devem estar formalmente esclarecidos.")
+        _exigir(prep["modo_pos_rollback_designado"] == "encerrar_em_off_standby", "Modo pos-rollback designado divergente.")
         _exigir(prep["ata_fase2_veredito"] == "GO", "Pre-requisito Fase 2 GO deve estar verificado.")
         _exigir(prep["integridade_cadeia_selada"] is True and prep["divergencias"] == [], "Cadeia selada deve estar integra.")
         _exigir(set(prep["hashes_7_selados"].keys()) == set(ARQUIVOS_PRODUCAO_PROMOCAO), "Devem constar exatamente os 7 arquivos selados.")
@@ -287,6 +329,25 @@ class TestLotofacilModo4PromocaoFase3Preparacao(unittest.TestCase):
                 _exigir(res_ok["etapas"]["etapa_4_monitoramento"]["aprovado"] is True, "Monitoramento falhou.")
                 _exigir(res_ok["etapas"]["etapa_5_rollback_comprovado"]["aprovado"] is True, "Rollback comprovado 503 falhou.")
                 _exigir(os.path.isfile(os.path.join(tmp_ok, "DOSSIE_PROMOCAO_FASE3.md")), "Dossie temporario deveria existir.")
+
+                snap_iso = capturar_snapshot_producao_somente_leitura(
+                    porta=porta_a,
+                    incluir_sondagem_endpoints=False,
+                    environ_map={
+                        "LOTOFACIL_MODO4_ATIVO": "false",
+                        "LOTOFACIL_MODO4_PERMITIR_EXPERIMENTAL_2J": "false",
+                        "LOTOFACIL_MODO4_POLITICA_MICRO": "conservadora_3J",
+                        "SEGREDO_EXTERNO": "nao_pode_aparecer",
+                    },
+                )
+                qp = snap_iso["quatro_parametros_governanca"]
+                _exigir(len(qp) == 4, "Snapshot deve listar explicitamente os 4 parametros de governanca.")
+                _exigir(qp["4_inicializacao_mista"]["chave_env"] is None, "Quarto parametro nao tem chave de ambiente.")
+                _exigir(qp["4_inicializacao_mista"]["suporta_override_env"] is False, "Quarto parametro nao suporta override env.")
+                _exigir(qp["4_inicializacao_mista"]["valor_codigo_selado"] == "padrao", "Valor selado divergente.")
+                _exigir(qp["4_inicializacao_mista"]["valor_status_api"] == "padrao", "Valor /status divergente.")
+                _exigir(qp["4_inicializacao_mista"]["conforme"] is True, "Conformidade do quarto parametro deveria ser True.")
+                _exigir("SEGREDO_EXTERNO" not in json.dumps(snap_iso), "Variavel externa nao permitida vazou no snapshot isolado.")
 
             res_reat = executar_protocolo_fase3_controlado(
                 controlador_processo=ctrl_a,

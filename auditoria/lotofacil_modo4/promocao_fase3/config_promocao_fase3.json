@@ -28,8 +28,14 @@
       "LOTOFACIL_MODO4_PERMITIR_EXPERIMENTAL_2J",
       "LOTOFACIL_MODO4_POLITICA_MICRO"
     ],
-    "chaves_constantes_governanca": {
-      "inicializacao_mista": "padrao"
+    "configuracao_interna_imutavel": {
+      "inicializacao_mista": {
+        "valor": "padrao",
+        "origem": "constante_interna_imutavel_codigo_selado",
+        "referencia_codigo": "lotofacil_modo4/promocao_producao.py:INICIALIZACAO_MISTA_FIXA",
+        "suporta_override_env": false,
+        "motivo_fora_da_allowlist_env": "Nao existe quarta variavel de ambiente no servidor; ConfigProducaoLotofacilModo4.__post_init__ e carregar_config_producao_de_env fixam inicializacao_mista='padrao' no codigo selado."
+      }
     },
     "proibir_dump_ambiente_completo": true,
     "rotulo_variavel_nao_definida": "NAO_DEFINIDA_USAR_PADRAO_SEGURO"
@@ -90,7 +96,7 @@
     }
   },
   "tres_definicoes_operacionais": {
-    "1_escopo_snapshot_ambiente": "Captura exclusiva por allowlist das chaves LOTOFACIL_MODO4_*, registrando apenas a contagem numerica de variaveis omitidas.",
+    "1_escopo_snapshot_ambiente": "Captura exclusiva por allowlist das 3 chaves existentes em os.environ (LOTOFACIL_MODO4_ATIVO, LOTOFACIL_MODO4_PERMITIR_EXPERIMENTAL_2J e LOTOFACIL_MODO4_POLITICA_MICRO), registrando apenas a contagem numerica de variaveis omitidas; o quarto parametro de governanca (inicializacao_mista='padrao') nao existe no ambiente e e registrado separadamente com origem rastreada para constante imutavel no codigo selado.",
     "2_ordem_rollback_e_estado_final": {
       "etapas_ordenadas": [
         "etapa_1_snapshot_anterior",
@@ -104,6 +110,8 @@
         "encerrar_em_off_standby",
         "reativar_on_com_revalidacao"
       ],
+      "modo_pos_rollback_designado": "encerrar_em_off_standby",
+      "justificativa_estado_final_designado": "Por definicao formal de governanca da Fase 3, apos comprovar o rollback OFF (HTTP 503 e zero jogos), a janela de validacao controlada encerra em standby seguro (LOTOFACIL_MODO4_ATIVO=False), exigindo deliberacao posterior para eventual operacao continua em ON.",
       "exigir_escolha_explicita_cli": true,
       "comportamento_sem_escolha": "bloqueio_fail_closed_codigo_2"
     },

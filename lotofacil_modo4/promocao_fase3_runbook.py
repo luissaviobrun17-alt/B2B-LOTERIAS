@@ -80,6 +80,7 @@ MODOS_POS_ROLLBACK_VALIDOS: Tuple[str, ...] = (
     "encerrar_em_off_standby",
     "reativar_on_com_revalidacao",
 )
+MODO_POS_ROLLBACK_DESIGNADO = "encerrar_em_off_standby"
 TOKEN_CONFIRMACAO_HUMANA_FASE3 = "AUTORIZADO_PRODUCAO_PORTA_8000"
 _ESTADOS_ESCUTA_NETSTAT = {"LISTENING", "ESCUTANDO", "LISTEN"}
 
@@ -112,8 +113,10 @@ def sanitizar_variaveis_ambiente_snapshot(
     allowlist: Sequence[str] = ALLOWLIST_ENV_FASE3,
 ) -> Dict[str, Any]:
     """
-    Extrai somente as variaveis declaradas na allowlist de governanca.
+    Extrai exclusivamente as 3 variaveis existentes em os.environ declaradas na allowlist.
     Nunca inclui nomes ou valores de variaveis externas ou segredos do SO.
+    Registra separadamente o quarto parametro de governanca (inicializacao_mista),
+    que nao possui variavel de ambiente e decorre de constante interna imutavel.
     """
     fonte = os.environ if environ_map is None else environ_map
     chaves_permitidas = tuple(allowlist)
@@ -129,9 +132,61 @@ def sanitizar_variaveis_ambiente_snapshot(
     return {
         "variaveis_permitidas": variaveis,
         "allowlist_aplicada": list(chaves_permitidas),
-        "chaves_constantes_governanca": {"inicializacao_mista": INICIALIZACAO_MISTA_FIXA},
+        "configuracao_interna_imutavel": {
+            "inicializacao_mista": {
+                "valor": INICIALIZACAO_MISTA_FIXA,
+                "origem": "constante_interna_imutavel_codigo_selado",
+                "referencia_codigo": "lotofacil_modo4/promocao_producao.py:INICIALIZACAO_MISTA_FIXA",
+                "suporta_override_env": False,
+                "observacao": "Nao ha quarta variavel de ambiente no servidor; apenas 3 chaves existem em os.environ.",
+            }
+        },
         "proibir_dump_ambiente_completo": True,
         "total_variaveis_omitidas_por_seguranca": int(omitidas),
+    }
+
+
+def _mapear_quatro_parametros_governanca(
+    *,
+    env_snap: Dict[str, Any],
+    dados_status: Dict[str, Any],
+    endpoint_alcancavel: bool,
+) -> Dict[str, Any]:
+    """
+    Consolida os 4 parametros de governanca no snapshot, separando as 3 chaves
+    de ambiente da constante interna imutavel inicializacao_mista e conferindo /status.
+    """
+    vars_env = env_snap["variaveis_permitidas"]
+    const_int = env_snap["configuracao_interna_imutavel"]["inicializacao_mista"]
+    valor_api_inic = dados_status.get("inicializacao_mista")
+    return {
+        "1_feature_flag_ativa": {
+            "chave_env": ENV_FEATURE_FLAG_LOTOFACIL_MODO4,
+            "origem": "variavel_de_ambiente_allowlist_e_endpoint_status",
+            "valor_env": vars_env.get(ENV_FEATURE_FLAG_LOTOFACIL_MODO4),
+            "valor_status_api": dados_status.get("feature_flag_ativa"),
+        },
+        "2_experimental_2j_habilitada": {
+            "chave_env": ENV_PERMITIR_EXPERIMENTAL_2J,
+            "origem": "variavel_de_ambiente_allowlist_e_endpoint_status",
+            "valor_env": vars_env.get(ENV_PERMITIR_EXPERIMENTAL_2J),
+            "valor_status_api": dados_status.get("experimental_2j_habilitada"),
+        },
+        "3_politica_micro_padrao": {
+            "chave_env": ENV_POLITICA_MICRO_PADRAO,
+            "origem": "variavel_de_ambiente_allowlist_e_endpoint_status",
+            "valor_env": vars_env.get(ENV_POLITICA_MICRO_PADRAO),
+            "valor_status_api": dados_status.get("politica_micro_padrao"),
+        },
+        "4_inicializacao_mista": {
+            "chave_env": None,
+            "origem": const_int["origem"],
+            "referencia_codigo": const_int["referencia_codigo"],
+            "suporta_override_env": False,
+            "valor_codigo_selado": INICIALIZACAO_MISTA_FIXA,
+            "valor_status_api": valor_api_inic,
+            "conforme": (not endpoint_alcancavel) or (valor_api_inic == INICIALIZACAO_MISTA_FIXA),
+        },
     }
 
 
@@ -383,6 +438,12 @@ def capturar_snapshot_producao_somente_leitura(
         if incluir_sondagem_endpoints and estado_8000.get("alcancavel")
         else None
     )
+    env_snap = sanitizar_variaveis_ambiente_snapshot(environ_map=environ_map)
+    quatro_parametros = _mapear_quatro_parametros_governanca(
+        env_snap=env_snap,
+        dados_status=ds,
+        endpoint_alcancavel=bool(estado_8000.get("alcancavel")),
+    )
 
     return {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
@@ -400,7 +461,9 @@ def capturar_snapshot_producao_somente_leitura(
         "politica_micro_padrao": ds.get("politica_micro_padrao"),
         "inicializacao_mista": ds.get("inicializacao_mista"),
         "telemetria_anterior": ds.get("telemetria"),
-        "variaveis_ambiente": sanitizar_variaveis_ambiente_snapshot(environ_map=environ_map),
+        "variaveis_ambiente": env_snap,
+        "configuracao_interna_imutavel": env_snap["configuracao_interna_imutavel"],
+        "quatro_parametros_governanca": quatro_parametros,
         "integridade_7_selados": integridade_7,
         "hashes_arquivos_legados_disco_count": len(hashes_legados_disco),
         "sha256_mapa_legados_disco": _calcular_sha256_json_canonico(hashes_legados_disco),
@@ -445,12 +508,23 @@ def verificar_preparacao_fase3_somente_leitura(
     )
     param = cfg_f3["parametros_producao"]
     allow_cfg = cfg_f3["allowlist_variaveis_snapshot"]
+    inic_cfg = allow_cfg.get("configuracao_interna_imutavel", {}).get("inicializacao_mista", {})
+    defs_cfg = cfg_f3.get("tres_definicoes_operacionais", {})
+    def2_cfg = defs_cfg.get("2_ordem_rollback_e_estado_final", {})
+    quatro_esclarecidos = bool(
+        tuple(allow_cfg["chaves_permitidas"]) == ALLOWLIST_ENV_FASE3
+        and inic_cfg.get("valor") == INICIALIZACAO_MISTA_FIXA
+        and inic_cfg.get("suporta_override_env") is False
+        and bool(inic_cfg.get("origem"))
+        and bool(inic_cfg.get("referencia_codigo"))
+    )
     regras_f3_ok = bool(
         param["permitir_experimental_2j"] is False
         and param["politica_micro_homologada"] == POLITICA_MICRO_PRODUCAO_PADRAO
         and param["inicializacao_mista"] == INICIALIZACAO_MISTA_FIXA
         and allow_cfg["proibir_dump_ambiente_completo"] is True
-        and tuple(allow_cfg["chaves_permitidas"]) == ALLOWLIST_ENV_FASE3
+        and quatro_esclarecidos
+        and def2_cfg.get("modo_pos_rollback_designado") == MODO_POS_ROLLBACK_DESIGNADO
         and cfg_f3["clausula_matematica_obrigatoria"] == CLAUSULA_MATEMATICA_OBRIGATORIA
     )
 
@@ -470,6 +544,8 @@ def verificar_preparacao_fase3_somente_leitura(
         "pronto_para_deliberacao": pronto,
         "ata_fase2_veredito": ata_f2.get("veredito"),
         "regras_governanca_fase3_ok": regras_f3_ok,
+        "quatro_parametros_governanca_esclarecidos": quatro_esclarecidos,
+        "modo_pos_rollback_designado": def2_cfg.get("modo_pos_rollback_designado"),
         "integridade_cadeia_selada": integridade_7["integro"],
         "hashes_7_selados": integridade_7["hashes_atuais"],
         "divergencias": integridade_7["divergencias_totais"],

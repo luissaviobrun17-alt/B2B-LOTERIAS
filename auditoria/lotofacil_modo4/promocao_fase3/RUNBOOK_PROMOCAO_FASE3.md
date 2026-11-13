@@ -20,9 +20,18 @@ Esta entrega cria exclusivamente a preparacao auditavel, o checklist executavel,
 | Exigencia 3: Teste Controlado | Executar primeiro uma geracao pequena controlada (`3` jogos simples, `conservadora_3J`, semente `42`), conferir contrato, `diff <= 1e-12`, `historico_utilizado=null` e clausula obrigatoria; somente apos validacao integral rodar `/avaliar` e cenarios negativos `HTTP 422`. |
 | Exigencia 4: Monitoramento | Verificar zero erros HTTP inesperados, latencia dentro do teto (`<= 3.0 s` no teste controlado), `PeakWorkingSetSize <= 1024.0 MB`, contadores de `telemetria` coerentes em `/status` e operacao normal (`HTTP 200`) dos 4 motores legados e da Lotomania MODO 4. |
 | Exigencia 5: Rollback Comprovado | Alternar a porta `8000` para `LOTOFACIL_MODO4_ATIVO=False` e comprovar `HTTP 503` com `0` jogos e `fallback_executado=false` em `/gerar` e `/avaliar`, mantendo legados e Lotomania operacionais. |
-| Definicao 1: Allowlist de Ambiente | Registrar apenas as chaves explicitas `LOTOFACIL_MODO4_ATIVO`, `LOTOFACIL_MODO4_PERMITIR_EXPERIMENTAL_2J` e `LOTOFACIL_MODO4_POLITICA_MICRO`, omitindo quaisquer segredos ou variaveis do sistema operacional (gravando somente a contagem numerica omitida). |
-| Definicao 2: Ordem Pos-Rollback Explicita | A execucao futura exige parametro explicito `--pos-rollback-modo` (`encerrar_em_off_standby` ou `reativar_on_com_revalidacao`). Sem essa escolha explicita e token de confirmacao humana, a execucao falha fechada (`codigo 2`). |
+| Definicao 1: Allowlist de Ambiente e Quarto Parametro | Capturar em `os.environ` exclusivamente as 3 chaves existentes (`LOTOFACIL_MODO4_ATIVO`, `LOTOFACIL_MODO4_PERMITIR_EXPERIMENTAL_2J`, `LOTOFACIL_MODO4_POLITICA_MICRO`), omitindo segredos e variaveis externas (registrando apenas a contagem omitida). O quarto parametro (`inicializacao_mista="padrao"`) nao possui variavel de ambiente em `lotofacil_modo4/promocao_producao.py`; e registrado separadamente em `configuracao_interna_imutavel` e `quatro_parametros_governanca` com referencia para `INICIALIZACAO_MISTA_FIXA` e conferencia contra `/api/v1/lotofacil-modo4/status`. |
+| Definicao 2: Ordem Pos-Rollback e Estado Final Designado | A execucao futura exige parametro explicito `--pos-rollback-modo`, sendo **`encerrar_em_off_standby`** o estado final formalmente designado para encerramento da Fase 3 apos comprovar o rollback (`LOTOFACIL_MODO4_ATIVO=False`, `HTTP 503` e zero jogos). Sem essa escolha explicita e token de confirmacao humana, a execucao falha fechada (`codigo 2`). |
 | Definicao 3: Contingencia no Reinicio | Se houver falha de subida ou erro funcional com selo integro, abortar a Fase 3 e restaurar imediatamente a porta `8000` em `LOTOFACIL_MODO4_ATIVO=False` validando legados e Lotomania; se houver divergencia em qualquer dos 7 arquivos selados, abortar fail-closed sem mascaramento e preservar evidencias forenses. |
+
+### Proveniencia dos Quatro Parametros de Governanca no Snapshot
+
+| Parametro de Governanca | Origem Real no Sistema | Entra na Allowlist de `os.environ` | Registro Separado e Validacao Cruzada |
+| :--- | :--- | :--- | :--- |
+| `feature_flag_ativa` | Variavel de ambiente `LOTOFACIL_MODO4_ATIVO` | Sim (`1/3`) | `variaveis_ambiente.variaveis_permitidas` + `/status` (`quatro_parametros_governanca`) |
+| `experimental_2j_habilitada` | Variavel de ambiente `LOTOFACIL_MODO4_PERMITIR_EXPERIMENTAL_2J` | Sim (`2/3`) | `variaveis_ambiente.variaveis_permitidas` + `/status` (`quatro_parametros_governanca`) |
+| `politica_micro_padrao` | Variavel de ambiente `LOTOFACIL_MODO4_POLITICA_MICRO` | Sim (`3/3`) | `variaveis_ambiente.variaveis_permitidas` + `/status` (`quatro_parametros_governanca`) |
+| `inicializacao_mista` | Constante interna imutavel `lotofacil_modo4/promocao_producao.py:INICIALIZACAO_MISTA_FIXA = "padrao"` (`suporta_override_env = false`) | Nao (inexistente em `os.environ`) | `configuracao_interna_imutavel` + `quatro_parametros_governanca.4_inicializacao_mista` conferido contra `/status` |
 
 ## 3. Sequencia Ordenada Quando a Fase 3 For Expressamente Autorizada
 
@@ -31,7 +40,7 @@ Esta entrega cria exclusivamente a preparacao auditavel, o checklist executavel,
 3. **Etapa 3 (Teste Controlado Escalonado):** validar primeiro carteira de `3` jogos; apenas se aprovada, executar `/avaliar` e cenarios negativos `HTTP 422`.
 4. **Etapa 4 (Monitoramento):** auditar memoria (`PeakWorkingSetSize`), latencias, telemetria em `/status`, 4 rotas legadas e Lotomania MODO 4.
 5. **Etapa 5 (Rollback Comprovado):** reiniciar em `LOTOFACIL_MODO4_ATIVO=false` e comprovar `HTTP 503` e zero jogos.
-6. **Etapa 6 (Estado Final Explicito):** executar exatamente o `--pos-rollback-modo` autorizado (`encerrar_em_off_standby` ou `reativar_on_com_revalidacao`), emitir `ata_promocao_fase3.json`, `evidencias_promocao_fase3.json` e `DOSSIE_PROMOCAO_FASE3.md`.
+6. **Etapa 6 (Estado Final Designado `encerrar_em_off_standby`):** executar `--pos-rollback-modo encerrar_em_off_standby` como estado final formalmente designado apos comprovar o rollback (`LOTOFACIL_MODO4_ATIVO=False`, `HTTP 503` e zero jogos, reservando eventual `reativar_on_com_revalidacao` apenas a deliberacao especifica posterior), emitir `ata_promocao_fase3.json`, `evidencias_promocao_fase3.json` e `DOSSIE_PROMOCAO_FASE3.md`.
 
 ## 4. Criterios Obrigatorios de Interrupcao Imediata
 
@@ -50,11 +59,11 @@ Set-Location 'C:\Users\Luis Brun\Desktop\GitHub\B2B LOTERIAS'
 # 1. Conferencia passiva da Preparacao da Fase 3 (nao altera nem reinicia a porta 8000)
 & 'C:\Users\Luis Brun\AppData\Local\Programs\Python\Python312\python.exe' -m lotofacil_modo4.promocao_fase3_runbook --preparacao-check
 
-# 2. Captura de snapshot somente-leitura da porta 8000 com allowlist (nao altera nem reinicia)
+# 2. Captura de snapshot somente-leitura da porta 8000 com allowlist + configuracao interna imutavel (nao altera nem reinicia)
 & 'C:\Users\Luis Brun\AppData\Local\Programs\Python\Python312\python.exe' -m lotofacil_modo4.promocao_fase3_runbook --snapshot-somente-leitura
 
-# 3. Execucao da Fase 3 (BLOQUEADA nesta etapa; exige autorizacao formal expressa)
-# & 'C:\Users\Luis Brun\AppData\Local\Programs\Python\Python312\python.exe' -m lotofacil_modo4.promocao_fase3_runbook --autorizar-execucao-fase3 --confirmacao-humana-fase3 AUTORIZADO_PRODUCAO_PORTA_8000 --pos-rollback-modo <encerrar_em_off_standby|reativar_on_com_revalidacao>
+# 3. Execucao da Fase 3 com o estado final designado (BLOQUEADA nesta etapa; exige autorizacao formal expressa)
+# & 'C:\Users\Luis Brun\AppData\Local\Programs\Python\Python312\python.exe' -m lotofacil_modo4.promocao_fase3_runbook --autorizar-execucao-fase3 --confirmacao-humana-fase3 AUTORIZADO_PRODUCAO_PORTA_8000 --pos-rollback-modo encerrar_em_off_standby
 ```
 
 ## 6. Limites Cientificos e Clausula Obrigatoria
