@@ -1,0 +1,174 @@
+{
+  "versao_runbook": "1.0.0-fase1-preparacao",
+  "versao_alvo_promocao": "5.1.0-promocao-controlada",
+  "data_preparacao_utc": "2026-11-13T18:40:00+00:00",
+  "status_fase": "FASE_1_PREPARACAO_CONCLUIDA_AGUARDANDO_AUTORIZACAO_FASE_2",
+  "diretorio_evidencias_isolado": "auditoria/lotofacil_modo4/homologacao_ativacao",
+  "preservacao_manifestos": {
+    "nao_sobrescrever": [
+      "auditoria/lotofacil_modo4/manifesto_etapa5.json",
+      "auditoria/lotofacil_modo4/manifesto_promocao_controlada.json",
+      "auditoria/lotofacil_modo4/DOSSIE_PROMOCAO_CONTROLADA.md",
+      "auditoria/lotofacil_modo4/promocao_controlada_evidencias.json",
+      "manifesto_modo4.json"
+    ]
+  },
+  "hardware_baseline_medido": {
+    "sistema_operacional": "Windows-11-10.0.26200-SP0",
+    "arquitetura": "AMD64",
+    "python_versao": "3.12.10",
+    "cpu_modelo": "AMD Ryzen 7 255 w/ Radeon 780M Graphics",
+    "cpu_nucleos_fisicos": 8,
+    "cpu_threads_logicas": 16,
+    "cpu_clock_max_mhz": 3801,
+    "ram_total_gb": 29.79,
+    "ram_disponivel_medida_gb": 16.07,
+    "disco_livre_gb": 803.21,
+    "modelo_execucao_api": "uvicorn processo unico (workers=1) com pool de threads AnyIO sob GIL Python 3.12",
+    "navegador_headless_disponivel": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "dependencias_automacao": {
+      "playwright": false,
+      "selenium": false,
+      "psutil": false,
+      "driver_navegador": "CDP WebSocket sobre stdlib Python pura",
+      "driver_memoria": "Win32 psapi.GetProcessMemoryInfo via ctypes stdlib"
+    }
+  },
+  "ambiente_homologacao_isolada": {
+    "host": "127.0.0.1",
+    "porta_api_producao_preservada": 8000,
+    "porta_api_isolada_preferencial": 18080,
+    "porta_ui_isolada_preferencial": 18081,
+    "politica_micro_homologada": "conservadora_3J",
+    "permitir_experimental_2j": false,
+    "inicializacao_mista": "padrao"
+  },
+  "criterios_go_no_go": {
+    "frente_1_criptografia": {
+      "exigir_integro_pre_e_pos": true,
+      "exigir_manifesto_promocao": true,
+      "exigir_manifesto_etapa5": true,
+      "exigir_selo_lotomania_valido": true,
+      "max_divergencias": 0
+    },
+    "frente_2_rotas_e_contratos": {
+      "exigir_status_off_503_zero_jogos": true,
+      "exigir_experimental_2j_bloqueada_422": true,
+      "exigir_inicializacao_mista_bloqueada_422": true,
+      "exigir_historico_bloqueado_422": true,
+      "exigir_contradicao_pool_bloqueadas_422": true,
+      "tolerancia_divergencia_ast_F": 1e-12,
+      "tolerancia_divergencia_ast_componentes": 1e-12
+    },
+    "frente_3_carga_escalonada": {
+      "timeout_por_requisicao_s": 30.0,
+      "max_taxa_erro_pct": 0.0,
+      "patamares": [
+        {
+          "id": "patamar_1_1x_cores_fisicos",
+          "descricao": "Concorrencia igual a 8 nucleos fisicos (16 chamadas /gerar homogeneas)",
+          "workers_simultaneos": 8,
+          "total_requisicoes": 16,
+          "max_p95_s": 2.5,
+          "max_p99_s": 3.5,
+          "exigir_determinismo_hash_unico": true
+        },
+        {
+          "id": "patamar_2_1x_threads_logicas",
+          "descricao": "Concorrencia igual a 16 threads logicas (32 chamadas /gerar homogeneas)",
+          "workers_simultaneos": 16,
+          "total_requisicoes": 32,
+          "max_p95_s": 5.0,
+          "max_p99_s": 6.5,
+          "exigir_determinismo_hash_unico": true
+        },
+        {
+          "id": "patamar_3_sobrecarga_controlada_mista",
+          "descricao": "Concorrencia 24 workers (1.5x threads logicas) com carga mista /gerar, /avaliar, /status, Lotomania MODO 4 e legados",
+          "workers_simultaneos": 24,
+          "total_requisicoes": 60,
+          "distribuicao": {
+            "lotofacil_modo4_gerar": 24,
+            "lotofacil_modo4_avaliar": 12,
+            "lotofacil_modo4_status": 12,
+            "lotomania_modo4_gerar": 6,
+            "motores_legados": 6
+          },
+          "max_p95_gerar_s": 8.0,
+          "max_p95_status_s": 0.75,
+          "max_p95_legados_s": 2.0,
+          "exigir_determinismo_hash_unico": true
+        }
+      ],
+      "limites_memoria_processo_isolado": {
+        "max_rss_absoluto_mb": 1024.0,
+        "max_crescimento_rss_patamar1_para_patamar3_mb": 150.0
+      }
+    },
+    "frente_4_navegador_web_mobile": {
+      "interfaces": [
+        "index.html",
+        "B2B_Loterias_Mobile.html"
+      ],
+      "max_excecoes_js_nao_tratadas": 0,
+      "exigir_subpainel_inicial_oculto": true,
+      "exigir_checkbox_experimental_2j_desabilitada": true,
+      "exigir_off_503_zero_jogos_sem_fallback": true,
+      "exigir_on_geracao_e_auditoria_dom": true,
+      "exigir_clausula_obrigatoria_no_dom": true
+    },
+    "frente_5_nao_interferencia": {
+      "rotas_legadas_obrigatorias": [
+        "/api/v1/motor-lotofacil",
+        "/api/v1/motor-lotomania",
+        "/api/v1/motor-diadesorte",
+        "/api/v1/motor-megasena"
+      ],
+      "exigir_lotomania_hash_v2_identico_off_vs_on": true,
+      "exigir_http_200_todos_legados": true
+    },
+    "frente_6_rollback_e_preservacao": {
+      "exigir_rollback_runtime_imediato_503_zero_jogos": true,
+      "exigir_reinicio_subprocesso_env_off_503_zero_jogos": true,
+      "exigir_producao_8000_inalterada_off": true
+    }
+  },
+  "casos_repetibilidade": {
+    "caso_simples_conservador": {
+      "quantidade_jogos": 6,
+      "tamanho_aposta": 15,
+      "tipo_concurso": "concurso_regular",
+      "prioridade": "equilibrio_adaptativo",
+      "semente": 42,
+      "max_avaliacoes": 200
+    },
+    "caso_multipla_16_independencia": {
+      "quantidade_jogos": 4,
+      "tamanho_aposta": 16,
+      "pool": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+      "fixas": [1, 2],
+      "bloqueadas": [24, 25],
+      "modo_fixas": "todos_os_jogos",
+      "tipo_concurso": "lotofacil_independencia",
+      "semente": 42,
+      "max_avaliacoes": 220
+    },
+    "caso_lotomania_controle": {
+      "quantidade_jogos": 5,
+      "permitir_espelhos": true,
+      "seed": 42,
+      "trace": false
+    }
+  },
+  "regras_automaticas_no_go": [
+    "Qualquer divergencia criptografica SHA-256 ou falha no selo Ed25519 antes ou depois da homologacao.",
+    "Qualquer fallback executado para motor JS ou motor legado quando flag OFF, erro HTTP ou offline.",
+    "Qualquer resposta diferente de HTTP 503 ou entrega > 0 jogos com flag OFF ou pos-rollback.",
+    "Qualquer aceitacao de experimental_2J sem habilitacao, inicializacao_mista='mista_equilibrada' ou payload com historico.",
+    "Qualquer divergencia numerica > 1e-12 entre motor principal e referencia AST independente.",
+    "Qualquer erro HTTP inesperado, timeout ou violacao de p95/p99/RSS/determinismo nos patamares de carga.",
+    "Qualquer excecao JS nao capturada ou ausencia da clausula obrigatoria nas interfaces Web e Mobile.",
+    "Qualquer degradacao ou alteracao de hash na Lotomania MODO 4 ou erro nos motores legados.",
+    "Qualquer alteracao observada no estado do servico de producao (127.0.0.1:8000)."
+  ]
+}

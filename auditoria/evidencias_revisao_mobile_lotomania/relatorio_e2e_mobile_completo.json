@@ -1,0 +1,104 @@
+{
+  "sucesso": true,
+  "sintaxe_e_boot": {
+    "inline_scripts_compilados_v8": 60,
+    "touch_fix_scripts": 1,
+    "touch_fix_console_logs": 1,
+    "lotofacil_modo4_oculto_padrao": true,
+    "lotofacil_exp2j_desabilitado": true,
+    "excecoes_js_nao_tratadas": 0
+  },
+  "botoes_e_funcionalidades": {
+    "conferir_20_ok": true,
+    "copy_btn": {
+      "btnText": "Veja a Janela",
+      "modalOpen": true,
+      "taLen": 5235
+    },
+    "save_btn_payload": {
+      "gameKey": "lotomania",
+      "fileName": "Lotomania_13-11-2026_17h18m34s.txt",
+      "content_len": 5811,
+      "first_lines": [
+        "═══════════════════════════════════════",
+        "  JOGOS — LOTOMANIA",
+        "  Data: 13/11/2026, 17:18:34",
+        "  Total de Jogos: 20",
+        "═══════════════════════════════════════"
+      ]
+    },
+    "print_btn_calls": 1,
+    "check_modal_ok": true,
+    "central_modal_ok": true,
+    "compare_btn_ok": true,
+    "play_caixa_href": "https://www.loteriasonline.caixa.gov.br/silce-web/#/lotomania"
+  },
+  "presets_testados": [
+    {
+      "expectedQtd": "1",
+      "actualQtd": "1",
+      "custoTxt": "R$ 3,00 (1 jogo)"
+    },
+    {
+      "expectedQtd": "20",
+      "actualQtd": "20",
+      "custoTxt": "R$ 60,00 (20 jogos)"
+    },
+    {
+      "expectedQtd": "100",
+      "actualQtd": "100",
+      "custoTxt": "R$ 300,00 (100 jogos)"
+    },
+    {
+      "expectedQtd": "500",
+      "actualQtd": "500",
+      "custoTxt": "R$ 1.500,00 (500 jogos)"
+    },
+    {
+      "expectedQtd": "1000",
+      "actualQtd": "1000",
+      "custoTxt": "R$ 3.000,00 (1.000 jogos)"
+    },
+    {
+      "expectedQtd": "5000",
+      "actualQtd": "5000",
+      "custoTxt": "R$ 15.000,00 (5.000 jogos)"
+    },
+    {
+      "expectedQtd": "10000",
+      "actualQtd": "10000",
+      "custoTxt": "R$ 30.000,00 (10.000 jogos)"
+    }
+  ],
+  "teste_20_jogos": {
+    "games_len": 20,
+    "dom_cards": 20,
+    "hash_v1": "a98c0b0267b1c2d91c630b363bb9be6744dd1d2a6d6943d447f869d705844f0f",
+    "hash_esperado": "a98c0b0267b1c2d91c630b363bb9be6744dd1d2a6d6943d447f869d705844f0f"
+  },
+  "teste_10000_jogos": {
+    "tempo_s": 223.44,
+    "games_len": 10000,
+    "dates_len": 10000,
+    "dom_cards": 500,
+    "hash_v1": "e994c3ca0cd7700ae32772e35979f4c2e2ed2d5a0c08bb512a5333dc55ba0deb",
+    "hash_v2": "439608f1fc180636de0650c78236cd33ed97c80043e040b1035888e764d97555",
+    "hash_esperado": "e994c3ca0cd7700ae32772e35979f4c2e2ed2d5a0c08bb512a5333dc55ba0deb",
+    "conferencia_10k_2699_ok": true,
+    "health_durante_10k": {
+      "probes": 45,
+      "max_latencia_s": 0.047,
+      "media_latencia_s": 0.0312
+    }
+  },
+  "teste_offline_fail_closed": {
+    "btnDisabled": false,
+    "gamesLen": 0,
+    "lastModo4GamesIsNull": true,
+    "domCards": 0,
+    "alertaDisplay": "block",
+    "alertaText": "⚠️ MODO 4 temporariamente indisponível. O servidor matemático oficial não está conectado. Nenhum jogo foi gerado.",
+    "gcText": "MODO 4 temporariamente indisponível. O servidor matemático oficial não está conectado. Nenhum jogo foi gerado."
+  },
+  "alerts_capturados": []
+}

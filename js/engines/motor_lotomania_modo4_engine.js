@@ -10,6 +10,7 @@
 class MotorLotomaniaModo4Engine {
     static API_BASE = 'http://127.0.0.1:8000';
     static ENDPOINT_GERAR = 'http://127.0.0.1:8000/api/v1/lotomania-modo4/gerar';
+    static ENDPOINT_JOBS = 'http://127.0.0.1:8000/api/v1/lotomania-modo4/jobs';
     static ENDPOINT_CONFERIR = 'http://127.0.0.1:8000/api/v1/lotomania-modo4/conferir';
     static ENDPOINT_HEALTH = 'http://127.0.0.1:8000/health';
 
@@ -27,19 +28,84 @@ class MotorLotomaniaModo4Engine {
         return String(num).padStart(2, '0');
     }
 
+    static _respostaVaziaErro(erro, extras = {}) {
+        return {
+            sucesso: false,
+            jogos: [],
+            jogos_formatados: [],
+            quantidade_entregue: 0,
+            erro: erro,
+            ...extras
+        };
+    }
+
+    static _aguardar(ms, signal = null) {
+        return new Promise((resolve) => {
+            if (signal && signal.aborted) {
+                resolve();
+                return;
+            }
+            const timer = setTimeout(() => {
+                if (signal && onAbort) signal.removeEventListener('abort', onAbort);
+                resolve();
+            }, ms);
+            const onAbort = signal ? () => {
+                clearTimeout(timer);
+                signal.removeEventListener('abort', onAbort);
+                resolve();
+            } : null;
+            if (signal && onAbort) {
+                signal.addEventListener('abort', onAbort, { once: true });
+            }
+        });
+    }
+
+    static async _fetchComTimeout(url, fetchOptions, timeoutMs, externalSignal = null) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        const onExternalAbort = () => controller.abort();
+        if (externalSignal) {
+            if (externalSignal.aborted) {
+                clearTimeout(timeoutId);
+                throw new DOMException('Aborted', 'AbortError');
+            }
+            externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+        }
+        try {
+            return await fetch(url, { ...fetchOptions, signal: controller.signal });
+        } finally {
+            clearTimeout(timeoutId);
+            if (externalSignal) externalSignal.removeEventListener('abort', onExternalAbort);
+        }
+    }
+
+    /**
+     * Solicita cancelamento imediato de um job assíncrono em execução no servidor.
+     */
+    static async cancelarJob(jobId) {
+        if (!jobId) return false;
+        try {
+            const resp = await this._fetchComTimeout(
+                `${this.ENDPOINT_JOBS}/${encodeURIComponent(jobId)}`,
+                { method: 'DELETE', headers: { 'Accept': 'application/json' } },
+                5000
+            );
+            return Boolean(resp && resp.ok);
+        } catch (_err) {
+            return false;
+        }
+    }
+
     /**
      * Consulta o endpoint /health do servidor Python para verificar disponibilidade e selo Ed25519.
      */
     static async verificarStatusServidor() {
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2500);
-            const resp = await fetch(this.ENDPOINT_HEALTH, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' },
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
+            const resp = await this._fetchComTimeout(
+                this.ENDPOINT_HEALTH,
+                { method: 'GET', headers: { 'Accept': 'application/json' } },
+                5000
+            );
             if (!resp.ok) {
                 return {
                     conectado: false,
@@ -99,19 +165,13 @@ class MotorLotomaniaModo4Engine {
     }
 
     /**
-     * Solicita a geração de carteira ao servidor Python oficial do MODO 4 v1.2.
+     * Solicita a geração de carteira ao servidor Python oficial do MODO 4 v1.2 via job assíncrono.
      * Não existe fallback local: qualquer falha de conexão retorna zero jogos.
      */
     static async gerarCarteira(quantidadeJogos, options = {}) {
         const validacaoQtd = this.validarQuantidadeJogos(quantidadeJogos);
         if (!validacaoQtd.valido) {
-            return {
-                sucesso: false,
-                jogos: [],
-                jogos_formatados: [],
-                quantidade_entregue: 0,
-                erro: validacaoQtd.erro
-            };
+            return this._respostaVaziaErro(validacaoQtd.erro);
         }
 
         const permitirEspelhos = (options.permitirEspelhos !== undefined)
@@ -121,23 +181,11 @@ class MotorLotomaniaModo4Engine {
         let seedVal = null;
         if (options.seed !== undefined && options.seed !== null && String(options.seed).trim() !== '') {
             if (typeof options.seed === 'boolean') {
-                return {
-                    sucesso: false,
-                    jogos: [],
-                    jogos_formatados: [],
-                    quantidade_entregue: 0,
-                    erro: 'Parâmetro seed inválido: deve ser um número inteiro ou vazio.'
-                };
+                return this._respostaVaziaErro('Parâmetro seed inválido: deve ser um número inteiro ou vazio.');
             }
             const parsedSeed = Number(options.seed);
             if (!Number.isInteger(parsedSeed)) {
-                return {
-                    sucesso: false,
-                    jogos: [],
-                    jogos_formatados: [],
-                    quantidade_entregue: 0,
-                    erro: 'Parâmetro seed inválido: deve ser um número inteiro ou vazio.'
-                };
+                return this._respostaVaziaErro('Parâmetro seed inválido: deve ser um número inteiro ou vazio.');
             }
             seedVal = parsedSeed;
         }
@@ -149,64 +197,171 @@ class MotorLotomaniaModo4Engine {
             trace: Boolean(options.trace === true)
         };
 
+        const signal = options.signal || null;
+        const onProgress = typeof options.onProgress === 'function' ? options.onProgress : null;
+        const onJobCreated = typeof options.onJobCreated === 'function' ? options.onJobCreated : null;
+        const maxWaitMs = Number.isFinite(options.maxWaitMs) && options.maxWaitMs > 0 ? options.maxWaitMs : 1800000;
+        let activeJobId = null;
+
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 180000);
+            // 1) Cria o job no servidor (resposta HTTP 202 imediata, imune a timeout HTTP de longa execucao)
+            const respCriar = await this._fetchComTimeout(
+                this.ENDPOINT_JOBS,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                },
+                15000,
+                signal
+            );
 
-            const resp = await fetch(this.ENDPOINT_GERAR, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (resp.status === 503) {
-                return {
-                    sucesso: false,
-                    jogos: [],
-                    jogos_formatados: [],
-                    quantidade_entregue: 0,
-                    erro: this.MENSAGEM_INDISPONIVEL
-                };
+            if (respCriar.status === 503) {
+                return this._respostaVaziaErro(this.MENSAGEM_INDISPONIVEL);
             }
 
-            const data = await resp.json();
-            if (!resp.ok || !data || data.sucesso !== true || !Array.isArray(data.jogos)) {
+            let jobInit = null;
+            try {
+                jobInit = await respCriar.json();
+            } catch (_jsonErr) {
+                jobInit = null;
+            }
+
+            if (!respCriar.ok || !jobInit || !jobInit.job_id) {
+                const detailMsg = (jobInit && (jobInit.erro || jobInit.detail))
+                    ? (typeof jobInit.detail === 'string' ? jobInit.detail : JSON.stringify(jobInit.detail))
+                    : this.MENSAGEM_INDISPONIVEL;
+                return this._respostaVaziaErro(detailMsg);
+            }
+
+            activeJobId = jobInit.job_id;
+            if (onJobCreated) onJobCreated(activeJobId);
+            if (onProgress) onProgress(jobInit);
+
+            const pollIntervalBase = Number.isFinite(jobInit.poll_interval_ms) && jobInit.poll_interval_ms >= 250
+                ? jobInit.poll_interval_ms
+                : 1500;
+            const deadline = Date.now() + maxWaitMs;
+            let falhasTransitoriasSeguidas = 0;
+            const maxFalhasTransitorias = 3;
+
+            // 2) Polling curto com tolerancia controlada a falhas transitorias de rede/aba em segundo plano
+            while (Date.now() < deadline) {
+                if (signal && signal.aborted) {
+                    await this.cancelarJob(activeJobId);
+                    return this._respostaVaziaErro('Operação cancelada pelo usuário. Nenhum jogo foi gerado.', { cancelado: true });
+                }
+
+                await this._aguardar(pollIntervalBase, signal);
+
+                if (signal && signal.aborted) {
+                    await this.cancelarJob(activeJobId);
+                    return this._respostaVaziaErro('Operação cancelada pelo usuário. Nenhum jogo foi gerado.', { cancelado: true });
+                }
+
+                let respStatus = null;
+                let statusData = null;
+                try {
+                    respStatus = await this._fetchComTimeout(
+                        `${this.ENDPOINT_JOBS}/${encodeURIComponent(activeJobId)}`,
+                        { method: 'GET', headers: { 'Accept': 'application/json' } },
+                        12000,
+                        signal
+                    );
+                } catch (pollErr) {
+                    if (signal && signal.aborted) {
+                        await this.cancelarJob(activeJobId);
+                        return this._respostaVaziaErro('Operação cancelada pelo usuário. Nenhum jogo foi gerado.', { cancelado: true });
+                    }
+                    falhasTransitoriasSeguidas += 1;
+                    if (falhasTransitoriasSeguidas > maxFalhasTransitorias) {
+                        return this._respostaVaziaErro(this.MENSAGEM_INDISPONIVEL);
+                    }
+                    continue;
+                }
+
+                if (respStatus.status === 503) {
+                    return this._respostaVaziaErro(this.MENSAGEM_INDISPONIVEL);
+                }
+                if (respStatus.status === 404) {
+                    return this._respostaVaziaErro('Tarefa interrompida no servidor (sessão reiniciada ou expirada). Nenhum jogo foi gerado.');
+                }
+
+                try {
+                    statusData = await respStatus.json();
+                } catch (_parseErr) {
+                    statusData = null;
+                }
+
+                if (!respStatus.ok || !statusData) {
+                    falhasTransitoriasSeguidas += 1;
+                    if (falhasTransitoriasSeguidas > maxFalhasTransitorias) {
+                        const errDetail = (statusData && (statusData.erro || statusData.detail)) || this.MENSAGEM_INDISPONIVEL;
+                        return this._respostaVaziaErro(typeof errDetail === 'string' ? errDetail : JSON.stringify(errDetail));
+                    }
+                    continue;
+                }
+
+                falhasTransitoriasSeguidas = 0;
+                if (onProgress) onProgress(statusData);
+
+                if (statusData.status === 'completed') {
+                    break;
+                }
+                if (statusData.status === 'failed') {
+                    const isSeloOuOffline = statusData.status_http === 503 || statusData.codigo_erro === 'SELO_INVALIDO';
+                    const msgFalha = isSeloOuOffline
+                        ? this.MENSAGEM_INDISPONIVEL
+                        : (statusData.erro || 'Erro interno ao otimizar carteira no servidor oficial. Nenhum jogo foi gerado.');
+                    return this._respostaVaziaErro(msgFalha);
+                }
+                if (statusData.status === 'cancelled') {
+                    return this._respostaVaziaErro(
+                        statusData.erro || 'Operação cancelada pelo usuário. Nenhum jogo foi gerado.',
+                        { cancelado: true }
+                    );
+                }
+            }
+
+            if (Date.now() >= deadline) {
+                await this.cancelarJob(activeJobId);
+                return this._respostaVaziaErro('Tempo limite global de execução excedido no servidor matemático. Nenhum jogo foi gerado.');
+            }
+
+            // 3) Coleta do JSON completo validado (suporte folgado para carteiras ate 10.000 jogos)
+            const respRes = await this._fetchComTimeout(
+                `${this.ENDPOINT_JOBS}/${encodeURIComponent(activeJobId)}/resultado`,
+                { method: 'GET', headers: { 'Accept': 'application/json' } },
+                60000,
+                signal
+            );
+
+            if (respRes.status === 503) {
+                return this._respostaVaziaErro(this.MENSAGEM_INDISPONIVEL);
+            }
+
+            const data = await respRes.json();
+            if (!respRes.ok || !data || data.sucesso !== true || !Array.isArray(data.jogos)) {
                 const detailMsg = (data && (data.erro || data.detail))
                     ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail))
                     : this.MENSAGEM_INDISPONIVEL;
-                return {
-                    sucesso: false,
-                    jogos: [],
-                    jogos_formatados: [],
-                    quantidade_entregue: 0,
-                    erro: detailMsg
-                };
+                return this._respostaVaziaErro(detailMsg);
             }
 
             const respostaCompleta = data.jogos.length === validacaoQtd.valor && data.jogos.every(
                 (j) => Array.isArray(j) && j.length === 50 && new Set(j).size === 50
             );
             if (!respostaCompleta) {
-                return {
-                    sucesso: false,
-                    jogos: [],
-                    jogos_formatados: [],
-                    quantidade_entregue: 0,
-                    erro: this.MENSAGEM_INDISPONIVEL
-                };
+                return this._respostaVaziaErro(this.MENSAGEM_INDISPONIVEL);
             }
 
             return data;
         } catch (_err) {
-            return {
-                sucesso: false,
-                jogos: [],
-                jogos_formatados: [],
-                quantidade_entregue: 0,
-                erro: this.MENSAGEM_INDISPONIVEL
-            };
+            if (signal && signal.aborted && activeJobId) {
+                await this.cancelarJob(activeJobId);
+                return this._respostaVaziaErro('Operação cancelada pelo usuário. Nenhum jogo foi gerado.', { cancelado: true });
+            }
+            return this._respostaVaziaErro(this.MENSAGEM_INDISPONIVEL);
         }
     }
 

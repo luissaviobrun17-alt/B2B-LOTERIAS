@@ -1,0 +1,1312 @@
+{
+  "etapa": "ETAPA_1_REGRAS_E_FORMALIZACAO_MATEMATICA",
+  "fonte_oficial_url": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+  "data_conferencia_caixa": "2026-11-13",
+  "regras_oficiais": {
+    "universo_total": 25,
+    "quantidade_sorteada": 15,
+    "min_dezenas_aposta": 15,
+    "max_dezenas_aposta": 20,
+    "faixas_premiadas": [
+      15,
+      14,
+      13,
+      12,
+      11
+    ],
+    "espaco_amostral_simples": 3268760,
+    "preco_aposta_simples_brl": "3.50",
+    "percentual_premio_bruto": "0.4379",
+    "premios_fixos_brl": {
+      "11": "7.00",
+      "12": "14.00",
+      "13": "35.00"
+    }
+  },
+  "regras_premiacao_versionadas": {
+    "regras_premiacao_regular": {
+      "codigo_regime": "concurso_regular",
+      "nome": "Concurso Regular da Lotofacil",
+      "versao_regra": "2025.07-v1",
+      "vigencia_desde_data": "2025-07-10",
+      "vigencia_desde_concurso": 3439,
+      "fonte_oficial_url": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+      "conferido_em": "2026-11-13",
+      "preco_aposta_simples_brl": "3.50",
+      "percentual_premio_bruto": "0.4379",
+      "premios_fixos_brl": {
+        "11": "7.00",
+        "12": "14.00",
+        "13": "35.00"
+      },
+      "rateio_saldo_variavel": {
+        "15_acertos": "0.62",
+        "14_acertos": "0.13",
+        "acumulado_final_zero": "0.10",
+        "acumulado_independencia": "0.15"
+      },
+      "observacao_normativa": "Deducao previa dos premios fixos (11, 12 e 13 acertos) antes do rateio percentual do saldo variavel."
+    },
+    "regras_premiacao_final_zero": {
+      "codigo_regime": "concurso_final_zero",
+      "nome": "Concurso Especial de Final Zero (terminados em 0, exceto Independencia)",
+      "versao_regra": "2025.07-v1",
+      "vigencia_desde_data": "2025-07-10",
+      "vigencia_desde_concurso": 3439,
+      "fonte_oficial_url": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+      "conferido_em": "2026-11-13",
+      "preco_aposta_simples_brl": "3.50",
+      "percentual_premio_bruto": "0.4379",
+      "premios_fixos_brl": {
+        "11": "7.00",
+        "12": "14.00",
+        "13": "35.00"
+      },
+      "rateio_saldo_variavel": {
+        "15_acertos": "0.72",
+        "14_acertos": "0.13",
+        "acumulado_independencia": "0.15"
+      },
+      "observacao_normativa": "Recebe o acumulado reservado nos 9 concursos anteriores de final 1 a 9 (10% do saldo variavel)."
+    },
+    "regras_premiacao_independencia": {
+      "codigo_regime": "lotofacil_independencia",
+      "nome": "Concurso Especial Lotofacil da Independência",
+      "versao_regra": "2025.07-v1",
+      "vigencia_desde_data": "2025-07-10",
+      "vigencia_desde_concurso": 3439,
+      "fonte_oficial_url": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+      "conferido_em": "2026-11-13",
+      "preco_aposta_simples_brl": "3.50",
+      "percentual_premio_bruto": "0.4379",
+      "premios_fixos_brl": {
+        "11": "7.00",
+        "12": "14.00",
+        "13": "35.00"
+      },
+      "rateio_saldo_variavel": {
+        "15_acertos": "0.87",
+        "14_acertos": "0.13"
+      },
+      "observacao_normativa": "Nao acumula; 87% do saldo variavel vai para 15 acertos e 13% para 14 acertos, somado ao fundo acumulado (15% do saldo dos concursos anteriores). Em situacoes excepcionais de arrecadacao/ganhadores, a CAIXA pode aplicar ajuste proporcional nas faixas fixas (observado na base oficial no concurso 3780 em 15/09/2026)."
+    }
+  },
+  "historico_transicoes_faixas_fixas": [
+    {
+      "concurso_inicio": 1,
+      "data_inicio": "2003-09-29",
+      "premios_fixos_brl": {
+        "11": "2.00",
+        "12": "4.00",
+        "13": "10.00"
+      }
+    },
+    {
+      "concurso_inicio": 460,
+      "data_inicio": "2009-09-10",
+      "premios_fixos_brl": {
+        "11": "2.50",
+        "12": "5.00",
+        "13": "12.50"
+      }
+    },
+    {
+      "concurso_inicio": 1054,
+      "data_inicio": "2014-05-12",
+      "premios_fixos_brl": {
+        "11": "3.00",
+        "12": "6.00",
+        "13": "15.00"
+      }
+    },
+    {
+      "concurso_inicio": 1213,
+      "data_inicio": "2015-05-25",
+      "premios_fixos_brl": {
+        "11": "4.00",
+        "12": "8.00",
+        "13": "20.00"
+      }
+    },
+    {
+      "concurso_inicio": 1889,
+      "data_inicio": "2019-11-11",
+      "premios_fixos_brl": {
+        "11": "5.00",
+        "12": "10.00",
+        "13": "25.00"
+      }
+    },
+    {
+      "concurso_inicio": 2801,
+      "data_inicio": "2023-05-02",
+      "premios_fixos_brl": {
+        "11": "6.00",
+        "12": "12.00",
+        "13": "30.00"
+      }
+    },
+    {
+      "concurso_inicio": 3439,
+      "data_inicio": "2025-07-10",
+      "premios_fixos_brl": {
+        "11": "7.00",
+        "12": "14.00",
+        "13": "35.00"
+      }
+    }
+  ],
+  "principios_independencia_estatistica": {
+    "independencia_entre_concursos": true,
+    "falacia_apostador_proibida": true,
+    "uso_permitido_historico": "caracterizacao_descritiva_e_backtesting_retrospectivo",
+    "conversao_atraso_em_predicao_permitida": false
+  },
+  "distribuicoes_hipergeometricas_15_a_20": {
+    "15": {
+      "dezenas_marcadas": 15,
+      "combinacoes_simples": 1,
+      "custo_brl": "3.50",
+      "espaco_amostral": 3268760,
+      "suporte_k": [
+        5,
+        15
+      ],
+      "soma_probabilidades": "1/1",
+      "valor_esperado_acertos": "9",
+      "valor_esperado_acertos_float": 9.0,
+      "variancia_acertos": "3/2",
+      "probabilidade_alguma_premiacao_exata": "15733/148580",
+      "probabilidade_alguma_premiacao_percentual": 10.588908332211604,
+      "distribuicao": {
+        "5": {
+          "acertos": 5,
+          "combinacoes_favoraveis": 3003,
+          "probabilidade_fracao": "273/297160",
+          "probabilidade_percentual": 0.0918696998,
+          "chance_1_em": 1088.4982,
+          "premiada": false
+        },
+        "6": {
+          "acertos": 6,
+          "combinacoes_favoraveis": 50050,
+          "probabilidade_fracao": "455/29716",
+          "probabilidade_percentual": 1.5311616638,
+          "chance_1_em": 65.3099,
+          "premiada": false
+        },
+        "7": {
+          "acertos": 7,
+          "combinacoes_favoraveis": 289575,
+          "probabilidade_fracao": "5265/59432",
+          "probabilidade_percentual": 8.8588639117,
+          "chance_1_em": 11.2881,
+          "premiada": false
+        },
+        "8": {
+          "acertos": 8,
+          "combinacoes_favoraveis": 772200,
+          "probabilidade_fracao": "1755/7429",
+          "probabilidade_percentual": 23.6236370979,
+          "chance_1_em": 4.233,
+          "premiada": false
+        },
+        "9": {
+          "acertos": 9,
+          "combinacoes_favoraveis": 1051050,
+          "probabilidade_fracao": "9555/29716",
+          "probabilidade_percentual": 32.1543949388,
+          "chance_1_em": 3.11,
+          "premiada": false
+        },
+        "10": {
+          "acertos": 10,
+          "combinacoes_favoraveis": 756756,
+          "probabilidade_fracao": "17199/74290",
+          "probabilidade_percentual": 23.1511643559,
+          "chance_1_em": 4.3194,
+          "premiada": false
+        },
+        "11": {
+          "acertos": 11,
+          "combinacoes_favoraveis": 286650,
+          "probabilidade_fracao": "28665/326876",
+          "probabilidade_percentual": 8.7693804378,
+          "chance_1_em": 11.4033,
+          "premiada": true
+        },
+        "12": {
+          "acertos": 12,
+          "combinacoes_favoraveis": 54600,
+          "probabilidade_fracao": "1365/81719",
+          "probabilidade_percentual": 1.6703581786,
+          "chance_1_em": 59.8674,
+          "premiada": true
+        },
+        "13": {
+          "acertos": 13,
+          "combinacoes_favoraveis": 4725,
+          "probabilidade_fracao": "945/653752",
+          "probabilidade_percentual": 0.144550227,
+          "chance_1_em": 691.8011,
+          "premiada": true
+        },
+        "14": {
+          "acertos": 14,
+          "combinacoes_favoraveis": 150,
+          "probabilidade_fracao": "15/326876",
+          "probabilidade_percentual": 0.0045888961,
+          "chance_1_em": 21791.7333,
+          "premiada": true
+        },
+        "15": {
+          "acertos": 15,
+          "combinacoes_favoraveis": 1,
+          "probabilidade_fracao": "1/3268760",
+          "probabilidade_percentual": 3.05926e-05,
+          "chance_1_em": 3268760.0,
+          "premiada": true
+        }
+      }
+    },
+    "16": {
+      "dezenas_marcadas": 16,
+      "combinacoes_simples": 16,
+      "custo_brl": "56.00",
+      "espaco_amostral": 3268760,
+      "suporte_k": [
+        6,
+        15
+      ],
+      "soma_probabilidades": "1/1",
+      "valor_esperado_acertos": "48/5",
+      "valor_esperado_acertos_float": 9.6,
+      "variancia_acertos": "36/25",
+      "probabilidade_alguma_premiacao_exata": "8233/37145",
+      "probabilidade_alguma_premiacao_percentual": 22.164490510162874,
+      "distribuicao": {
+        "6": {
+          "acertos": 6,
+          "combinacoes_favoraveis": 8008,
+          "probabilidade_fracao": "91/37145",
+          "probabilidade_percentual": 0.2449858662,
+          "chance_1_em": 408.1868,
+          "premiada": false
+        },
+        "7": {
+          "acertos": 7,
+          "combinacoes_favoraveis": 102960,
+          "probabilidade_fracao": "234/7429",
+          "probabilidade_percentual": 3.1498182797,
+          "chance_1_em": 31.7479,
+          "premiada": false
+        },
+        "8": {
+          "acertos": 8,
+          "combinacoes_favoraveis": 463320,
+          "probabilidade_fracao": "1053/7429",
+          "probabilidade_percentual": 14.1741822587,
+          "chance_1_em": 7.0551,
+          "premiada": false
+        },
+        "9": {
+          "acertos": 9,
+          "combinacoes_favoraveis": 960960,
+          "probabilidade_fracao": "2184/7429",
+          "probabilidade_percentual": 29.398303944,
+          "chance_1_em": 3.4016,
+          "premiada": false
+        },
+        "10": {
+          "acertos": 10,
+          "combinacoes_favoraveis": 1009008,
+          "probabilidade_fracao": "11466/37145",
+          "probabilidade_percentual": 30.8682191412,
+          "chance_1_em": 3.2396,
+          "premiada": false
+        },
+        "11": {
+          "acertos": 11,
+          "combinacoes_favoraveis": 550368,
+          "probabilidade_fracao": "68796/408595",
+          "probabilidade_percentual": 16.8372104407,
+          "chance_1_em": 5.9392,
+          "premiada": true
+        },
+        "12": {
+          "acertos": 12,
+          "combinacoes_favoraveis": 152880,
+          "probabilidade_fracao": "3822/81719",
+          "probabilidade_percentual": 4.6770029002,
+          "chance_1_em": 21.3812,
+          "premiada": true
+        },
+        "13": {
+          "acertos": 13,
+          "combinacoes_favoraveis": 20160,
+          "probabilidade_fracao": "504/81719",
+          "probabilidade_percentual": 0.6167476352,
+          "chance_1_em": 162.1409,
+          "premiada": true
+        },
+        "14": {
+          "acertos": 14,
+          "combinacoes_favoraveis": 1080,
+          "probabilidade_fracao": "27/81719",
+          "probabilidade_percentual": 0.0330400519,
+          "chance_1_em": 3026.6296,
+          "premiada": true
+        },
+        "15": {
+          "acertos": 15,
+          "combinacoes_favoraveis": 16,
+          "probabilidade_fracao": "2/408595",
+          "probabilidade_percentual": 0.0004894823,
+          "chance_1_em": 204297.5,
+          "premiada": true
+        }
+      }
+    },
+    "17": {
+      "dezenas_marcadas": 17,
+      "combinacoes_simples": 136,
+      "custo_brl": "476.00",
+      "espaco_amostral": 3268760,
+      "suporte_k": [
+        7,
+        15
+      ],
+      "soma_probabilidades": "1/1",
+      "valor_esperado_acertos": "51/5",
+      "valor_esperado_acertos_float": 10.2,
+      "variancia_acertos": "34/25",
+      "probabilidade_alguma_premiacao_exata": "859/2185",
+      "probabilidade_alguma_premiacao_percentual": 39.31350114416476,
+      "distribuicao": {
+        "7": {
+          "acertos": 7,
+          "combinacoes_favoraveis": 19448,
+          "probabilidade_fracao": "13/2185",
+          "probabilidade_percentual": 0.5949656751,
+          "chance_1_em": 168.0769,
+          "premiada": false
+        },
+        "8": {
+          "acertos": 8,
+          "combinacoes_favoraveis": 194480,
+          "probabilidade_fracao": "26/437",
+          "probabilidade_percentual": 5.9496567506,
+          "chance_1_em": 16.8077,
+          "premiada": false
+        },
+        "9": {
+          "acertos": 9,
+          "combinacoes_favoraveis": 680680,
+          "probabilidade_fracao": "91/437",
+          "probabilidade_percentual": 20.823798627,
+          "chance_1_em": 4.8022,
+          "premiada": false
+        },
+        "10": {
+          "acertos": 10,
+          "combinacoes_favoraveis": 1089088,
+          "probabilidade_fracao": "728/2185",
+          "probabilidade_percentual": 33.3180778032,
+          "chance_1_em": 3.0014,
+          "premiada": false
+        },
+        "11": {
+          "acertos": 11,
+          "combinacoes_favoraveis": 866320,
+          "probabilidade_fracao": "1274/4807",
+          "probabilidade_percentual": 26.5030164344,
+          "chance_1_em": 3.7732,
+          "premiada": true
+        },
+        "12": {
+          "acertos": 12,
+          "combinacoes_favoraveis": 346528,
+          "probabilidade_fracao": "2548/24035",
+          "probabilidade_percentual": 10.6012065737,
+          "chance_1_em": 9.4329,
+          "premiada": true
+        },
+        "13": {
+          "acertos": 13,
+          "combinacoes_favoraveis": 66640,
+          "probabilidade_fracao": "98/4807",
+          "probabilidade_percentual": 2.0386935719,
+          "chance_1_em": 49.051,
+          "premiada": true
+        },
+        "14": {
+          "acertos": 14,
+          "combinacoes_favoraveis": 5440,
+          "probabilidade_fracao": "8/4807",
+          "probabilidade_percentual": 0.1664239651,
+          "chance_1_em": 600.875,
+          "premiada": true
+        },
+        "15": {
+          "acertos": 15,
+          "combinacoes_favoraveis": 136,
+          "probabilidade_fracao": "1/24035",
+          "probabilidade_percentual": 0.0041605991,
+          "chance_1_em": 24035.0,
+          "premiada": true
+        }
+      }
+    },
+    "18": {
+      "dezenas_marcadas": 18,
+      "combinacoes_simples": 816,
+      "custo_brl": "2856.00",
+      "espaco_amostral": 3268760,
+      "suporte_k": [
+        8,
+        15
+      ],
+      "soma_probabilidades": "1/1",
+      "valor_esperado_acertos": "54/5",
+      "valor_esperado_acertos_float": 10.8,
+      "variancia_acertos": "63/50",
+      "probabilidade_alguma_premiacao_exata": "1314/2185",
+      "probabilidade_alguma_premiacao_percentual": 60.13729977116705,
+      "distribuicao": {
+        "8": {
+          "acertos": 8,
+          "combinacoes_favoraveis": 43758,
+          "probabilidade_fracao": "117/8740",
+          "probabilidade_percentual": 1.3386727689,
+          "chance_1_em": 74.7009,
+          "premiada": false
+        },
+        "9": {
+          "acertos": 9,
+          "combinacoes_favoraveis": 340340,
+          "probabilidade_fracao": "91/874",
+          "probabilidade_percentual": 10.4118993135,
+          "chance_1_em": 9.6044,
+          "premiada": false
+        },
+        "10": {
+          "acertos": 10,
+          "combinacoes_favoraveis": 918918,
+          "probabilidade_fracao": "2457/8740",
+          "probabilidade_percentual": 28.1121281465,
+          "chance_1_em": 3.5572,
+          "premiada": false
+        },
+        "11": {
+          "acertos": 11,
+          "combinacoes_favoraveis": 1113840,
+          "probabilidade_fracao": "1638/4807",
+          "probabilidade_percentual": 34.0753068442,
+          "chance_1_em": 2.9347,
+          "premiada": true
+        },
+        "12": {
+          "acertos": 12,
+          "combinacoes_favoraveis": 649740,
+          "probabilidade_fracao": "1911/9614",
+          "probabilidade_percentual": 19.8772623258,
+          "chance_1_em": 5.0309,
+          "premiada": true
+        },
+        "13": {
+          "acertos": 13,
+          "combinacoes_favoraveis": 179928,
+          "probabilidade_fracao": "1323/24035",
+          "probabilidade_percentual": 5.5044726441,
+          "chance_1_em": 18.167,
+          "premiada": true
+        },
+        "14": {
+          "acertos": 14,
+          "combinacoes_favoraveis": 21420,
+          "probabilidade_fracao": "63/9614",
+          "probabilidade_percentual": 0.6552943624,
+          "chance_1_em": 152.6032,
+          "premiada": true
+        },
+        "15": {
+          "acertos": 15,
+          "combinacoes_favoraveis": 816,
+          "probabilidade_fracao": "6/24035",
+          "probabilidade_percentual": 0.0249635948,
+          "chance_1_em": 4005.8333,
+          "premiada": true
+        }
+      }
+    },
+    "19": {
+      "dezenas_marcadas": 19,
+      "combinacoes_simples": 3876,
+      "custo_brl": "13566.00",
+      "espaco_amostral": 3268760,
+      "suporte_k": [
+        9,
+        15
+      ],
+      "soma_probabilidades": "1/1",
+      "valor_esperado_acertos": "57/5",
+      "valor_esperado_acertos_float": 11.4,
+      "variancia_acertos": "57/50",
+      "probabilidade_alguma_premiacao_exata": "369/460",
+      "probabilidade_alguma_premiacao_percentual": 80.21739130434783,
+      "distribuicao": {
+        "9": {
+          "acertos": 9,
+          "combinacoes_favoraveis": 92378,
+          "probabilidade_fracao": "13/460",
+          "probabilidade_percentual": 2.8260869565,
+          "chance_1_em": 35.3846,
+          "premiada": false
+        },
+        "10": {
+          "acertos": 10,
+          "combinacoes_favoraveis": 554268,
+          "probabilidade_fracao": "39/230",
+          "probabilidade_percentual": 16.9565217391,
+          "chance_1_em": 5.8974,
+          "premiada": false
+        },
+        "11": {
+          "acertos": 11,
+          "combinacoes_favoraveis": 1133730,
+          "probabilidade_fracao": "351/1012",
+          "probabilidade_percentual": 34.6837944664,
+          "chance_1_em": 2.8832,
+          "premiada": true
+        },
+        "12": {
+          "acertos": 12,
+          "combinacoes_favoraveis": 1007760,
+          "probabilidade_fracao": "78/253",
+          "probabilidade_percentual": 30.8300395257,
+          "chance_1_em": 3.2436,
+          "premiada": true
+        },
+        "13": {
+          "acertos": 13,
+          "combinacoes_favoraveis": 406980,
+          "probabilidade_fracao": "63/506",
+          "probabilidade_percentual": 12.4505928854,
+          "chance_1_em": 8.0317,
+          "premiada": true
+        },
+        "14": {
+          "acertos": 14,
+          "combinacoes_favoraveis": 69768,
+          "probabilidade_fracao": "27/1265",
+          "probabilidade_percentual": 2.1343873518,
+          "chance_1_em": 46.8519,
+          "premiada": true
+        },
+        "15": {
+          "acertos": 15,
+          "combinacoes_favoraveis": 3876,
+          "probabilidade_fracao": "3/2530",
+          "probabilidade_percentual": 0.1185770751,
+          "chance_1_em": 843.3333,
+          "premiada": true
+        }
+      }
+    },
+    "20": {
+      "dezenas_marcadas": 20,
+      "combinacoes_simples": 15504,
+      "custo_brl": "54264.00",
+      "espaco_amostral": 3268760,
+      "suporte_k": [
+        10,
+        15
+      ],
+      "soma_probabilidades": "1/1",
+      "valor_esperado_acertos": "12",
+      "valor_esperado_acertos_float": 12.0,
+      "variancia_acertos": "1",
+      "probabilidade_alguma_premiacao_exata": "217/230",
+      "probabilidade_alguma_premiacao_percentual": 94.34782608695652,
+      "distribuicao": {
+        "10": {
+          "acertos": 10,
+          "combinacoes_favoraveis": 184756,
+          "probabilidade_fracao": "13/230",
+          "probabilidade_percentual": 5.652173913,
+          "chance_1_em": 17.6923,
+          "premiada": false
+        },
+        "11": {
+          "acertos": 11,
+          "combinacoes_favoraveis": 839800,
+          "probabilidade_fracao": "65/253",
+          "probabilidade_percentual": 25.6916996047,
+          "chance_1_em": 3.8923,
+          "premiada": true
+        },
+        "12": {
+          "acertos": 12,
+          "combinacoes_favoraveis": 1259700,
+          "probabilidade_fracao": "195/506",
+          "probabilidade_percentual": 38.5375494071,
+          "chance_1_em": 2.5949,
+          "premiada": true
+        },
+        "13": {
+          "acertos": 13,
+          "combinacoes_favoraveis": 775200,
+          "probabilidade_fracao": "60/253",
+          "probabilidade_percentual": 23.7154150198,
+          "chance_1_em": 4.2167,
+          "premiada": true
+        },
+        "14": {
+          "acertos": 14,
+          "combinacoes_favoraveis": 193800,
+          "probabilidade_fracao": "15/253",
+          "probabilidade_percentual": 5.9288537549,
+          "chance_1_em": 16.8667,
+          "premiada": true
+        },
+        "15": {
+          "acertos": 15,
+          "combinacoes_favoraveis": 15504,
+          "probabilidade_fracao": "6/1265",
+          "probabilidade_percentual": 0.4743083004,
+          "chance_1_em": 210.8333,
+          "premiada": true
+        }
+      }
+    }
+  },
+  "multiplicidade_premios_15_a_20": {
+    "m15_h11": {
+      "dezenas_marcadas": 15,
+      "acertos_no_subconjunto": 11,
+      "total_combinacoes_aposta": 1,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 0,
+        "11": 1
+      },
+      "total_bilhetes_premiados": 1,
+      "retorno_premios_fixos_brl": "7.00"
+    },
+    "m15_h12": {
+      "dezenas_marcadas": 15,
+      "acertos_no_subconjunto": 12,
+      "total_combinacoes_aposta": 1,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 1,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 1,
+      "retorno_premios_fixos_brl": "14.00"
+    },
+    "m15_h13": {
+      "dezenas_marcadas": 15,
+      "acertos_no_subconjunto": 13,
+      "total_combinacoes_aposta": 1,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 1,
+        "12": 0,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 1,
+      "retorno_premios_fixos_brl": "35.00"
+    },
+    "m15_h14": {
+      "dezenas_marcadas": 15,
+      "acertos_no_subconjunto": 14,
+      "total_combinacoes_aposta": 1,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 1,
+        "13": 0,
+        "12": 0,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 1,
+      "retorno_premios_fixos_brl": "0.00"
+    },
+    "m15_h15": {
+      "dezenas_marcadas": 15,
+      "acertos_no_subconjunto": 15,
+      "total_combinacoes_aposta": 1,
+      "premios_por_faixa": {
+        "15": 1,
+        "14": 0,
+        "13": 0,
+        "12": 0,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 1,
+      "retorno_premios_fixos_brl": "0.00"
+    },
+    "m16_h11": {
+      "dezenas_marcadas": 16,
+      "acertos_no_subconjunto": 11,
+      "total_combinacoes_aposta": 16,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 0,
+        "11": 5
+      },
+      "total_bilhetes_premiados": 5,
+      "retorno_premios_fixos_brl": "35.00"
+    },
+    "m16_h12": {
+      "dezenas_marcadas": 16,
+      "acertos_no_subconjunto": 12,
+      "total_combinacoes_aposta": 16,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 4,
+        "11": 12
+      },
+      "total_bilhetes_premiados": 16,
+      "retorno_premios_fixos_brl": "140.00"
+    },
+    "m16_h13": {
+      "dezenas_marcadas": 16,
+      "acertos_no_subconjunto": 13,
+      "total_combinacoes_aposta": 16,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 3,
+        "12": 13,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 16,
+      "retorno_premios_fixos_brl": "287.00"
+    },
+    "m16_h14": {
+      "dezenas_marcadas": 16,
+      "acertos_no_subconjunto": 14,
+      "total_combinacoes_aposta": 16,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 2,
+        "13": 14,
+        "12": 0,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 16,
+      "retorno_premios_fixos_brl": "490.00"
+    },
+    "m16_h15": {
+      "dezenas_marcadas": 16,
+      "acertos_no_subconjunto": 15,
+      "total_combinacoes_aposta": 16,
+      "premios_por_faixa": {
+        "15": 1,
+        "14": 15,
+        "13": 0,
+        "12": 0,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 16,
+      "retorno_premios_fixos_brl": "0.00"
+    },
+    "m17_h11": {
+      "dezenas_marcadas": 17,
+      "acertos_no_subconjunto": 11,
+      "total_combinacoes_aposta": 136,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 0,
+        "11": 15
+      },
+      "total_bilhetes_premiados": 15,
+      "retorno_premios_fixos_brl": "105.00"
+    },
+    "m17_h12": {
+      "dezenas_marcadas": 17,
+      "acertos_no_subconjunto": 12,
+      "total_combinacoes_aposta": 136,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 10,
+        "11": 60
+      },
+      "total_bilhetes_premiados": 70,
+      "retorno_premios_fixos_brl": "560.00"
+    },
+    "m17_h13": {
+      "dezenas_marcadas": 17,
+      "acertos_no_subconjunto": 13,
+      "total_combinacoes_aposta": 136,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 6,
+        "12": 52,
+        "11": 78
+      },
+      "total_bilhetes_premiados": 136,
+      "retorno_premios_fixos_brl": "1484.00"
+    },
+    "m17_h14": {
+      "dezenas_marcadas": 17,
+      "acertos_no_subconjunto": 14,
+      "total_combinacoes_aposta": 136,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 3,
+        "13": 42,
+        "12": 91,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 136,
+      "retorno_premios_fixos_brl": "2744.00"
+    },
+    "m17_h15": {
+      "dezenas_marcadas": 17,
+      "acertos_no_subconjunto": 15,
+      "total_combinacoes_aposta": 136,
+      "premios_por_faixa": {
+        "15": 1,
+        "14": 30,
+        "13": 105,
+        "12": 0,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 136,
+      "retorno_premios_fixos_brl": "3675.00"
+    },
+    "m18_h11": {
+      "dezenas_marcadas": 18,
+      "acertos_no_subconjunto": 11,
+      "total_combinacoes_aposta": 816,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 0,
+        "11": 35
+      },
+      "total_bilhetes_premiados": 35,
+      "retorno_premios_fixos_brl": "245.00"
+    },
+    "m18_h12": {
+      "dezenas_marcadas": 18,
+      "acertos_no_subconjunto": 12,
+      "total_combinacoes_aposta": 816,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 20,
+        "11": 180
+      },
+      "total_bilhetes_premiados": 200,
+      "retorno_premios_fixos_brl": "1540.00"
+    },
+    "m18_h13": {
+      "dezenas_marcadas": 18,
+      "acertos_no_subconjunto": 13,
+      "total_combinacoes_aposta": 816,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 10,
+        "12": 130,
+        "11": 390
+      },
+      "total_bilhetes_premiados": 530,
+      "retorno_premios_fixos_brl": "4900.00"
+    },
+    "m18_h14": {
+      "dezenas_marcadas": 18,
+      "acertos_no_subconjunto": 14,
+      "total_combinacoes_aposta": 816,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 4,
+        "13": 84,
+        "12": 364,
+        "11": 364
+      },
+      "total_bilhetes_premiados": 816,
+      "retorno_premios_fixos_brl": "10584.00"
+    },
+    "m18_h15": {
+      "dezenas_marcadas": 18,
+      "acertos_no_subconjunto": 15,
+      "total_combinacoes_aposta": 816,
+      "premios_por_faixa": {
+        "15": 1,
+        "14": 45,
+        "13": 315,
+        "12": 455,
+        "11": 0
+      },
+      "total_bilhetes_premiados": 816,
+      "retorno_premios_fixos_brl": "17395.00"
+    },
+    "m19_h11": {
+      "dezenas_marcadas": 19,
+      "acertos_no_subconjunto": 11,
+      "total_combinacoes_aposta": 3876,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 0,
+        "11": 70
+      },
+      "total_bilhetes_premiados": 70,
+      "retorno_premios_fixos_brl": "490.00"
+    },
+    "m19_h12": {
+      "dezenas_marcadas": 19,
+      "acertos_no_subconjunto": 12,
+      "total_combinacoes_aposta": 3876,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 35,
+        "11": 420
+      },
+      "total_bilhetes_premiados": 455,
+      "retorno_premios_fixos_brl": "3430.00"
+    },
+    "m19_h13": {
+      "dezenas_marcadas": 19,
+      "acertos_no_subconjunto": 13,
+      "total_combinacoes_aposta": 3876,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 15,
+        "12": 260,
+        "11": 1170
+      },
+      "total_bilhetes_premiados": 1445,
+      "retorno_premios_fixos_brl": "12355.00"
+    },
+    "m19_h14": {
+      "dezenas_marcadas": 19,
+      "acertos_no_subconjunto": 14,
+      "total_combinacoes_aposta": 3876,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 5,
+        "13": 140,
+        "12": 910,
+        "11": 1820
+      },
+      "total_bilhetes_premiados": 2875,
+      "retorno_premios_fixos_brl": "30380.00"
+    },
+    "m19_h15": {
+      "dezenas_marcadas": 19,
+      "acertos_no_subconjunto": 15,
+      "total_combinacoes_aposta": 3876,
+      "premios_por_faixa": {
+        "15": 1,
+        "14": 60,
+        "13": 630,
+        "12": 1820,
+        "11": 1365
+      },
+      "total_bilhetes_premiados": 3876,
+      "retorno_premios_fixos_brl": "57085.00"
+    },
+    "m20_h11": {
+      "dezenas_marcadas": 20,
+      "acertos_no_subconjunto": 11,
+      "total_combinacoes_aposta": 15504,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 0,
+        "11": 126
+      },
+      "total_bilhetes_premiados": 126,
+      "retorno_premios_fixos_brl": "882.00"
+    },
+    "m20_h12": {
+      "dezenas_marcadas": 20,
+      "acertos_no_subconjunto": 12,
+      "total_combinacoes_aposta": 15504,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 0,
+        "12": 56,
+        "11": 840
+      },
+      "total_bilhetes_premiados": 896,
+      "retorno_premios_fixos_brl": "6664.00"
+    },
+    "m20_h13": {
+      "dezenas_marcadas": 20,
+      "acertos_no_subconjunto": 13,
+      "total_combinacoes_aposta": 15504,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 0,
+        "13": 21,
+        "12": 455,
+        "11": 2730
+      },
+      "total_bilhetes_premiados": 3206,
+      "retorno_premios_fixos_brl": "26215.00"
+    },
+    "m20_h14": {
+      "dezenas_marcadas": 20,
+      "acertos_no_subconjunto": 14,
+      "total_combinacoes_aposta": 15504,
+      "premios_por_faixa": {
+        "15": 0,
+        "14": 6,
+        "13": 210,
+        "12": 1820,
+        "11": 5460
+      },
+      "total_bilhetes_premiados": 7496,
+      "retorno_premios_fixos_brl": "71050.00"
+    },
+    "m20_h15": {
+      "dezenas_marcadas": 20,
+      "acertos_no_subconjunto": 15,
+      "total_combinacoes_aposta": 15504,
+      "premios_por_faixa": {
+        "15": 1,
+        "14": 75,
+        "13": 1050,
+        "12": 4550,
+        "11": 6825
+      },
+      "total_bilhetes_premiados": 12501,
+      "retorno_premios_fixos_brl": "148225.00"
+    }
+  },
+  "splits_teoricos": {
+    "divisao_principal_13_12_soma": "1",
+    "divisao_principal_13_12": {
+      "3/12": {
+        "fracao_exata": "13/148580",
+        "percentual": 0.008749495221429532
+      },
+      "4/11": {
+        "fracao_exata": "39/14858",
+        "percentual": 0.262484856642886
+      },
+      "5/10": {
+        "fracao_exata": "3861/148580",
+        "percentual": 2.5986000807645713
+      },
+      "6/9": {
+        "fracao_exata": "858/7429",
+        "percentual": 11.549333692286984
+      },
+      "7/8": {
+        "fracao_exata": "3861/14858",
+        "percentual": 25.986000807645713
+      },
+      "8/7": {
+        "fracao_exata": "11583/37145",
+        "percentual": 31.183200969174855
+      },
+      "9/6": {
+        "fracao_exata": "3003/14858",
+        "percentual": 20.21133396150222
+      },
+      "10/5": {
+        "fracao_exata": "2574/37145",
+        "percentual": 6.92960021537219
+      },
+      "11/4": {
+        "fracao_exata": "351/29716",
+        "percentual": 1.1811818548929869
+      },
+      "12/3": {
+        "fracao_exata": "13/14858",
+        "percentual": 0.08749495221429533
+      },
+      "13/2": {
+        "fracao_exata": "3/148580",
+        "percentual": 0.0020191142818683535
+      }
+    },
+    "divisao_alternativa_12_13_soma": "1",
+    "divisao_alternativa_12_13": {
+      "2/13": {
+        "fracao_exata": "3/148580",
+        "percentual": 0.0020191142818683535
+      },
+      "3/12": {
+        "fracao_exata": "13/14858",
+        "percentual": 0.08749495221429533
+      },
+      "4/11": {
+        "fracao_exata": "351/29716",
+        "percentual": 1.1811818548929869
+      },
+      "5/10": {
+        "fracao_exata": "2574/37145",
+        "percentual": 6.92960021537219
+      },
+      "6/9": {
+        "fracao_exata": "3003/14858",
+        "percentual": 20.21133396150222
+      },
+      "7/8": {
+        "fracao_exata": "11583/37145",
+        "percentual": 31.183200969174855
+      },
+      "8/7": {
+        "fracao_exata": "3861/14858",
+        "percentual": 25.986000807645713
+      },
+      "9/6": {
+        "fracao_exata": "858/7429",
+        "percentual": 11.549333692286984
+      },
+      "10/5": {
+        "fracao_exata": "3861/148580",
+        "percentual": 2.5986000807645713
+      },
+      "11/4": {
+        "fracao_exata": "39/14858",
+        "percentual": 0.262484856642886
+      },
+      "12/3": {
+        "fracao_exata": "13/148580",
+        "percentual": 0.008749495221429532
+      }
+    }
+  },
+  "conceitos_formais_secao3": {
+    "espaco_amostral": {
+      "notacao": "Omega = {S subconjunto {1..25} : |S| = 15}",
+      "cardinalidade_exata": 3268760,
+      "medida_uniforme": "P({omega}) = 1 / C(25,15) = 1 / 3.268.760",
+      "isomorfismo_bitmask": "phi(S) = sum_{d in S} 2^(d-1) em [0, 2^25 - 1]; |S1 inter S2| = popcount(phi(S1) & phi(S2))"
+    },
+    "distincoes_conceituais_obrigatorias": {
+      "1_probabilidade_individual_bilhete": {
+        "definicao": "Para um bilhete B_i de 15 dezenas. P(H_i >= 11) = sum_{k=11}^{15} C(15.k)*C(10.15-k) / C(25.15) = 346.126 / 3.268.760 (= 15.733/148.580. ~10.5889%).",
+        "invariancia": "Identica para todo bilhete valido, independentemente de paridade, soma, matriz ou historico."
+      },
+      "2_probabilidade_ao_menos_um_premiado_carteira": {
+        "definicao": "Para carteira C = {B_1, ..., B_J}, P(existe i : H_i >= 11) = P(U_i A_i), onde A_i = {omega in Omega : |B_i inter omega| >= 11}.",
+        "formula_inclusao_exclusao": "P(U_i A_i) = sum P(A_i) - sum_{i<j} P(A_i inter A_j) + ..., dependendo diretamente das intersecoes entre eventos de premiacao."
+      },
+      "3_distribuicao_numero_premiacoes": {
+        "definicao": "Distribuicao completa da variavel aleatoria N_prem(C) = sum_{i=1}^{J} 1(H_i >= 11) em {0, 1, ..., J}.",
+        "observacao": "Carteiras altamente redundantes concentram massa em N_prem=0 ou N_prem alto; carteiras dispersas transferem massa de eventos multiplos redundantes para P(N_prem >= 1)."
+      },
+      "4_quantidade_esperada_bilhetes_premiados": {
+        "definicao": "E[N_prem(C)] = sum_{i=1}^{J} P(H_i >= 11) = J * (15733/148580).",
+        "invariancia": "Pela linearidade da esperanca, E[N_prem(C)] depende EXCLUSIVAMENTE de J para apostas simples, sendo invariante a estrategia combinatoria."
+      },
+      "5_cobertura_combinatoria_carteira": {
+        "definicao": "Cov_t(C) = |U_{i=1}^{J} subconjuntos_t(B_i)| / C(|U|, t), medindo fracao deterministica de t-subconjuntos (ex.: pares t=2, trincas t=3, ou quadras t=4) cobertos pela carteira.",
+        "observacao": "Cobertura deterministica de t-subconjuntos nao equivale a garantia automatica de premiacao (faixas 11..15) salvo demonstracao formal condicional."
+      }
+    },
+    "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada."
+  },
+  "auditoria_base_caixa": {
+    "versao_sincronizador": "1.1.0-etapa1-homologada",
+    "origem_oficial": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx (Planilha Oficial CAIXA .xlsx)",
+    "arquivo_planilha_oficial": "lotofacil_modo4/dados/caixa_lotofacil_oficial.xlsx",
+    "sha256_planilha_oficial_caixa": "fd32f9578200e36e8c714526854d8d6dcee5a6a7d03fa625115a11e1be09251c",
+    "sincronizado_em_utc": "2026-11-13T13:54:27.028787+00:00",
+    "arquivo_canonico": "lotofacil_modo4/dados/lotofacil_oficial_caixa.json",
+    "tamanho_bytes": 4338180,
+    "sha256_arquivo": "df31c4bce233ff65f9dc032595595aa7d73f819bfc5a67c1dd87bbd793c257f8",
+    "sha256_lista_concursos_canonica": "121c645b1f84f9cf868a099bddf4ea06e28e177e45aef4eee467a7a5c6a54a57",
+    "total_concursos": 3828,
+    "primeiro_concurso": 1,
+    "primeiro_data_apuracao": "29/09/2003",
+    "ultimo_concurso": 3828,
+    "ultimo_data_apuracao": "12/11/2026",
+    "concursos_faltantes": 0,
+    "origens_separadas": {
+      "planilha_historica_oficial": {
+        "utilizada": true,
+        "caminho": "lotofacil_modo4/dados/caixa_lotofacil_oficial.xlsx",
+        "sha256": "fd32f9578200e36e8c714526854d8d6dcee5a6a7d03fa625115a11e1be09251c",
+        "pagina_oficial": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+        "preserva_ordem_sorteio_fisica": false,
+        "observacao": "Planilha CAIXA fornece Bola1..Bola15 ordenadas crescentemente; campo ordem_sorteio mantido vazio [] sem preenchimento artificial."
+      },
+      "amostras_api_json_caixa": {
+        "endpoint": "https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil",
+        "presente": true,
+        "concursos_api_confrontados": 161,
+        "qtd_divergencias_api_vs_planilha": 0,
+        "divergencias_api_vs_planilha": [],
+        "validado_no_mesmo_sha256_canonico": true
+      }
+    },
+    "registro_transformacoes": [
+      "1. Leitura direta de xl/sharedStrings.xml e xl/worksheets/sheet1.xml via stdlib zipfile + xml.etree.ElementTree (sem macros ou inferencias).",
+      "2. Mapeamento explicito de cabecalhos e referencias de coluna Excel (suportando celulas esparsas e sequenciais).",
+      "3. Conversao deterministica de valores monetarios 'R$...' para float e inteiros de ganhadores.",
+      "4. Validacao estrita de data DD/MM/YYYY -> YYYY-MM-DD e de 15 dezenas unicas no intervalo [1..25].",
+      "5. Ordenacao crescente por numero de concurso (1..3828), verificando ausencia de lacunas e duplicatas, preservando ordem_sorteio=[] na ausencia de ordem fisica.",
+      "6. Serializacao UTF-8 deterministica da lista de concursos e calculo de SHA-256 do arquivo XLSX, do JSON completo e da lista canonica."
+    ],
+    "relatorio_integridade_concursos": {
+      "total_concursos": 3828,
+      "primeiro_concurso": 1,
+      "ultimo_concurso": 3828,
+      "ausentes": [],
+      "qtd_ausentes": 0,
+      "duplicados": [],
+      "qtd_duplicados": 0
+    },
+    "confronto_base_legada": {
+      "presente": true,
+      "caminho": "data/lotofacil.json",
+      "sha256": "e06201401b08b3559c69b6f387e736011ba0816abc4ff0908bd9560817320c8c",
+      "concursos_legado_total": 3246,
+      "primeiro_concurso_legado": 1,
+      "ultimo_concurso_legado": 3246,
+      "concursos_confrontados": 3246,
+      "divergencias_dezenas_conjunto": [],
+      "qtd_divergencias_conjunto": 0,
+      "divergencias_ordem_sorteio": [],
+      "qtd_divergencias_ordem_sorteio": 0,
+      "novos_concursos_apos_legado": 582
+    },
+    "confronto_amostra_api_caixa": {
+      "presente": true,
+      "concursos_api_confrontados": 161,
+      "qtd_divergencias_api_vs_planilha": 0,
+      "divergencias_api_vs_planilha": [],
+      "validado_no_mesmo_sha256_canonico": true
+    }
+  },
+  "hashes_artefatos_etapa1": {
+    "lotofacil_modo4/__init__.py": "4ea5d507cdc437af1fe93a4a6e83eee0b8d63edc5f6aefadcacb03aab0a4c664",
+    "lotofacil_modo4/etapa1_regras_oficiais.py": "09bc206ca1b35372f59d522a4653931f2d2cc637ca8880eeff149dc4e3ad06af",
+    "lotofacil_modo4/sincronizador_caixa.py": "a5199ca0c1b118dfc8933ede402edc5b41c1201fb964ca6cc0e7159d8159f9ae",
+    "lotofacil_modo4/gerar_evidencias_etapa1.py": "ec9f94b36df4c45d15278306606c51673c7884ebde87af1fab601631c599108e",
+    "testes/test_lotofacil_modo4_etapa1.py": "5eea34fbda9bebb33bd2c92b4f45d93c971499d3e23996bc5938eb8368288685"
+  }
+}

@@ -87,13 +87,34 @@ End If
 
 ' -- 4. GARANTIR API PYTHON RODANDO (SE DISPONIVEL) --
 On Error Resume Next
-Dim pyW, apiPy
-pyW = sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe")
+Dim pyW, pyCands, pyCand, apiPy, esperaApi
+pyW = ""
+pyCands = Array( _
+    sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe"), _
+    sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python313\pythonw.exe"), _
+    sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python311\pythonw.exe"), _
+    "C:\Python312\pythonw.exe", _
+    "C:\Program Files\Python312\pythonw.exe")
+For Each pyCand In pyCands
+    If fso.FileExists(pyCand) Then
+        pyW = pyCand
+        Exit For
+    End If
+Next
+If pyW = "" Then pyW = "pythonw.exe"
 apiPy = APP_DIR & "\api.py"
-If fso.FileExists(pyW) And fso.FileExists(apiPy) Then
+If fso.FileExists(apiPy) Then
     If Not Porta8000Ativa() Then
         sh.CurrentDirectory = APP_DIR
-        sh.Run Chr(34) & pyW & Chr(34) & " " & Chr(34) & apiPy & Chr(34), 0, False
+        If InStr(pyW, "\") > 0 Then
+            sh.Run Chr(34) & pyW & Chr(34) & " " & Chr(34) & apiPy & Chr(34), 0, False
+        Else
+            sh.Run pyW & " " & Chr(34) & apiPy & Chr(34), 0, False
+        End If
+        For esperaApi = 1 To 24
+            WScript.Sleep 250
+            If Porta8000Ativa() Then Exit For
+        Next
     End If
 End If
 On Error GoTo 0
@@ -141,10 +162,10 @@ Function Porta8000Ativa()
     On Error Resume Next
     Set h = CreateObject("MSXML2.ServerXMLHTTP.6.0")
     h.setTimeouts 300, 300, 300, 500
-    h.Open "GET", "http://127.0.0.1:8000/docs", False
+    h.Open "GET", "http://127.0.0.1:8000/health", False
     h.Send
     If Err.Number = 0 Then
-        If h.Status >= 200 And h.Status < 500 Then Porta8000Ativa = True
+        If h.Status = 200 Then Porta8000Ativa = True
     End If
     Set h = Nothing
     Err.Clear

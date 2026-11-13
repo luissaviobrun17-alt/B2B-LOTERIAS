@@ -1,0 +1,464 @@
+{
+  "versao_promocao": "5.1.0-promocao-controlada",
+  "gerado_em_utc": "2026-11-13T18:04:31.405080+00:00",
+  "arquivos_promocao": [
+    "lotofacil_modo4/promocao_producao.py",
+    "api.py",
+    "motor_lotofacil.py",
+    "js/engines/motor_lotofacil_modo4_engine.js",
+    "index.html",
+    "js/ui.js",
+    "B2B_Loterias_Mobile.html"
+  ],
+  "manifesto_promocao": {
+    "versao_promocao": "5.1.0-promocao-controlada",
+    "versao_motor": "4.0.0-etapa4-arquitetura-adaptativa",
+    "identificacao_oficial": "MOTOR COMBINATORIO DE OTIMIZACAO DE CARTEIRAS - LOTOFACIL | MODO 4",
+    "gerado_em_utc": "2026-11-13T18:04:29.043645+00:00",
+    "feature_flag_padrao_producao": false,
+    "politica_micro_padrao_producao": "conservadora_3J",
+    "experimental_2j_habilitada_por_padrao": false,
+    "inicializacao_mista_fixa": "padrao",
+    "etapas_1_a_5_verificadas": true,
+    "verificados_etapas_1_2_3": 20,
+    "verificados_etapa_4": 4,
+    "selo_lotomania_valido": true,
+    "hashes_producao": {
+      "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+      "api.py": "fce9c08bdb6344612d6e35a799f51e9371fff09d0ce7917f503fc8a1e0003387",
+      "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+      "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+      "index.html": "53065882b7adf6aca8807faad0b76e80bc4e3dc7f003c368dc6bb2d0bfb1e91d",
+      "js/ui.js": "814e795daa55249ce302308bd2277f373ea8f263b80862b247570a5fad85d4c8",
+      "B2B_Loterias_Mobile.html": "c57b6f73b26098af3bb82201f46b75a8008a78a63dd2d3fbf9d4e11b8abb2c8c"
+    },
+    "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada."
+  },
+  "auditoria_ast_referencia": {
+    "arquivo_auditado": "C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotofacil_modo4\\etapa4_referencia_independente.py",
+    "total_imports": 9,
+    "modulos_importados": [
+      "__future__",
+      "ast",
+      "decimal",
+      "fractions",
+      "hashlib",
+      "itertools",
+      "math",
+      "os",
+      "typing"
+    ],
+    "dependencias_internas_detectadas": 0,
+    "violacoes": [],
+    "independencia_comprovada": true
+  },
+  "integridade_pos_implantacao": {
+    "integro": true,
+    "integro_etapas_1_a_5": true,
+    "historico_geracao_none": true,
+    "verificados_etapas_1_2_3": 20,
+    "verificados_etapa_4": 4,
+    "verificados_bases_externas": 0,
+    "selo_lotomania_valido": true,
+    "erro_selo_lotomania": null,
+    "manifesto_etapa5_presente": true,
+    "manifesto_promocao_presente": true,
+    "verificados_promocao": 7,
+    "hashes_atuais_producao": {
+      "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+      "api.py": "fce9c08bdb6344612d6e35a799f51e9371fff09d0ce7917f503fc8a1e0003387",
+      "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+      "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+      "index.html": "53065882b7adf6aca8807faad0b76e80bc4e3dc7f003c368dc6bb2d0bfb1e91d",
+      "js/ui.js": "814e795daa55249ce302308bd2277f373ea8f263b80862b247570a5fad85d4c8",
+      "B2B_Loterias_Mobile.html": "c57b6f73b26098af3bb82201f46b75a8008a78a63dd2d3fbf9d4e11b8abb2c8c"
+    },
+    "divergencias": [],
+    "timestamp_utc": "2026-11-13T18:04:31.405080+00:00"
+  },
+  "evidencia_flag_off_padrao": {
+    "health_lotofacil_modo4": {
+      "versao_promocao": "5.1.0-promocao-controlada",
+      "versao_motor": "4.0.0-etapa4-arquitetura-adaptativa",
+      "identificacao_oficial": "MOTOR COMBINATORIO DE OTIMIZACAO DE CARTEIRAS - LOTOFACIL | MODO 4",
+      "disponivel": false,
+      "feature_flag_ativa": false,
+      "status": "desativado_por_feature_flag",
+      "motivo_indisponibilidade": "feature_flag_desativada",
+      "integridade_verificada": true,
+      "integridade_etapas_1_a_5_valida": true,
+      "verificados_etapas_1_2_3": 20,
+      "verificados_etapa_4": 4,
+      "selo_lotomania_valido": true,
+      "manifesto_etapa5_presente": true,
+      "manifesto_promocao_presente": true,
+      "politica_micro_padrao": "conservadora_3J",
+      "experimental_2j_habilitada": false,
+      "inicializacao_mista": "padrao",
+      "historico_geracao": null,
+      "fallback_permitido": false,
+      "sha256_modulos_promocao": {
+        "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+        "api.py": "fce9c08bdb6344612d6e35a799f51e9371fff09d0ce7917f503fc8a1e0003387",
+        "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+        "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+        "index.html": "53065882b7adf6aca8807faad0b76e80bc4e3dc7f003c368dc6bb2d0bfb1e91d",
+        "js/ui.js": "814e795daa55249ce302308bd2277f373ea8f263b80862b247570a5fad85d4c8",
+        "B2B_Loterias_Mobile.html": "c57b6f73b26098af3bb82201f46b75a8008a78a63dd2d3fbf9d4e11b8abb2c8c"
+      },
+      "divergencias_integridade": [],
+      "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada."
+    },
+    "status_endpoint": {
+      "versao_promocao": "5.1.0-promocao-controlada",
+      "versao_motor": "4.0.0-etapa4-arquitetura-adaptativa",
+      "identificacao_oficial": "MOTOR COMBINATORIO DE OTIMIZACAO DE CARTEIRAS - LOTOFACIL | MODO 4",
+      "disponivel": false,
+      "feature_flag_ativa": false,
+      "status": "desativado_por_feature_flag",
+      "motivo_indisponibilidade": "feature_flag_desativada",
+      "integridade_verificada": true,
+      "integridade_etapas_1_a_5_valida": true,
+      "verificados_etapas_1_2_3": 20,
+      "verificados_etapa_4": 4,
+      "selo_lotomania_valido": true,
+      "manifesto_etapa5_presente": true,
+      "manifesto_promocao_presente": true,
+      "politica_micro_padrao": "conservadora_3J",
+      "experimental_2j_habilitada": false,
+      "inicializacao_mista": "padrao",
+      "historico_geracao": null,
+      "fallback_permitido": false,
+      "sha256_modulos_promocao": {
+        "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+        "api.py": "fce9c08bdb6344612d6e35a799f51e9371fff09d0ce7917f503fc8a1e0003387",
+        "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+        "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+        "index.html": "53065882b7adf6aca8807faad0b76e80bc4e3dc7f003c368dc6bb2d0bfb1e91d",
+        "js/ui.js": "814e795daa55249ce302308bd2277f373ea8f263b80862b247570a5fad85d4c8",
+        "B2B_Loterias_Mobile.html": "c57b6f73b26098af3bb82201f46b75a8008a78a63dd2d3fbf9d4e11b8abb2c8c"
+      },
+      "divergencias_integridade": [],
+      "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada.",
+      "telemetria": {
+        "total_requisicoes_gerar": 0,
+        "total_sucesso_gerar": 0,
+        "total_bloqueios_feature_flag": 0,
+        "total_bloqueios_integridade": 0,
+        "total_bloqueios_politica_experimental": 0,
+        "total_erros_validacao": 0,
+        "total_erros_internos": 0,
+        "total_requisicoes_avaliar": 0,
+        "ultimos_eventos": [
+          {
+            "timestamp_utc": "2026-11-13T18:04:29.029410+00:00",
+            "evento": "ROLLBACK_FEATURE_FLAG",
+            "detalhes": {
+              "feature_flag_anterior": false,
+              "feature_flag_atual": false,
+              "permitir_experimental_2j": false,
+              "motivo": "garantir_padrao_off_inicial"
+            }
+          }
+        ]
+      },
+      "regimes_caixa": [
+        {
+          "tipo_concurso": "concurso_regular",
+          "chave_regra_etapa1": "regras_premiacao_regular",
+          "versao_regra": "2025.07-v1",
+          "vigencia_desde_concurso": 3439,
+          "vigencia_desde_data": "2025-07-10",
+          "fonte_oficial_url": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+          "preco_aposta_simples_brl": "3.50",
+          "rateio_saldo_variavel": {
+            "15_acertos": "0.62",
+            "14_acertos": "0.13",
+            "acumulado_final_zero": "0.10",
+            "acumulado_independencia": "0.15"
+          }
+        },
+        {
+          "tipo_concurso": "concurso_final_zero",
+          "chave_regra_etapa1": "regras_premiacao_final_zero",
+          "versao_regra": "2025.07-v1",
+          "vigencia_desde_concurso": 3439,
+          "vigencia_desde_data": "2025-07-10",
+          "fonte_oficial_url": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+          "preco_aposta_simples_brl": "3.50",
+          "rateio_saldo_variavel": {
+            "15_acertos": "0.72",
+            "14_acertos": "0.13",
+            "acumulado_independencia": "0.15"
+          }
+        },
+        {
+          "tipo_concurso": "lotofacil_independencia",
+          "chave_regra_etapa1": "regras_premiacao_independencia",
+          "versao_regra": "2025.07-v1",
+          "vigencia_desde_concurso": 3439,
+          "vigencia_desde_data": "2025-07-10",
+          "fonte_oficial_url": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+          "preco_aposta_simples_brl": "3.50",
+          "rateio_saldo_variavel": {
+            "15_acertos": "0.87",
+            "14_acertos": "0.13"
+          }
+        }
+      ]
+    },
+    "gerar_off": {
+      "status_http": 503,
+      "jogos": [],
+      "fallback_executado": false
+    },
+    "avaliar_off_status": 503
+  },
+  "evidencia_flag_on_controlada": {
+    "caso_simples_conservador": {
+      "quantidade_jogos": 8,
+      "politica_micro_utilizada": "conservadora_3J",
+      "inicializacao_mista": "padrao",
+      "algoritmo_utilizado": "multiplos_reinicios",
+      "funcao_objetivo_F": 0.9788610255897333,
+      "divergencia_F": 1.1102230246251565e-16,
+      "hash_carteira_sha256": "1fb8caac341fd7ab12862c3ba0a09348c66d017319c46e612b87edacad2f9ac9",
+      "clausula_obrigatoria_integra": true
+    },
+    "bloqueio_experimental_2j_padrao": {
+      "status_http": 422,
+      "jogos": [],
+      "fallback_executado": false
+    },
+    "caso_multipla_16": {
+      "quantidade_jogos": 4,
+      "tamanho_aposta": 16,
+      "funcao_objetivo_F": 0.9500597634304355,
+      "divergencia_F": 0.0,
+      "hash_carteira_sha256": "7ca7e5e84228f2b70bef53faacb9f79b187419693a30dcadd106584e1a7fc089"
+    },
+    "caso_experimental_2j_habilitado": {
+      "quantidade_jogos": 8,
+      "politica_micro_utilizada": "experimental_2J",
+      "experimental_2j_utilizada": true,
+      "funcao_objetivo_F": 0.9788610255897333,
+      "divergencia_F": 1.1102230246251565e-16,
+      "hash_carteira_sha256": "1fb8caac341fd7ab12862c3ba0a09348c66d017319c46e612b87edacad2f9ac9"
+    }
+  },
+  "evidencia_rollback_runtime": {
+    "transicao": {
+      "feature_flag_anterior": true,
+      "feature_flag_atual": false,
+      "politica_micro_padrao": "conservadora_3J",
+      "permitir_experimental_2j": false,
+      "inicializacao_mista": "padrao",
+      "motivo": "rollback_producao_padrao_off"
+    },
+    "health_pos_rollback": {
+      "versao_promocao": "5.1.0-promocao-controlada",
+      "versao_motor": "4.0.0-etapa4-arquitetura-adaptativa",
+      "identificacao_oficial": "MOTOR COMBINATORIO DE OTIMIZACAO DE CARTEIRAS - LOTOFACIL | MODO 4",
+      "disponivel": false,
+      "feature_flag_ativa": false,
+      "status": "desativado_por_feature_flag",
+      "motivo_indisponibilidade": "feature_flag_desativada",
+      "integridade_verificada": true,
+      "integridade_etapas_1_a_5_valida": true,
+      "verificados_etapas_1_2_3": 20,
+      "verificados_etapa_4": 4,
+      "selo_lotomania_valido": true,
+      "manifesto_etapa5_presente": true,
+      "manifesto_promocao_presente": true,
+      "politica_micro_padrao": "conservadora_3J",
+      "experimental_2j_habilitada": false,
+      "inicializacao_mista": "padrao",
+      "historico_geracao": null,
+      "fallback_permitido": false,
+      "sha256_modulos_promocao": {
+        "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+        "api.py": "fce9c08bdb6344612d6e35a799f51e9371fff09d0ce7917f503fc8a1e0003387",
+        "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+        "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+        "index.html": "53065882b7adf6aca8807faad0b76e80bc4e3dc7f003c368dc6bb2d0bfb1e91d",
+        "js/ui.js": "814e795daa55249ce302308bd2277f373ea8f263b80862b247570a5fad85d4c8",
+        "B2B_Loterias_Mobile.html": "c57b6f73b26098af3bb82201f46b75a8008a78a63dd2d3fbf9d4e11b8abb2c8c"
+      },
+      "divergencias_integridade": [],
+      "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada."
+    },
+    "gerar_pos_rollback": {
+      "status_http": 503,
+      "jogos": [],
+      "fallback_executado": false
+    }
+  },
+  "concorrencia_flag_off": {
+    "total_requisicoes": 12,
+    "sucessos": 12,
+    "falhas": 0,
+    "duracao_segundos": 0.2231,
+    "lotofacil_hashes_unicos": 0,
+    "lotomania_hashes_unicos": 1,
+    "amostra_resultados": [
+      {
+        "tipo": "health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "tipo": "lotomania_modo4",
+        "status": 200,
+        "ok": true,
+        "sha_v2": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27"
+      },
+      {
+        "tipo": "lotofacil_modo4",
+        "status": 503,
+        "ok": true
+      },
+      {
+        "tipo": "health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "tipo": "lotomania_modo4",
+        "status": 200,
+        "ok": true,
+        "sha_v2": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27"
+      },
+      {
+        "tipo": "lotofacil_modo4",
+        "status": 503,
+        "ok": true
+      },
+      {
+        "tipo": "health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "tipo": "lotomania_modo4",
+        "status": 200,
+        "ok": true,
+        "sha_v2": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27"
+      },
+      {
+        "tipo": "lotofacil_modo4",
+        "status": 503,
+        "ok": true
+      },
+      {
+        "tipo": "health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "tipo": "lotomania_modo4",
+        "status": 200,
+        "ok": true,
+        "sha_v2": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27"
+      },
+      {
+        "tipo": "lotofacil_modo4",
+        "status": 503,
+        "ok": true
+      }
+    ]
+  },
+  "concorrencia_flag_on": {
+    "total_requisicoes": 12,
+    "sucessos": 12,
+    "falhas": 0,
+    "duracao_segundos": 0.4166,
+    "lotofacil_hashes_unicos": 1,
+    "lotomania_hashes_unicos": 1,
+    "amostra_resultados": [
+      {
+        "tipo": "health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "tipo": "lotomania_modo4",
+        "status": 200,
+        "ok": true,
+        "sha_v2": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27"
+      },
+      {
+        "tipo": "lotofacil_modo4",
+        "status": 200,
+        "ok": true,
+        "hash_carteira": "d194aed890de598275f23fe87f9dce4211d92fbbf651bb341cb366e344ac4a19"
+      },
+      {
+        "tipo": "health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "tipo": "lotomania_modo4",
+        "status": 200,
+        "ok": true,
+        "sha_v2": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27"
+      },
+      {
+        "tipo": "lotofacil_modo4",
+        "status": 200,
+        "ok": true,
+        "hash_carteira": "d194aed890de598275f23fe87f9dce4211d92fbbf651bb341cb366e344ac4a19"
+      },
+      {
+        "tipo": "health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "tipo": "lotomania_modo4",
+        "status": 200,
+        "ok": true,
+        "sha_v2": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27"
+      },
+      {
+        "tipo": "lotofacil_modo4",
+        "status": 200,
+        "ok": true,
+        "hash_carteira": "d194aed890de598275f23fe87f9dce4211d92fbbf651bb341cb366e344ac4a19"
+      },
+      {
+        "tipo": "health",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "tipo": "lotomania_modo4",
+        "status": 200,
+        "ok": true,
+        "sha_v2": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27"
+      },
+      {
+        "tipo": "lotofacil_modo4",
+        "status": 200,
+        "ok": true,
+        "hash_carteira": "d194aed890de598275f23fe87f9dce4211d92fbbf651bb341cb366e344ac4a19"
+      }
+    ]
+  },
+  "nao_interferencia": {
+    "lotomania_modo4_hashes_identicos": true,
+    "lotomania_sha256_v2": "c3e0e60d4582103bd0d8661fb53c3334219499c966258701cadacaa16966ee27",
+    "legados_status_off": {
+      "/api/v1/motor-lotofacil": 200,
+      "/api/v1/motor-lotomania": 200,
+      "/api/v1/motor-diadesorte": 200,
+      "/api/v1/motor-megasena": 200
+    },
+    "legados_status_on": {
+      "/api/v1/motor-lotofacil": 200,
+      "/api/v1/motor-lotomania": 200,
+      "/api/v1/motor-diadesorte": 200,
+      "/api/v1/motor-megasena": 200
+    }
+  }
+}

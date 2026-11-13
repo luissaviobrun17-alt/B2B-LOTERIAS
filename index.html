@@ -504,12 +504,15 @@
                         <!-- PAINEL MOTOR LOTOFÁCIL DO B2B LOTERIAS -->
                         <div id="motor-lotofacil-panel" style="display:none; margin-top: 12px; padding: 16px; background: radial-gradient(circle at top left, rgba(147, 51, 234, 0.25), rgba(15, 23, 42, 0.95)); border: 1px solid #a855f7; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
                             <!-- SELETOR DE ABAS DO MOTOR LOTOFACIL -->
-                            <div style="display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid rgba(168,85,247,0.3); padding-bottom: 10px;">
-                                <button id="tab-btn-lotofacil-estatistico" type="button" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid #a855f7; background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(168,85,247,0.3)); color: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; border-bottom: 1px solid rgba(168,85,247,0.3); padding-bottom: 10px;">
+                                <button id="tab-btn-lotofacil-estatistico" type="button" style="flex: 1; min-width: 190px; padding: 8px 12px; border-radius: 8px; border: 1px solid #a855f7; background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(168,85,247,0.3)); color: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
                                     ⚡ Motor Estatístico B2B
                                 </button>
-                                <button id="tab-btn-lotofacil-grupos" type="button" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(245,158,11,0.4); background: rgba(15,23,42,0.6); color: #fde68a; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                <button id="tab-btn-lotofacil-grupos" type="button" style="flex: 1; min-width: 210px; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(245,158,11,0.4); background: rgba(15,23,42,0.6); color: #fde68a; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
                                     🎲 Fechamento por Grupos (Jogador)
+                                </button>
+                                <button id="tab-btn-lotofacil-modo4" type="button" style="flex: 1.1; min-width: 220px; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.4); background: rgba(15,23,42,0.6); color: #a7f3d0; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                    🔒 MODO 4 | Otimizador Combinatório (Controlado)
                                 </button>
                             </div>
 
@@ -822,6 +825,105 @@
 
                                 <!-- Container Visual do Desdobramento dos Conjuntos da Lotofácil -->
                                 <div id="container-visual-conjuntos-lotofacil" style="margin-top: 14px; display: none;"></div>
+                            </div>
+
+                            <!-- SUB-PAINEL 3: LOTOFACIL MODO 4 (PROMOCAO CONTROLADA COM FEATURE FLAG OFF POR PADRAO) -->
+                            <div id="subpanel-lotofacil-modo4" style="display:none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 0.98rem; font-weight: 900; color: #34d399; display: flex; align-items: center; gap: 8px;">
+                                        🔒 MOTOR COMBINATÓRIO DE OTIMIZAÇÃO DE CARTEIRAS | LOTOFÁCIL MODO 4
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span id="badge-status-lotofacil-modo4" style="font-size: 0.74rem; background: rgba(239, 68, 68, 0.18); color: #fecaca; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(239, 68, 68, 0.45); font-weight: 800;">
+                                            ⏳ Verificando Feature Flag...
+                                        </span>
+                                        <button id="btn-verificar-lotofacil-modo4" type="button" style="background: rgba(15,23,42,0.8); border: 1px solid rgba(52,211,153,0.4); color: #6ee7b7; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">
+                                            🔄 Revalidar Status
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Clausula Matematica Obrigatoria -->
+                                <div id="clausula-obrigatoria-lotofacil-modo4" style="padding: 10px 12px; margin-bottom: 12px; border-radius: 8px; background: rgba(15, 23, 42, 0.85); border-left: 3px solid #10b981; border-top: 1px solid rgba(16,185,129,0.2); border-right: 1px solid rgba(16,185,129,0.2); border-bottom: 1px solid rgba(16,185,129,0.2); font-size: 0.78rem; color: #cbd5e1; line-height: 1.5;">
+                                    <strong style="color: #34d399;">Declaração Institucional de Escopo e Limitação Matemática:</strong>
+                                    O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada.
+                                    <div style="margin-top: 4px; font-size: 0.73rem; color: #94a3b8;">
+                                        Probabilidade individual fixa (aposta simples de 15 dezenas): 1 em 3.268.760 (15 acertos) | P(X ≥ 11) = 346.126 / 3.268.760 (aprox. 10,5889%). F_MODO4 e S_prob são métricas/limites combinatórios de otimização, não garantias de prêmio.
+                                    </div>
+                                </div>
+
+                                <!-- Aviso Fail-Closed (Feature Flag OFF ou Servidor Desconectado / Integridade Violada) -->
+                                <div id="alerta-indisponivel-lotofacil-modo4" style="display: block; padding: 12px 14px; margin-bottom: 12px; border-radius: 8px; background: rgba(239, 68, 68, 0.16); border: 1px solid #ef4444; color: #fecaca; font-size: 0.83rem; font-weight: 700; line-height: 1.5;">
+                                    ⚠️ LOTOFÁCIL MODO 4 desativado em produção por feature flag controlada (padrão OFF). Nenhum jogo foi gerado.
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                                    <div>
+                                        <label for="input-qtd-jogos-lotofacil-modo4" style="font-size: 0.75rem; color: #a7f3d0; font-weight: 700; display: block; margin-bottom: 4px;">
+                                            Quantidade de Jogos (1 a 5.000):
+                                        </label>
+                                        <input type="number" id="input-qtd-jogos-lotofacil-modo4" min="1" max="5000" step="1" value="8" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(16,185,129,0.45); color: #fff; padding: 7px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 800;">
+                                    </div>
+                                    <div>
+                                        <label for="select-tamanho-lotofacil-modo4" style="font-size: 0.75rem; color: #a7f3d0; font-weight: 700; display: block; margin-bottom: 4px;">
+                                            Dezenas por Aposta (15 a 20):
+                                        </label>
+                                        <select id="select-tamanho-lotofacil-modo4" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(16,185,129,0.45); color: #e2e8f0; padding: 7px 10px; border-radius: 6px; font-size: 0.83rem; font-weight: 700;">
+                                            <option value="15" selected>15 dezenas (R$ 3,50)</option>
+                                            <option value="16">16 dezenas (R$ 56,00)</option>
+                                            <option value="17">17 dezenas (R$ 476,00)</option>
+                                            <option value="18">18 dezenas (R$ 2.856,00)</option>
+                                            <option value="19">19 dezenas (R$ 13.566,00)</option>
+                                            <option value="20">20 dezenas (R$ 54.264,00)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="select-concurso-lotofacil-modo4" style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">
+                                            Regime Oficial CAIXA:
+                                        </label>
+                                        <select id="select-concurso-lotofacil-modo4" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(16,185,129,0.35); color: #e2e8f0; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">
+                                            <option value="concurso_regular" selected>Concurso Regular</option>
+                                            <option value="concurso_final_zero">Concurso Final Zero</option>
+                                            <option value="lotofacil_independencia">Lotofácil da Independência</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="select-prioridade-lotofacil-modo4" style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">
+                                            Prioridade do Despacho:
+                                        </label>
+                                        <select id="select-prioridade-lotofacil-modo4" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(16,185,129,0.35); color: #e2e8f0; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">
+                                            <option value="equilibrio_adaptativo" selected>Equilíbrio Adaptativo</option>
+                                            <option value="qualidade_maxima">Qualidade Máxima</option>
+                                            <option value="baixa_latencia">Baixa Latência</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="input-seed-lotofacil-modo4" style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">
+                                            Semente Determinística:
+                                        </label>
+                                        <input type="number" id="input-seed-lotofacil-modo4" min="0" step="1" value="42" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.35); color: #e2e8f0; padding: 7px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; justify-content: center; background: rgba(0,0,0,0.35); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(16,185,129,0.2);">
+                                        <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.74rem; color: #cbd5e1; font-weight: 700; line-height: 1.35;">
+                                            <input type="checkbox" id="check-exp2j-lotofacil-modo4" disabled style="width: 15px; height: 15px; accent-color: #f59e0b; margin-top: 2px;">
+                                            <span>Política experimental_2J (desabilitada por padrão; oficial: conservadora_3J)</span>
+                                        </label>
+                                        <div style="font-size: 0.69rem; color: #64748b; margin-top: 4px;">
+                                            Inicialização mista fixa: <strong>padrao</strong> | Histórico na geração: <strong>None</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                    <button id="btn-executar-lotofacil-modo4" type="button" style="flex: 2; min-width: 240px; background: linear-gradient(135deg, #059669, #047857); border: 1px solid #34d399; color: white; padding: 11px 16px; border-radius: 8px; font-weight: 900; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 15px rgba(16,185,129,0.35);">
+                                        🔒 GERAR CARTEIRA (LOTOFÁCIL MODO 4)
+                                    </button>
+                                    <button id="btn-avaliar-lotofacil-modo4" type="button" style="flex: 1; min-width: 180px; background: rgba(2,132,199,0.25); border: 1px solid #38bdf8; color: #bae6fd; padding: 11px 14px; border-radius: 8px; font-weight: 800; font-size: 0.83rem; cursor: pointer;">
+                                        🔬 Auditar Carteira Atual
+                                    </button>
+                                </div>
+
+                                <div id="container-resultado-lotofacil-modo4" style="margin-top: 12px; display: none;"></div>
                             </div>
                         </div>
 
@@ -3137,8 +3239,9 @@
                         <script src="js/engines/motor_quina_engine.js?v=20260905_V2"></script>
 <script src="js/engines/motor_duplasena_engine.js?v=20260904_V2"></script>
             <script src="js/engines/motor_lotomania_engine.js?v=20261104_FIX_K_REFERENCE"></script>
-            <script src="js/engines/motor_lotomania_modo4_engine.js?v=20261112_MODO4_V12_3438"></script>
+            <script src="js/engines/motor_lotomania_modo4_engine.js?v=20261113_MODO4_JOBS_V13"></script>
             <script src="js/engines/motor_lotofacil_engine.js?v=20261105_CONJUNTOS_FULL"></script>
+            <script src="js/engines/motor_lotofacil_modo4_engine.js?v=20261113_MODO4_PROMOCAO_510"></script>
             <script src="js/engines/motor_diadesorte_engine.js?v=20260903"></script>
             <script src="js/engines/motor_timemania_engine.js?v=1781904590"></script>
             <script src="js/engines/motor_milionaria_engine.js?v=20261014_MILIONARIA_FIX"></script>
@@ -3334,7 +3437,7 @@
                 console.log('[B2B] repairGameLotomania injetado com sucesso no escopo global das classes.');
             })();
             </script>
-            <script src="js/ui.js?v=20261112_MODO4_V12_3438"></script>
+            <script src="js/ui.js?v=20261113_MODO4_JOBS_V13"></script>
             <script src="js/main.js?v=20261014_MILIONARIA_FIX"></script>
 
     <!-- v11: Coverage handler inline REMOVIDO — handler canônico está em ui.js -->
@@ -3347,6 +3450,7 @@
         console.log('[B2B-DIAG] PureCoverageEngine: ' + (typeof PureCoverageEngine !== 'undefined' ? '✅ Ativo' : '❌'));
         console.log('[B2B-DIAG] MotorFechamentoManual: ' + (typeof MotorFechamentoManual !== 'undefined' ? '✅ Ativo' : '❌'));
         console.log('[B2B-DIAG] MotorLotofacilB2BEngine: ' + (typeof MotorLotofacilB2BEngine !== 'undefined' ? '✅ Ativo' : '❌'));
+        console.log('[B2B-DIAG] MotorLotofacilModo4Engine: ' + (typeof MotorLotofacilModo4Engine !== 'undefined' ? '✅ Ativo (Controlado)' : '❌'));
         console.log('[B2B-DIAG] ClosingEngine: ' + (typeof ClosingEngine !== 'undefined' ? '✅ Ativo' : '❌'));
         console.log('[B2B-DIAG] GAMES: ' + (typeof GAMES !== 'undefined' ? '✅ Ativo' : '❌'));
         console.log('[B2B-DIAG] StatsService: ' + (typeof StatsService !== 'undefined' ? '✅ Ativo' : '❌'));

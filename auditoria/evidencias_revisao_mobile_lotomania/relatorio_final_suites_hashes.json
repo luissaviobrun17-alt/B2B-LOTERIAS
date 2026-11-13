@@ -1,0 +1,164 @@
+{
+  "ok": true,
+  "suites": [
+    {
+      "suite": "testes/test_modo4_selo.py",
+      "modo": "std",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_bateria_completa_10_cenarios_fail_closed (testes.test_modo4_selo.TestModo4Selo.test_bateria_completa_10_cenarios_fail_closed) ... ok\ntest_selo_ausente_bloqueado (testes.test_modo4_selo.TestModo4Selo.test_selo_ausente_bloqueado) ... ok\ntest_selo_oficial_valido (testes.test_modo4_selo.TestModo4Selo.test_selo_oficial_valido) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.277s\n\nOK"
+    },
+    {
+      "suite": "testes/test_modo4_sem_fallback.py",
+      "modo": "std",
+      "returncode": 0,
+      "stdout": "[TESTE NEGATIVO CONTROLADO - REJEICAO ESPERADA]: Simulando violacao de selo/manifesto na API (HTTP 503)...\n  [TESTE NEGATIVO CONTROLADO - REJEICAO ESPERADA]: Bloqueios 503/500/422 confirmados com zero jogos entregues.\n  [TESTE NEGATIVO CONTROLADO - REJEICAO ESPERADA]: Simulando violacao de selo/manifesto na API (HTTP 503)...",
+      "stderr": "test_auditoria_estatica_e_dinamica_sem_fallback (testes.test_modo4_sem_fallback.TestModo4SemFallback.test_auditoria_estatica_e_dinamica_sem_fallback) ... BLOQUEIO CRIPTOGRAFICO MODO 4 (ID: 9377027a): Manifesto ou selo criptográfico inválido (simulação controlada).\nBLOQUEIO CRIPTOGRAFICO MODO 4 CONFERENCIA (ID: 97c27470): Manifesto ou selo criptográfico inválido (simulação controlada).\nFalha na verificacao de saude do MODO 4: Manifesto ou selo criptográfico inválido (simulação controlada).\nErro no Motor Lotomania MODO 4. ID: f0cf6534 | Detalhe: Erro interno simulado no processo de otimização.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 645, in endpoint_lotomania_modo4_gerar\n    resultado = motor.gerar_carteira_otimizada_cobertura(\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\testes\\test_modo4_sem_fallback.py\", line 254, in _erro_interno\n    raise RuntimeError(\"Erro interno simulado no processo de otimização.\")\nRuntimeError: Erro interno simulado no processo de otimização.\nErro no Motor Lotomania MODO 4. ID: 6d4c6492 | Detalhe: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 60, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(\"Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\")\nRuntimeError: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\nErro no Motor Lotomania MODO 4. ID: a5d64c7f | Detalhe: Discrepancia quantitativa: esperados 20 jogos, entregues 19.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 63, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(\nRuntimeError: Discrepancia quantitativa: esperados 20 jogos, entregues 19.\nErro no Motor Lotomania MODO 4. ID: 208ec6de | Detalhe: Jogo 1 na resposta nao contem 50 dezenas distintas.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 68, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(f\"Jogo {idx + 1} na resposta nao contem 50 dezenas distintas.\")\nRuntimeError: Jogo 1 na resposta nao contem 50 dezenas distintas.\nErro no Motor Lotomania MODO 4. ID: 3059aa1a | Detalhe: Jogo 1 na resposta contem dezenas fora do dominio [1..100].\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 70, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(f\"Jogo {idx + 1} na resposta contem dezenas fora do dominio [1..100].\")\nRuntimeError: Jogo 1 na resposta contem dezenas fora do dominio [1..100].\nok\ntest_cenarios_http_timeout_erro_incompleta (testes.test_modo4_sem_fallback.TestModo4SemFallback.test_cenarios_http_timeout_erro_incompleta) ... ok\ntest_handlers_api_negativos_fail_closed (testes.test_modo4_sem_fallback.TestModo4SemFallback.test_handlers_api_negativos_fail_closed) ... BLOQUEIO CRIPTOGRAFICO MODO 4 (ID: d8c98b04): Manifesto ou selo criptográfico inválido (simulação controlada).\nBLOQUEIO CRIPTOGRAFICO MODO 4 CONFERENCIA (ID: e59f9610): Manifesto ou selo criptográfico inválido (simulação controlada).\nFalha na verificacao de saude do MODO 4: Manifesto ou selo criptográfico inválido (simulação controlada).\nErro no Motor Lotomania MODO 4. ID: 5a421e8f | Detalhe: Erro interno simulado no processo de otimização.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 645, in endpoint_lotomania_modo4_gerar\n    resultado = motor.gerar_carteira_otimizada_cobertura(\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\testes\\test_modo4_sem_fallback.py\", line 254, in _erro_interno\n    raise RuntimeError(\"Erro interno simulado no processo de otimização.\")\nRuntimeError: Erro interno simulado no processo de otimização.\nErro no Motor Lotomania MODO 4. ID: 6ff72342 | Detalhe: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 60, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(\"Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\")\nRuntimeError: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\nErro no Motor Lotomania MODO 4. ID: f5799e80 | Detalhe: Discrepancia quantitativa: esperados 20 jogos, entregues 19.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 63, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(\nRuntimeError: Discrepancia quantitativa: esperados 20 jogos, entregues 19.\nErro no Motor Lotomania MODO 4. ID: 34c399da | Detalhe: Jogo 1 na resposta nao contem 50 dezenas distintas.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 68, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(f\"Jogo {idx + 1} na resposta nao contem 50 dezenas distintas.\")\nRuntimeError: Jogo 1 na resposta nao contem 50 dezenas distintas.\nErro no Motor Lotomania MODO 4. ID: acbfda3c | Detalhe: Jogo 1 na resposta contem dezenas fora do dominio [1..100].\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 70, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(f\"Jogo {idx + 1} na resposta contem dezenas fora do dominio [1..100].\")\nRuntimeError: Jogo 1 na resposta contem dezenas fora do dominio [1..100].\nok\n\n----------------------------------------------------------------------\nRan 3 tests in 6.877s\n\nOK"
+    },
+    {
+      "suite": "testes/test_modo4_equivalencia.py",
+      "modo": "std",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_delta_v_casos_borda (testes.test_modo4_equivalencia.TestModo4Equivalencia.test_delta_v_casos_borda) ... ok\ntest_equivalencia_registro_a_registro_10_sementes (testes.test_modo4_equivalencia.TestModo4Equivalencia.test_equivalencia_registro_a_registro_10_sementes) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 6.465s\n\nOK"
+    },
+    {
+      "suite": "testes/test_lotofacil_modo4_promocao.py",
+      "modo": "std",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_01_configuracao_padrao_desligada_e_env (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_01_configuracao_padrao_desligada_e_env) ... ok\ntest_02_integridade_pos_implantacao_e_adulteracao_fail_closed (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_02_integridade_pos_implantacao_e_adulteracao_fail_closed) ... ok\ntest_03_api_producao_flag_off_on_experimental_e_rollback (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_03_api_producao_flag_off_on_experimental_e_rollback) ... ok\ntest_04_concorrencia_e_nao_interferencia_demais_modalidades (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_04_concorrencia_e_nao_interferencia_demais_modalidades) ... ok\ntest_05_falha_rede_http500_fail_closed (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_05_falha_rede_http500_fail_closed) ... ok\ntest_06_ui_web_e_mobile_paridade_e_zero_fallback (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_06_ui_web_e_mobile_paridade_e_zero_fallback) ... ok\ntest_07_artefatos_e_dossie_promocao (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_07_artefatos_e_dossie_promocao) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 5.370s\n\nOK"
+    },
+    {
+      "suite": "testes/test_lotofacil_modo4_homologacao_preparacao.py",
+      "modo": "std",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_01_arquivos_preparacao_isolados_e_sem_travessao (testes.test_lotofacil_modo4_homologacao_preparacao.TestLotofacilModo4HomologacaoPreparacao.test_01_arquivos_preparacao_isolados_e_sem_travessao) ... ok\ntest_02_trava_fail_closed_sem_autorizacao_fase2 (testes.test_lotofacil_modo4_homologacao_preparacao.TestLotofacilModo4HomologacaoPreparacao.test_02_trava_fail_closed_sem_autorizacao_fase2) ... ok\ntest_03_telemetria_hardware_e_cadeia_selada_intacta (testes.test_lotofacil_modo4_homologacao_preparacao.TestLotofacilModo4HomologacaoPreparacao.test_03_telemetria_hardware_e_cadeia_selada_intacta) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.760s\n\nOK"
+    },
+    {
+      "suite": "testes/test_lotomania_modo4_jobs.py",
+      "modo": "std",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_equivalencia_limites_cancelamento_e_nao_interferencia_http_real (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_equivalencia_limites_cancelamento_e_nao_interferencia_http_real)\nExecuta ciclo completo em Uvicorn HTTP real cobrindo 202/200/404/409/422, cancelamento e /health. ... ok\ntest_limite_fila_retorna_429 (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_limite_fila_retorna_429) ... ok\ntest_paridade_estatica_web_e_mobile_preservando_botoes_e_flag_lotofacil (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_paridade_estatica_web_e_mobile_preservando_botoes_e_flag_lotofacil) ... ok\ntest_selo_invalido_dentro_do_worker_falha_503_zero_jogos (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_selo_invalido_dentro_do_worker_falha_503_zero_jogos)\nVerifica em subprocesso real com copia temporaria adulterada que o worker falha fechado. ... ok\ntest_selo_invalido_na_criacao_bloqueia_503_sem_criar_job (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_selo_invalido_na_criacao_bloqueia_503_sem_criar_job) ... BLOQUEIO CRIPTOGRAFICO MODO 4 JOB (ID: f63d5b6d): manifesto adulterado teste\nok\n\n----------------------------------------------------------------------\nRan 5 tests in 2.956s\n\nOK"
+    },
+    {
+      "suite": "testes/test_modo4_selo.py",
+      "modo": "-O",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_bateria_completa_10_cenarios_fail_closed (testes.test_modo4_selo.TestModo4Selo.test_bateria_completa_10_cenarios_fail_closed) ... ok\ntest_selo_ausente_bloqueado (testes.test_modo4_selo.TestModo4Selo.test_selo_ausente_bloqueado) ... ok\ntest_selo_oficial_valido (testes.test_modo4_selo.TestModo4Selo.test_selo_oficial_valido) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.279s\n\nOK"
+    },
+    {
+      "suite": "testes/test_modo4_sem_fallback.py",
+      "modo": "-O",
+      "returncode": 0,
+      "stdout": "[TESTE NEGATIVO CONTROLADO - REJEICAO ESPERADA]: Simulando violacao de selo/manifesto na API (HTTP 503)...\n  [TESTE NEGATIVO CONTROLADO - REJEICAO ESPERADA]: Bloqueios 503/500/422 confirmados com zero jogos entregues.\n  [TESTE NEGATIVO CONTROLADO - REJEICAO ESPERADA]: Simulando violacao de selo/manifesto na API (HTTP 503)...",
+      "stderr": "test_auditoria_estatica_e_dinamica_sem_fallback (testes.test_modo4_sem_fallback.TestModo4SemFallback.test_auditoria_estatica_e_dinamica_sem_fallback) ... BLOQUEIO CRIPTOGRAFICO MODO 4 (ID: c76d24bf): Manifesto ou selo criptográfico inválido (simulação controlada).\nBLOQUEIO CRIPTOGRAFICO MODO 4 CONFERENCIA (ID: 81307df4): Manifesto ou selo criptográfico inválido (simulação controlada).\nFalha na verificacao de saude do MODO 4: Manifesto ou selo criptográfico inválido (simulação controlada).\nErro no Motor Lotomania MODO 4. ID: 1ff9f678 | Detalhe: Erro interno simulado no processo de otimização.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 645, in endpoint_lotomania_modo4_gerar\n    resultado = motor.gerar_carteira_otimizada_cobertura(\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\testes\\test_modo4_sem_fallback.py\", line 254, in _erro_interno\n    raise RuntimeError(\"Erro interno simulado no processo de otimização.\")\nRuntimeError: Erro interno simulado no processo de otimização.\nErro no Motor Lotomania MODO 4. ID: a3b57368 | Detalhe: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 60, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(\"Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\")\nRuntimeError: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\nErro no Motor Lotomania MODO 4. ID: 0f12be6a | Detalhe: Discrepancia quantitativa: esperados 20 jogos, entregues 19.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 63, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(\nRuntimeError: Discrepancia quantitativa: esperados 20 jogos, entregues 19.\nErro no Motor Lotomania MODO 4. ID: 6ef58f20 | Detalhe: Jogo 1 na resposta nao contem 50 dezenas distintas.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 68, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(f\"Jogo {idx + 1} na resposta nao contem 50 dezenas distintas.\")\nRuntimeError: Jogo 1 na resposta nao contem 50 dezenas distintas.\nErro no Motor Lotomania MODO 4. ID: 2546e6ee | Detalhe: Jogo 1 na resposta contem dezenas fora do dominio [1..100].\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 70, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(f\"Jogo {idx + 1} na resposta contem dezenas fora do dominio [1..100].\")\nRuntimeError: Jogo 1 na resposta contem dezenas fora do dominio [1..100].\nok\ntest_cenarios_http_timeout_erro_incompleta (testes.test_modo4_sem_fallback.TestModo4SemFallback.test_cenarios_http_timeout_erro_incompleta) ... ok\ntest_handlers_api_negativos_fail_closed (testes.test_modo4_sem_fallback.TestModo4SemFallback.test_handlers_api_negativos_fail_closed) ... BLOQUEIO CRIPTOGRAFICO MODO 4 (ID: 361e79a4): Manifesto ou selo criptográfico inválido (simulação controlada).\nBLOQUEIO CRIPTOGRAFICO MODO 4 CONFERENCIA (ID: 835755af): Manifesto ou selo criptográfico inválido (simulação controlada).\nFalha na verificacao de saude do MODO 4: Manifesto ou selo criptográfico inválido (simulação controlada).\nErro no Motor Lotomania MODO 4. ID: e772dd8a | Detalhe: Erro interno simulado no processo de otimização.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 645, in endpoint_lotomania_modo4_gerar\n    resultado = motor.gerar_carteira_otimizada_cobertura(\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\testes\\test_modo4_sem_fallback.py\", line 254, in _erro_interno\n    raise RuntimeError(\"Erro interno simulado no processo de otimização.\")\nRuntimeError: Erro interno simulado no processo de otimização.\nErro no Motor Lotomania MODO 4. ID: e4403bfc | Detalhe: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 60, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(\"Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\")\nRuntimeError: Falha estrutural: o motor MODO 4 nao retornou status de sucesso.\nErro no Motor Lotomania MODO 4. ID: a6f4195c | Detalhe: Discrepancia quantitativa: esperados 20 jogos, entregues 19.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 63, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(\nRuntimeError: Discrepancia quantitativa: esperados 20 jogos, entregues 19.\nErro no Motor Lotomania MODO 4. ID: ff79c2a3 | Detalhe: Jogo 1 na resposta nao contem 50 dezenas distintas.\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 68, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(f\"Jogo {idx + 1} na resposta nao contem 50 dezenas distintas.\")\nRuntimeError: Jogo 1 na resposta nao contem 50 dezenas distintas.\nErro no Motor Lotomania MODO 4. ID: 80c42348 | Detalhe: Jogo 1 na resposta contem dezenas fora do dominio [1..100].\nTraceback (most recent call last):\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\api.py\", line 653, in endpoint_lotomania_modo4_gerar\n    return validar_e_serializar_resultado_lotomania_modo4(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotomania_modo4_jobs.py\", line 70, in validar_e_serializar_resultado_lotomania_modo4\n    raise RuntimeError(f\"Jogo {idx + 1} na resposta contem dezenas fora do dominio [1..100].\")\nRuntimeError: Jogo 1 na resposta contem dezenas fora do dominio [1..100].\nok\n\n----------------------------------------------------------------------\nRan 3 tests in 6.881s\n\nOK"
+    },
+    {
+      "suite": "testes/test_modo4_equivalencia.py",
+      "modo": "-O",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_delta_v_casos_borda (testes.test_modo4_equivalencia.TestModo4Equivalencia.test_delta_v_casos_borda) ... ok\ntest_equivalencia_registro_a_registro_10_sementes (testes.test_modo4_equivalencia.TestModo4Equivalencia.test_equivalencia_registro_a_registro_10_sementes) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 6.511s\n\nOK"
+    },
+    {
+      "suite": "testes/test_lotofacil_modo4_promocao.py",
+      "modo": "-O",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_01_configuracao_padrao_desligada_e_env (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_01_configuracao_padrao_desligada_e_env) ... ok\ntest_02_integridade_pos_implantacao_e_adulteracao_fail_closed (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_02_integridade_pos_implantacao_e_adulteracao_fail_closed) ... ok\ntest_03_api_producao_flag_off_on_experimental_e_rollback (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_03_api_producao_flag_off_on_experimental_e_rollback) ... ok\ntest_04_concorrencia_e_nao_interferencia_demais_modalidades (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_04_concorrencia_e_nao_interferencia_demais_modalidades) ... ok\ntest_05_falha_rede_http500_fail_closed (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_05_falha_rede_http500_fail_closed) ... ok\ntest_06_ui_web_e_mobile_paridade_e_zero_fallback (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_06_ui_web_e_mobile_paridade_e_zero_fallback) ... ok\ntest_07_artefatos_e_dossie_promocao (testes.test_lotofacil_modo4_promocao.TestLotofacilModo4PromocaoControlada.test_07_artefatos_e_dossie_promocao) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 5.467s\n\nOK"
+    },
+    {
+      "suite": "testes/test_lotofacil_modo4_homologacao_preparacao.py",
+      "modo": "-O",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_01_arquivos_preparacao_isolados_e_sem_travessao (testes.test_lotofacil_modo4_homologacao_preparacao.TestLotofacilModo4HomologacaoPreparacao.test_01_arquivos_preparacao_isolados_e_sem_travessao) ... ok\ntest_02_trava_fail_closed_sem_autorizacao_fase2 (testes.test_lotofacil_modo4_homologacao_preparacao.TestLotofacilModo4HomologacaoPreparacao.test_02_trava_fail_closed_sem_autorizacao_fase2) ... ok\ntest_03_telemetria_hardware_e_cadeia_selada_intacta (testes.test_lotofacil_modo4_homologacao_preparacao.TestLotofacilModo4HomologacaoPreparacao.test_03_telemetria_hardware_e_cadeia_selada_intacta) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.776s\n\nOK"
+    },
+    {
+      "suite": "testes/test_lotomania_modo4_jobs.py",
+      "modo": "-O",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_equivalencia_limites_cancelamento_e_nao_interferencia_http_real (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_equivalencia_limites_cancelamento_e_nao_interferencia_http_real)\nExecuta ciclo completo em Uvicorn HTTP real cobrindo 202/200/404/409/422, cancelamento e /health. ... ok\ntest_limite_fila_retorna_429 (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_limite_fila_retorna_429) ... ok\ntest_paridade_estatica_web_e_mobile_preservando_botoes_e_flag_lotofacil (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_paridade_estatica_web_e_mobile_preservando_botoes_e_flag_lotofacil) ... ok\ntest_selo_invalido_dentro_do_worker_falha_503_zero_jogos (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_selo_invalido_dentro_do_worker_falha_503_zero_jogos)\nVerifica em subprocesso real com copia temporaria adulterada que o worker falha fechado. ... ok\ntest_selo_invalido_na_criacao_bloqueia_503_sem_criar_job (testes.test_lotomania_modo4_jobs.TestLotomaniaModo4Jobs.test_selo_invalido_na_criacao_bloqueia_503_sem_criar_job) ... BLOQUEIO CRIPTOGRAFICO MODO 4 JOB (ID: 6b4f9bf2): manifesto adulterado teste\nok\n\n----------------------------------------------------------------------\nRan 5 tests in 3.070s\n\nOK"
+    }
+  ],
+  "hashes_sha256": {
+    "motor_lotomania_modo4.py": "94a2d1001d235e0e9bd543aeee697bac0ac6c60b1d24654838e452d6f42c68f9",
+    "manifesto_modo4.json": "66e255cd526e2c72ec1fda3d3112cb918b4e678b1f264117593ca7cdf127e57c",
+    "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+    "api.py": "d60cad46afbf563530a77e4950b142c1ebd54bcd2fef2e17bc23d84fc9de7c0b",
+    "lotomania_modo4_jobs.py": "f88362dacc1527a86aebb5db44247e049c395f64977f9f9887e7400ce3da6296",
+    "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+    "index.html": "639bf551a59a3eeef9b1ee322ba16e9eeb6bc3477616338fef996fc155a12de0",
+    "js/ui.js": "e11df28bae9c9671b5ea4a69dfd389c8c66663ecf4caf139be56f0b2f14ca427",
+    "js/engines/motor_lotomania_modo4_engine.js": "786d860293445c8d8e398c47c776469aba43c090ff0094757ec60d00c4657331",
+    "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+    "GERAR_MOBILE.ps1": "c9aeeb6b0a3362202276a09f887c2e11d8c1fe018d36e336b8c5992245e17b38",
+    "B2B_Loterias_Mobile.html": "22d7439d279073dae543eb1a8c89649dd38abe18c5dd76727edfff29b2ac02e3",
+    "auditoria/lotofacil_modo4/manifesto_promocao_controlada.json": "df5624f03ee008c36d702e1ae8d0efc51411031e5729a2219d4418949d686021"
+  },
+  "live_8000_health": {
+    "status": 200,
+    "body": {
+      "status": "ok",
+      "api_operacional": true,
+      "modo4_disponivel": true,
+      "modo4": {
+        "disponivel": true,
+        "identificacao_oficial": "OTIMIZADOR COMBINATÓRIO DE DISPERSÃO E COBERTURA CONJUNTA — LOTOMANIA | MODO 4 — v1.2",
+        "versao_motor": "1.2",
+        "selo_valido": true,
+        "algoritmo_assinatura": "Ed25519",
+        "integridade_base_historica": true,
+        "corte_historico_concurso": 2699,
+        "historico_geracao": null,
+        "limite_min_jogos": 1,
+        "limite_max_jogos": 10000,
+        "sha256_manifesto": "ae7a38f2b80bb07a7b145c570a26d1bc5cd104216b11a785d30f3e28f169fcc2",
+        "arquivos_verificados": {
+          "motor_lotomania_modo4.py": "94a2d1001d235e0e9bd543aeee697bac0ac6c60b1d24654838e452d6f42c68f9",
+          "verificador_selo_modo4.py": "632388d3c58aee37ae41cd33e44ddd8fad78ea22ebdb339f2aff4fae59b89e46",
+          "chave_publica_modo4.pem": "d810ed9f31f476b159590cd2e053632dc32e8e6e62a5a17f7c2f371a45084b0f",
+          "data/lotomania.json": "3f11b71e15b936940c8cef40cf39c0a67f5c47f7a15b12a8c2608763ec39f873"
+        },
+        "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada."
+      },
+      "lotofacil_modo4": {
+        "versao_promocao": "5.1.0-promocao-controlada",
+        "versao_motor": "4.0.0-etapa4-arquitetura-adaptativa",
+        "identificacao_oficial": "MOTOR COMBINATORIO DE OTIMIZACAO DE CARTEIRAS - LOTOFACIL | MODO 4",
+        "disponivel": false,
+        "feature_flag_ativa": false,
+        "status": "desativado_por_feature_flag",
+        "motivo_indisponibilidade": "feature_flag_desativada",
+        "integridade_verificada": true,
+        "integridade_etapas_1_a_5_valida": true,
+        "verificados_etapas_1_2_3": 20,
+        "verificados_etapa_4": 4,
+        "selo_lotomania_valido": true,
+        "manifesto_etapa5_presente": true,
+        "manifesto_promocao_presente": true,
+        "politica_micro_padrao": "conservadora_3J",
+        "experimental_2j_habilitada": false,
+        "inicializacao_mista": "padrao",
+        "historico_geracao": null,
+        "fallback_permitido": false,
+        "sha256_modulos_promocao": {
+          "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+          "api.py": "d60cad46afbf563530a77e4950b142c1ebd54bcd2fef2e17bc23d84fc9de7c0b",
+          "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+          "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+          "index.html": "639bf551a59a3eeef9b1ee322ba16e9eeb6bc3477616338fef996fc155a12de0",
+          "js/ui.js": "e11df28bae9c9671b5ea4a69dfd389c8c66663ecf4caf139be56f0b2f14ca427",
+          "B2B_Loterias_Mobile.html": "22d7439d279073dae543eb1a8c89649dd38abe18c5dd76727edfff29b2ac02e3"
+        },
+        "divergencias_integridade": [],
+        "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada."
+      }
+    }
+  }
+}

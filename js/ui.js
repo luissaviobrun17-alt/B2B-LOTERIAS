@@ -11483,6 +11483,18 @@ if(pp){
     _initLotomaniaModo4Controls() {
         this._lastModo4Games = null;
         this._lastModo4Response = null;
+        this._activeModo4JobId = null;
+        this._modo4AbortController = null;
+
+        if (!this._modo4UnloadBound && typeof window !== 'undefined') {
+            this._modo4UnloadBound = true;
+            window.addEventListener('beforeunload', () => {
+                if (this._activeModo4JobId && typeof MotorLotomaniaModo4Engine !== 'undefined' && navigator.sendBeacon) {
+                    const urlCancel = `${MotorLotomaniaModo4Engine.ENDPOINT_JOBS}/${encodeURIComponent(this._activeModo4JobId)}/cancel`;
+                    navigator.sendBeacon(urlCancel);
+                }
+            });
+        }
 
         const inputQtd = document.getElementById('input-qtd-jogos-modo4');
         const labelCusto = document.getElementById('label-custo-estimado-modo4');
@@ -11625,19 +11637,60 @@ if(pp){
             seedVal = parseInt(rawSeed, 10);
         }
 
+        const escapeHtml = (txt) => String(txt)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        if (this._modo4AbortController) {
+            try { this._modo4AbortController.abort(); } catch (_e) {}
+        }
+        const currentAbort = new AbortController();
+        this._modo4AbortController = currentAbort;
+        this._activeModo4JobId = null;
+
         const origText = btnExec ? btnExec.innerHTML : '';
         if (btnExec) {
             btnExec.disabled = true;
-            btnExec.innerHTML = `⏳ Otimizando ${numQtd.toLocaleString('pt-BR')} jogos no Motor Oficial Python (MODO 4 v1.2)...`;
+            btnExec.textContent = `⏳ Iniciando otimização de ${numQtd.toLocaleString('pt-BR')} jogos no Motor Oficial Python (MODO 4 v1.2)...`;
         }
         if (this.gamesContainer) {
-            this.gamesContainer.innerHTML = `<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.15em;">Executando ${MotorLotomaniaModo4Engine.NOME_OFICIAL}...</div></div>`;
+            this.gamesContainer.innerHTML = `<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.15em;">Executando ${escapeHtml(MotorLotomaniaModo4Engine.NOME_OFICIAL)}...</div><div id="status-progresso-modo4" style="margin-top:10px;font-size:0.9rem;color:#94a3b8;">Conectando ao servidor matemático oficial...</div></div>`;
         }
 
         try {
             const data = await MotorLotomaniaModo4Engine.gerarCarteira(numQtd, {
                 permitirEspelhos: permitirEspelhos,
-                seed: seedVal
+                seed: seedVal,
+                signal: currentAbort.signal,
+                onJobCreated: (jobId) => {
+                    if (this._modo4AbortController === currentAbort) {
+                        this._activeModo4JobId = jobId;
+                    }
+                },
+                onProgress: (st) => {
+                    if (currentAbort.signal.aborted || !st) return;
+                    const sec = Number.isFinite(Number(st.elapsed_s)) ? Math.floor(Number(st.elapsed_s)) : 0;
+                    const minPart = Math.floor(sec / 60);
+                    const remPart = sec % 60;
+                    const tempoFmt = minPart > 0
+                        ? `${minPart}m ${String(remPart).padStart(2, '0')}s`
+                        : `${remPart}s`;
+                    const estadoTexto = st.status === 'queued'
+                        ? `Na fila do motor oficial (${tempoFmt})`
+                        : (st.status === 'completed'
+                            ? `Concluído em ${tempoFmt}; carregando jogos...`
+                            : `Otimizando ${numQtd.toLocaleString('pt-BR')} jogos no Motor Oficial Python (${tempoFmt})`);
+                    if (btnExec) {
+                        btnExec.textContent = `⏳ ${estadoTexto}...`;
+                    }
+                    const progEl = document.getElementById('status-progresso-modo4');
+                    if (progEl) {
+                        progEl.textContent = `${estadoTexto} | Job ${st.job_id || ''}`;
+                    }
+                }
             });
 
             if (!data || data.sucesso !== true || !Array.isArray(data.jogos) || data.jogos.length === 0) {
@@ -11645,13 +11698,17 @@ if(pp){
                 this.currentGeneratedGames = [];
                 this._lastGeneratedGames = [];
                 this._lastModo4Games = null;
-                if (alerta && msg === MotorLotomaniaModo4Engine.MENSAGEM_INDISPONIVEL) {
-                    alerta.innerText = '⚠️ ' + msg;
-                    alerta.style.display = 'block';
+                if (alerta) {
+                    if (msg === MotorLotomaniaModo4Engine.MENSAGEM_INDISPONIVEL) {
+                        alerta.innerText = '⚠️ ' + msg;
+                        alerta.style.display = 'block';
+                    } else {
+                        alerta.style.display = 'none';
+                    }
                 }
                 if (containerRes) containerRes.style.display = 'none';
                 if (this.gamesContainer) {
-                    this.gamesContainer.innerHTML = `<div class="empty-state" style="color:#EF4444;font-weight:800;padding:24px;border:1px solid #ef4444;border-radius:8px;background:rgba(239,68,68,0.12);">${msg}</div>`;
+                    this.gamesContainer.innerHTML = `<div class="empty-state" style="color:#EF4444;font-weight:800;padding:24px;border:1px solid #ef4444;border-radius:8px;background:rgba(239,68,68,0.12);">${escapeHtml(msg)}</div>`;
                 }
                 await this._atualizarStatusServidorModo4();
                 return;
@@ -11670,6 +11727,12 @@ if(pp){
                 smartAnalysis: null,
                 preserveOrder: true
             }, 'lotomania');
+            this.currentGeneratedGames = data.jogos;
+            this._lastGeneratedGames = data.jogos;
+            if (Array.isArray(this.currentGeneratedDates) && this.currentGeneratedDates.length < data.jogos.length && this.currentGeneratedDates.length > 0) {
+                const refDate = this.currentGeneratedDates[0];
+                this.currentGeneratedDates = new Array(data.jogos.length).fill(refDate);
+            }
 
             if (data.jogos.length > 500 && this.gamesContainer) {
                 const avisoAltoVol = document.createElement('div');
@@ -11713,15 +11776,22 @@ if(pp){
             }
             await this._atualizarStatusServidorModo4();
         } catch (err) {
-            this.currentGeneratedGames = [];
-            this._lastGeneratedGames = [];
-            if (this.gamesContainer) {
-                this.gamesContainer.innerHTML = `<div class="empty-state" style="color:#EF4444;font-weight:800;">${MotorLotomaniaModo4Engine.MENSAGEM_INDISPONIVEL}</div>`;
+            if (this._modo4AbortController === currentAbort) {
+                this.currentGeneratedGames = [];
+                this._lastGeneratedGames = [];
+                this._lastModo4Games = null;
+                if (this.gamesContainer) {
+                    this.gamesContainer.innerHTML = `<div class="empty-state" style="color:#EF4444;font-weight:800;">${escapeHtml(MotorLotomaniaModo4Engine.MENSAGEM_INDISPONIVEL)}</div>`;
+                }
             }
         } finally {
-            if (btnExec) {
-                btnExec.disabled = false;
-                btnExec.innerHTML = origText;
+            if (this._modo4AbortController === currentAbort) {
+                this._activeModo4JobId = null;
+                this._modo4AbortController = null;
+                if (btnExec) {
+                    btnExec.disabled = false;
+                    btnExec.innerHTML = origText;
+                }
             }
         }
     }
@@ -11767,33 +11837,60 @@ if(pp){
     _initLotofacilGruposEngine() {
         const tabEstatistico = document.getElementById('tab-btn-lotofacil-estatistico');
         const tabGrupos = document.getElementById('tab-btn-lotofacil-grupos');
+        const tabModo4 = document.getElementById('tab-btn-lotofacil-modo4');
         const subEstatistico = document.getElementById('subpanel-lotofacil-estatistico');
         const subGrupos = document.getElementById('subpanel-lotofacil-grupos');
+        const subModo4 = document.getElementById('subpanel-lotofacil-modo4');
 
-        if (tabEstatistico && tabGrupos && subEstatistico && subGrupos) {
-            tabEstatistico.onclick = () => {
-                subEstatistico.style.display = 'block';
-                subGrupos.style.display = 'none';
-                tabEstatistico.style.background = 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(168,85,247,0.3))';
-                tabEstatistico.style.borderColor = '#a855f7';
-                tabEstatistico.style.color = '#fff';
-                tabGrupos.style.background = 'rgba(15,23,42,0.6)';
-                tabGrupos.style.borderColor = 'rgba(245,158,11,0.3)';
-                tabGrupos.style.color = '#fde68a';
-            };
+        const estilosAbasLotofacil = {
+            estatistico: {
+                btn: tabEstatistico,
+                sub: subEstatistico,
+                bgAtivo: 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(168,85,247,0.3))',
+                borderAtivo: '#a855f7',
+                borderInativo: 'rgba(168,85,247,0.3)',
+                corInativa: '#cbd5e1'
+            },
+            grupos: {
+                btn: tabGrupos,
+                sub: subGrupos,
+                bgAtivo: 'linear-gradient(135deg, rgba(245,158,11,0.35), rgba(217,119,6,0.25))',
+                borderAtivo: '#f59e0b',
+                borderInativo: 'rgba(245,158,11,0.3)',
+                corInativa: '#fde68a'
+            },
+            modo4: {
+                btn: tabModo4,
+                sub: subModo4,
+                bgAtivo: 'linear-gradient(135deg, rgba(5,150,105,0.55), rgba(15,23,42,0.85))',
+                borderAtivo: '#10b981',
+                borderInativo: 'rgba(16,185,129,0.4)',
+                corInativa: '#a7f3d0'
+            }
+        };
 
-            tabGrupos.onclick = () => {
-                subEstatistico.style.display = 'none';
-                subGrupos.style.display = 'block';
-                tabGrupos.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.35), rgba(217,119,6,0.25))';
-                tabGrupos.style.borderColor = '#f59e0b';
-                tabGrupos.style.color = '#fff';
-                tabEstatistico.style.background = 'rgba(15,23,42,0.6)';
-                tabEstatistico.style.borderColor = 'rgba(168,85,247,0.3)';
-                tabEstatistico.style.color = '#cbd5e1';
+        const ativarAbaLotofacil = (abaAlvo) => {
+            Object.entries(estilosAbasLotofacil).forEach(([chave, cfg]) => {
+                const ativa = (chave === abaAlvo);
+                if (cfg.sub) cfg.sub.style.display = ativa ? 'block' : 'none';
+                if (cfg.btn) {
+                    cfg.btn.style.background = ativa ? cfg.bgAtivo : 'rgba(15,23,42,0.6)';
+                    cfg.btn.style.borderColor = ativa ? cfg.borderAtivo : cfg.borderInativo;
+                    cfg.btn.style.color = ativa ? '#fff' : cfg.corInativa;
+                }
+            });
+            if (abaAlvo === 'grupos') {
                 this._atualizarDiagnosticoGrupos();
-            };
-        }
+            } else if (abaAlvo === 'modo4') {
+                this._atualizarStatusServidorLotofacilModo4();
+            }
+        };
+
+        if (tabEstatistico) tabEstatistico.onclick = () => ativarAbaLotofacil('estatistico');
+        if (tabGrupos) tabGrupos.onclick = () => ativarAbaLotofacil('grupos');
+        if (tabModo4) tabModo4.onclick = () => ativarAbaLotofacil('modo4');
+
+        this._initLotofacilModo4Controls();
 
         this._modoGruposLotofacil = '8_grupos';
         this._pool25Lotofacil = null;
@@ -12676,6 +12773,259 @@ if(pp){
         `;
 
         container.innerHTML = html;
+    }
+
+    // =========================================================================
+    // LOTOFACIL MODO 4 (PROMOCAO CONTROLADA COM FEATURE FLAG OFF POR PADRAO)
+    // =========================================================================
+    _initLotofacilModo4Controls() {
+        this._lastLotofacilModo4Games = null;
+        this._lastLotofacilModo4Response = null;
+
+        const btnVerificar = document.getElementById('btn-verificar-lotofacil-modo4');
+        const btnExecutar = document.getElementById('btn-executar-lotofacil-modo4');
+        const btnAvaliar = document.getElementById('btn-avaliar-lotofacil-modo4');
+
+        if (btnVerificar) btnVerificar.onclick = () => this._atualizarStatusServidorLotofacilModo4();
+        if (btnExecutar) btnExecutar.onclick = () => this._executarGeracaoLotofacilModo4();
+        if (btnAvaliar) btnAvaliar.onclick = () => this._avaliarCarteiraLotofacilModo4();
+
+        this._atualizarStatusServidorLotofacilModo4();
+    }
+
+    async _atualizarStatusServidorLotofacilModo4() {
+        const badge = document.getElementById('badge-status-lotofacil-modo4');
+        const alerta = document.getElementById('alerta-indisponivel-lotofacil-modo4');
+        const checkExp2J = document.getElementById('check-exp2j-lotofacil-modo4');
+
+        if (typeof MotorLotofacilModo4Engine === 'undefined') {
+            if (badge) {
+                badge.innerText = '❌ Módulo Lotofácil MODO 4 Não Carregado';
+                badge.style.background = 'rgba(239,68,68,0.2)';
+                badge.style.color = '#fca5a5';
+                badge.style.borderColor = '#ef4444';
+            }
+            return false;
+        }
+
+        const st = await MotorLotofacilModo4Engine.verificarStatusServidor();
+        if (checkExp2J) {
+            const pode2J = Boolean(st.disponivel && st.experimental_2j_habilitada === true);
+            checkExp2J.disabled = !pode2J;
+            if (!pode2J) checkExp2J.checked = false;
+        }
+
+        if (st.disponivel && st.feature_flag_ativa && st.integridade_verificada) {
+            if (badge) {
+                badge.innerText = `🔒 Ativo (Controlado) | Política: ${st.politica_micro_padrao} | v${st.versao_promocao}`;
+                badge.style.background = 'rgba(16,185,129,0.18)';
+                badge.style.color = '#a7f3d0';
+                badge.style.borderColor = 'rgba(16,185,129,0.45)';
+            }
+            if (alerta) alerta.style.display = 'none';
+            return true;
+        }
+
+        if (badge) {
+            badge.innerText = st.conectado && !st.feature_flag_ativa
+                ? '🛡️ Desativado em Produção (Feature Flag OFF)'
+                : '⚠️ API Desconectada / Integridade Indisponível';
+            badge.style.background = 'rgba(239,68,68,0.2)';
+            badge.style.color = '#fca5a5';
+            badge.style.borderColor = '#ef4444';
+        }
+        if (alerta) {
+            alerta.innerText = '⚠️ ' + st.mensagem;
+            alerta.style.display = 'block';
+        }
+        return false;
+    }
+
+    async _executarGeracaoLotofacilModo4() {
+        if (this.currentGameKey !== 'lotofacil') {
+            const navBtn = document.querySelector(`.nav-btn[data-game="lotofacil"]`);
+            if (navBtn) navBtn.click();
+            else this.updateGameInfo('lotofacil');
+        }
+
+        const inputQtd = document.getElementById('input-qtd-jogos-lotofacil-modo4');
+        const selectTam = document.getElementById('select-tamanho-lotofacil-modo4');
+        const selectConcurso = document.getElementById('select-concurso-lotofacil-modo4');
+        const selectPrioridade = document.getElementById('select-prioridade-lotofacil-modo4');
+        const inputSeed = document.getElementById('input-seed-lotofacil-modo4');
+        const checkExp2J = document.getElementById('check-exp2j-lotofacil-modo4');
+        const btnExec = document.getElementById('btn-executar-lotofacil-modo4');
+        const containerRes = document.getElementById('container-resultado-lotofacil-modo4');
+        const alerta = document.getElementById('alerta-indisponivel-lotofacil-modo4');
+
+        const rawQtd = inputQtd ? inputQtd.value.trim() : '';
+        const numQtd = Number(rawQtd);
+        const tamanhoAposta = parseInt(selectTam ? selectTam.value : '15', 10) || 15;
+        const tipoConcurso = selectConcurso ? selectConcurso.value : 'concurso_regular';
+        const prioridade = selectPrioridade ? selectPrioridade.value : 'equilibrio_adaptativo';
+        const sementeRaw = inputSeed ? inputSeed.value.trim() : '42';
+        const usarExperimental2J = Boolean(checkExp2J && !checkExp2J.disabled && checkExp2J.checked);
+
+        if (typeof MotorLotofacilModo4Engine === 'undefined') {
+            this.currentGeneratedGames = [];
+            this._lastGeneratedGames = [];
+            return;
+        }
+
+        const limparEstadoFailClosed = (mensagemErro) => {
+            this.currentGeneratedGames = [];
+            this._lastGeneratedGames = [];
+            this._lastLotofacilModo4Games = null;
+            this._lastLotofacilModo4Response = null;
+            if (alerta) {
+                alerta.innerText = '⚠️ ' + mensagemErro;
+                alerta.style.display = 'block';
+            }
+            if (containerRes) containerRes.style.display = 'none';
+            if (this.gamesContainer) {
+                this.gamesContainer.innerHTML = `<div class="empty-state" style="color:#EF4444;font-weight:800;padding:24px;border:1px solid #ef4444;border-radius:8px;background:rgba(239,68,68,0.12);">${mensagemErro}</div>`;
+            }
+        };
+
+        if (!rawQtd || !/^\d+$/.test(rawQtd) || !Number.isInteger(numQtd) || numQtd < 1 || numQtd > 5000) {
+            limparEstadoFailClosed('Quantidade inválida: informe inteiro estrito entre 1 e 5.000 jogos. Nenhum jogo foi gerado.');
+            return;
+        }
+        if (sementeRaw !== '' && !/^\d+$/.test(sementeRaw)) {
+            limparEstadoFailClosed('Semente inválida: informe inteiro não negativo. Nenhum jogo foi gerado.');
+            return;
+        }
+
+        const origText = btnExec ? btnExec.innerHTML : '';
+        if (btnExec) {
+            btnExec.disabled = true;
+            btnExec.innerHTML = `⏳ Executando LOTOFÁCIL MODO 4 (${numQtd} jogos)...`;
+        }
+        if (this.gamesContainer) {
+            this.gamesContainer.innerHTML = `<div style="text-align:center;padding:40px;"><div class="sync-loader" style="font-size:1.15em;">Executando ${MotorLotofacilModo4Engine.NOME_OFICIAL}...</div></div>`;
+        }
+
+        try {
+            const fixasAtuais = Array.from(this.fixedNumbers || []).map(Number).filter((n) => n >= 1 && n <= 25);
+            const blqAtuais = Array.from(this.excludedNumbers || window.excludedNumbers || []).map(Number).filter((n) => n >= 1 && n <= 25);
+
+            const data = await MotorLotofacilModo4Engine.gerarCarteira({
+                quantidadeJogos: numQtd,
+                tamanhoAposta: tamanhoAposta,
+                tipoConcurso: tipoConcurso,
+                prioridade: prioridade,
+                semente: sementeRaw === '' ? 42 : parseInt(sementeRaw, 10),
+                usarExperimental2J: usarExperimental2J,
+                fixas: fixasAtuais,
+                bloqueadas: blqAtuais
+            });
+
+            if (!data || data.sucesso !== true || data.fallback_executado !== false || !Array.isArray(data.jogos) || data.jogos.length === 0) {
+                const msg = (data && data.erro) ? data.erro : MotorLotofacilModo4Engine.MENSAGEM_INDISPONIVEL;
+                limparEstadoFailClosed(msg);
+                await this._atualizarStatusServidorLotofacilModo4();
+                return;
+            }
+
+            if (alerta) alerta.style.display = 'none';
+            this._lastLotofacilModo4Games = data.jogos;
+            this._lastLotofacilModo4Response = data;
+            this.currentGeneratedGames = data.jogos;
+            this._lastGeneratedGames = data.jogos;
+
+            const jogosParaRenderizar = data.jogos.length > 500 ? data.jogos.slice(0, 500) : data.jogos;
+            this.renderGames({
+                pool: Array.from({ length: 25 }, (_, i) => i + 1),
+                games: jogosParaRenderizar,
+                smartAnalysis: null,
+                preserveOrder: true
+            }, 'lotofacil');
+
+            if (containerRes) {
+                this._renderAuditoriaLotofacilModo4(containerRes, data, false);
+            }
+            await this._atualizarStatusServidorLotofacilModo4();
+        } catch (_err) {
+            limparEstadoFailClosed(MotorLotofacilModo4Engine.MENSAGEM_INDISPONIVEL);
+        } finally {
+            if (btnExec) {
+                btnExec.disabled = false;
+                btnExec.innerHTML = origText;
+            }
+        }
+    }
+
+    async _avaliarCarteiraLotofacilModo4() {
+        const jogos = this._lastLotofacilModo4Games || this.currentGeneratedGames;
+        if (!Array.isArray(jogos) || jogos.length === 0) {
+            alert('Nenhuma carteira disponível para auditoria no LOTOFÁCIL MODO 4.');
+            return;
+        }
+        const containerRes = document.getElementById('container-resultado-lotofacil-modo4');
+        const espAtual = (this._lastLotofacilModo4Response && this._lastLotofacilModo4Response.especificacao)
+            ? this._lastLotofacilModo4Response.especificacao
+            : {};
+        const res = await MotorLotofacilModo4Engine.avaliarCarteira(jogos, {
+            pool: espAtual.pool,
+            fixas: espAtual.fixas,
+            bloqueadas: espAtual.bloqueadas
+        });
+        if (!res || res.sucesso !== true) {
+            alert((res && res.erro) ? res.erro : MotorLotofacilModo4Engine.MENSAGEM_INDISPONIVEL);
+            return;
+        }
+        if (containerRes) {
+            this._renderAuditoriaLotofacilModo4(containerRes, res, true);
+        }
+    }
+
+    _renderAuditoriaLotofacilModo4(container, data, isAvaliacaoOnly) {
+        const esp = data.especificacao || {};
+        const promos = data.promocao_controlada || {};
+        const dist6 = data.distincao_seis_grandezas_probabilisticas || {};
+        const p1Arr = Array.isArray(dist6['1_probabilidade_individual']) ? dist6['1_probabilidade_individual'] : [];
+        const p1PctStr = p1Arr.length > 0 ? `${Number(p1Arr[0]).toFixed(4)}%` : '10.5889%';
+        const eNprem = dist6['3_esperanca_N_prem'];
+        const dsVal = dist6['4_cota_inferior_dawson_sankoff'];
+        const hwVal = dist6['4_cota_superior_hunter_worsley'];
+        const exataObj = dist6['5_probabilidade_exata_uniao'] || {};
+        const notaSprob = dist6['6_nota_escopo_S_prob'] || 'S_prob e limites sao metricas/cotas de otimizacao, distintas da probabilidade exata P(U A_i).';
+        const refAudit = data.auditoria_referencia_independente || {};
+        const avE2 = data.avaliacao_etapa2 || {};
+        const fVal = data.funcao_objetivo_F !== undefined ? data.funcao_objetivo_F : avE2.funcao_objetivo_F;
+        const comps = data.componentes || avE2.componentes || {};
+        const pExataStr = (exataObj && exataObj.calculada_diretamente && exataObj.valor_percentual !== undefined && exataObj.valor_percentual !== null)
+            ? `${Number(exataObj.valor_percentual).toFixed(4)}% (${exataObj.valor_fracao || exataObj.metodo || 'exata'})`
+            : 'Fora do domínio de enumeração exata (usar limites)';
+
+        container.style.display = 'block';
+        container.innerHTML = `
+            <div style="padding: 14px 16px; border-radius: 10px; background: rgba(2, 6, 23, 0.85); border: 1px solid rgba(16, 185, 129, 0.45); font-size: 0.8rem; color: #e2e8f0; line-height: 1.6;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(16,185,129,0.25); padding-bottom: 6px;">
+                    <strong style="color: #34d399; font-size: 0.9rem;">
+                        ✅ ${isAvaliacaoOnly ? 'AUDITORIA INDEPENDENTE' : 'RESULTADO HOMOLOGADO'} | LOTOFÁCIL MODO 4
+                    </strong>
+                    <span style="background: rgba(16,185,129,0.2); color: #a7f3d0; padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 0.74rem;">
+                        ${data.quantidade_entregue || (data.jogos ? data.jogos.length : 0)} JOGOS | Política: ${promos.politica_micro_utilizada || data.politica_micro_aplicada || 'conservadora_3J'}
+                    </span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin-bottom: 8px;">
+                    <div>• <strong>Métrica Heurística F_MODO4:</strong> <span style="color:#34d399;">${fVal !== undefined ? Number(fVal).toFixed(6) : '--'}</span> | S_prob: <strong>${comps.S_prob !== undefined ? Number(comps.S_prob).toFixed(6) : '--'}</strong></div>
+                    <div>• <strong>Prob. Individual (1º bilhete):</strong> <span>${p1PctStr}</span> (15 pts = 1/3.268.760)</div>
+                    <div>• <strong>Esperança E[N_prem]:</strong> <strong>${typeof eNprem === 'number' ? eNprem.toFixed(6) : '--'}</strong> | Exata P(U A_i): <strong>${pExataStr}</strong></div>
+                    <div>• <strong>Limites da União:</strong> Dawson-Sankoff <strong>${typeof dsVal === 'number' ? dsVal.toFixed(6) : '--'}</strong> | Hunter-Worsley <strong>${typeof hwVal === 'number' ? hwVal.toFixed(6) : '--'}</strong></div>
+                    <div>• <strong>Referência AST Independente:</strong> Diff F = <strong>${refAudit.divergencia_F !== undefined ? Number(refAudit.divergencia_F).toExponential(2) : '--'}</strong></div>
+                    <div>• <strong>Configuração de Geração:</strong> init=${promos.inicializacao_mista || 'padrao'} | hist=${String(data.historico_utilizado)} | fallback=${String(data.fallback_executado)}</div>
+                </div>
+                <div style="font-size: 0.74rem; color: #fde68a; background: rgba(245,158,11,0.12); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(245,158,11,0.3); margin-bottom: 8px;">
+                    ${typeof notaSprob === 'string' ? notaSprob : JSON.stringify(notaSprob)}
+                </div>
+                <div style="font-family: monospace; font-size: 0.72rem; background: rgba(0,0,0,0.5); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); color: #94a3b8; overflow-x: auto;">
+                    <div><strong style="color:#a7f3d0;">SHA-256 Carteira:</strong> ${data.hash_carteira_sha256 || '--'} | Regime: ${esp.tipo_concurso || '--'}</div>
+                    <div><strong style="color:#7dd3fc;">Cláusula Obrigatória:</strong> ${data.clausula_obrigatoria || MotorLotofacilModo4Engine.CLAUSULA_MATEMATICA_OBRIGATORIA}</div>
+                </div>
+            </div>
+        `;
     }
 }
 

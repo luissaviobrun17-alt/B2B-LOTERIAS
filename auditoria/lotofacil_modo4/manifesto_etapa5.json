@@ -1,0 +1,61 @@
+{
+  "sistema": "LOTOFACIL_MODO4",
+  "etapa": "ETAPA_05_INTEGRACAO_HOMOLOGACAO",
+  "versao_modulo_etapa5": "5.0.0-etapa5-homologacao",
+  "versao_arquitetura_etapa4": "4.0.0-etapa4-arquitetura-adaptativa",
+  "gerado_em_utc": "2026-11-13T15:42:26.349540+00:00",
+  "historico_geracao_permitido": null,
+  "feature_flag_homologacao_padrao": false,
+  "fallback_permitido": false,
+  "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada.",
+  "hashes_etapas_1_2_3_congelados": {
+    "lotofacil_modo4/__init__.py": "4ea5d507cdc437af1fe93a4a6e83eee0b8d63edc5f6aefadcacb03aab0a4c664",
+    "lotofacil_modo4/etapa1_regras_oficiais.py": "09bc206ca1b35372f59d522a4653931f2d2cc637ca8880eeff149dc4e3ad06af",
+    "lotofacil_modo4/sincronizador_caixa.py": "a5199ca0c1b118dfc8933ede402edc5b41c1201fb964ca6cc0e7159d8159f9ae",
+    "lotofacil_modo4/gerar_evidencias_etapa1.py": "ec9f94b36df4c45d15278306606c51673c7884ebde87af1fab601631c599108e",
+    "lotofacil_modo4/etapa2_funcao_objetivo.py": "664d10d152545799f9fe7705f5d27ffbe441d9daedb5fa6b0c9e20fd203d5bd4",
+    "lotofacil_modo4/etapa2_referencia_independente.py": "6bd58b9c3337ec8178100d4e79d26eddafe525041a6db99222f1c59d6749a84f",
+    "lotofacil_modo4/gerar_evidencias_etapa2.py": "9f73ee2fbbaf5092ceb1fb9cd17b116fbdc74e8768b42f33e841b071c9208d55",
+    "lotofacil_modo4/etapa3_otimizadores.py": "791d40521e93627fbe1f07bfd1c71ccf6b3a2338d48169196150a62ba8ad2663",
+    "lotofacil_modo4/etapa3_referencia_independente.py": "ab3fd59d3f8bb10300c376bd789b3c0cd293e01bc74645499dee16ad93344342",
+    "lotofacil_modo4/gerar_evidencias_etapa3.py": "1540aa33c82729e41245e3de696cfba3d4aa6afd8885a1843a7bfb86fe2f7e9d",
+    "auditoria/lotofacil_modo4/auditoria_base_caixa_etapa1.json": "c14794ab607e3b76e083846aa14d868a0bf347ddb79c32c8e30f7b673e02bd1a",
+    "auditoria/lotofacil_modo4/etapa_01_evidencias.json": "54fab20dbc4ce513caecaa8e3442ff26f9e0590d22f3fc8d16f7420a4487bd3e",
+    "auditoria/lotofacil_modo4/ETAPA_01_REGRAS_E_FORMALIZACAO_MATEMATICA.md": "354195530957c5ff309b4c08f9954214ccdf0f6918c91d8375a1b744d5561ca0",
+    "auditoria/lotofacil_modo4/etapa_02_evidencias.json": "511dc2d862363e3337d293d06d90443802846e134bebad9f869e48a87d51469f",
+    "auditoria/lotofacil_modo4/ETAPA_02_FUNCAO_OBJETIVO_E_OTIMIZACAO.md": "52a8513d26cf3d848e14b315fff9d451a6daf712c6df7113553d530fa8ecbc87",
+    "auditoria/lotofacil_modo4/etapa_03_evidencias.json": "ecf29ec0cfacfcb9493c2a15b5827693834d41be210e6bba4493a0e90aa8a171",
+    "auditoria/lotofacil_modo4/ETAPA_03_ALGORITMOS_DE_OTIMIZACAO.md": "be799bad875e772405009064bbc09be1a9e5071c4ade8916d18c74747801bd4f",
+    "testes/test_lotofacil_modo4_etapa1.py": "5eea34fbda9bebb33bd2c92b4f45d93c971499d3e23996bc5938eb8368288685",
+    "testes/test_lotofacil_modo4_etapa2.py": "bf12bec5b2baece0d308b1c731a7b3eb38176da5937cf88c9aacda5108b36630",
+    "testes/test_lotofacil_modo4_etapa3.py": "7e1507537d56daa390c4b67ef8e3d2800b8b89c8a73256c4fc731a5428ca0367"
+  },
+  "hashes_etapa_4_congelados": {
+    "lotofacil_modo4/etapa4_referencia_independente.py": "7f91533704a0c637a9d26440a251e8a258e72e657aef97e221fbeb01cf3a2213",
+    "lotofacil_modo4/etapa4_arquitetura_adaptativa.py": "52a7de83b792b41a1a99a3c866f0c87a1824d84e1b1728ee9c2c13a9ddddedec",
+    "lotofacil_modo4/gerar_evidencias_etapa4.py": "1ea4d5885e16c9dc670ca869029e83fe7db62cbfc307999de133c586c1256127",
+    "testes/test_lotofacil_modo4_etapa4.py": "7777f88f6a3da9f54bbd709c86620e86fae6453d7586aa2176e4688e3b2bb66f"
+  },
+  "hashes_dados_caixa_e_lotomania_protegidos": {
+    "lotofacil_modo4/dados/lotofacil_oficial_caixa.json": "df31c4bce233ff65f9dc032595595aa7d73f819bfc5a67c1dd87bbd793c257f8",
+    "lotofacil_modo4/dados/caixa_lotofacil_oficial.xlsx": "fd32f9578200e36e8c714526854d8d6dcee5a6a7d03fa625115a11e1be09251c",
+    "data/lotofacil.json": "e06201401b08b3559c69b6f387e736011ba0816abc4ff0908bd9560817320c8c",
+    "motor_lotomania_modo4.py": "94a2d1001d235e0e9bd543aeee697bac0ac6c60b1d24654838e452d6f42c68f9",
+    "verificador_selo_modo4.py": "632388d3c58aee37ae41cd33e44ddd8fad78ea22ebdb339f2aff4fae59b89e46",
+    "chave_publica_modo4.pem": "d810ed9f31f476b159590cd2e053632dc32e8e6e62a5a17f7c2f371a45084b0f",
+    "data/lotomania.json": "3f11b71e15b936940c8cef40cf39c0a67f5c47f7a15b12a8c2608763ec39f873"
+  },
+  "hashes_modulos_etapa5": {
+    "lotofacil_modo4/etapa5_experimento_despacho.py": "c1cf75c947fa0f15016dbd1ed5340ca32289c16ee54edbbd229eb105fbe1757a",
+    "lotofacil_modo4/etapa5_api_homologacao.py": "a17dc927fbe719fb39b1ef9608121422c76ec8b0377a98fcff39c621baa72b83",
+    "lotofacil_modo4/gerar_evidencias_etapa5.py": "cee6b1d8992070a9dcb470701fc0b796fe0f2e5c2aceed5f0bf49b88520355ec",
+    "testes/test_lotofacil_modo4_etapa5.py": "b4348cec874fe74ea6e2f55968317566fce406e262a926bd25e1135891f1bcdc"
+  },
+  "hashes_baseline_producao_inalterados": {
+    "api.py": "00ce87abede00a27a0f7a7b585bef83260fa63df887631f058316a26072422e4",
+    "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+    "index.html": "dbe34fc336206db531c9b42b5b365137212dadc7039568c8c3ad921d89746b6c",
+    "js/ui.js": "c09db8b8554517a14cd5d5ecd53a11393a15063d5988117a3c3495b80c22fed8",
+    "B2B_Loterias_Mobile.html": "ad35961c59d851f7e60c8979c21f2d9ec107cce4b3223651c7b0ffbb66ad79b3"
+  }
+}

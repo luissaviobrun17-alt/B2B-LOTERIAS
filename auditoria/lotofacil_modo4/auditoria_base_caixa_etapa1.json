@@ -1,0 +1,73 @@
+{
+  "versao_sincronizador": "1.1.0-etapa1-homologada",
+  "origem_oficial": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx (Planilha Oficial CAIXA .xlsx)",
+  "arquivo_planilha_oficial": "lotofacil_modo4/dados/caixa_lotofacil_oficial.xlsx",
+  "sha256_planilha_oficial_caixa": "fd32f9578200e36e8c714526854d8d6dcee5a6a7d03fa625115a11e1be09251c",
+  "sincronizado_em_utc": "2026-11-13T13:54:27.028787+00:00",
+  "arquivo_canonico": "lotofacil_modo4/dados/lotofacil_oficial_caixa.json",
+  "tamanho_bytes": 4338180,
+  "sha256_arquivo": "df31c4bce233ff65f9dc032595595aa7d73f819bfc5a67c1dd87bbd793c257f8",
+  "sha256_lista_concursos_canonica": "121c645b1f84f9cf868a099bddf4ea06e28e177e45aef4eee467a7a5c6a54a57",
+  "total_concursos": 3828,
+  "primeiro_concurso": 1,
+  "primeiro_data_apuracao": "29/09/2003",
+  "ultimo_concurso": 3828,
+  "ultimo_data_apuracao": "12/11/2026",
+  "concursos_faltantes": 0,
+  "origens_separadas": {
+    "planilha_historica_oficial": {
+      "utilizada": true,
+      "caminho": "lotofacil_modo4/dados/caixa_lotofacil_oficial.xlsx",
+      "sha256": "fd32f9578200e36e8c714526854d8d6dcee5a6a7d03fa625115a11e1be09251c",
+      "pagina_oficial": "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+      "preserva_ordem_sorteio_fisica": false,
+      "observacao": "Planilha CAIXA fornece Bola1..Bola15 ordenadas crescentemente; campo ordem_sorteio mantido vazio [] sem preenchimento artificial."
+    },
+    "amostras_api_json_caixa": {
+      "endpoint": "https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil",
+      "presente": true,
+      "concursos_api_confrontados": 161,
+      "qtd_divergencias_api_vs_planilha": 0,
+      "divergencias_api_vs_planilha": [],
+      "validado_no_mesmo_sha256_canonico": true
+    }
+  },
+  "registro_transformacoes": [
+    "1. Leitura direta de xl/sharedStrings.xml e xl/worksheets/sheet1.xml via stdlib zipfile + xml.etree.ElementTree (sem macros ou inferencias).",
+    "2. Mapeamento explicito de cabecalhos e referencias de coluna Excel (suportando celulas esparsas e sequenciais).",
+    "3. Conversao deterministica de valores monetarios 'R$...' para float e inteiros de ganhadores.",
+    "4. Validacao estrita de data DD/MM/YYYY -> YYYY-MM-DD e de 15 dezenas unicas no intervalo [1..25].",
+    "5. Ordenacao crescente por numero de concurso (1..3828), verificando ausencia de lacunas e duplicatas, preservando ordem_sorteio=[] na ausencia de ordem fisica.",
+    "6. Serializacao UTF-8 deterministica da lista de concursos e calculo de SHA-256 do arquivo XLSX, do JSON completo e da lista canonica."
+  ],
+  "relatorio_integridade_concursos": {
+    "total_concursos": 3828,
+    "primeiro_concurso": 1,
+    "ultimo_concurso": 3828,
+    "ausentes": [],
+    "qtd_ausentes": 0,
+    "duplicados": [],
+    "qtd_duplicados": 0
+  },
+  "confronto_base_legada": {
+    "presente": true,
+    "caminho": "data/lotofacil.json",
+    "sha256": "e06201401b08b3559c69b6f387e736011ba0816abc4ff0908bd9560817320c8c",
+    "concursos_legado_total": 3246,
+    "primeiro_concurso_legado": 1,
+    "ultimo_concurso_legado": 3246,
+    "concursos_confrontados": 3246,
+    "divergencias_dezenas_conjunto": [],
+    "qtd_divergencias_conjunto": 0,
+    "divergencias_ordem_sorteio": [],
+    "qtd_divergencias_ordem_sorteio": 0,
+    "novos_concursos_apos_legado": 582
+  },
+  "confronto_amostra_api_caixa": {
+    "presente": true,
+    "concursos_api_confrontados": 161,
+    "qtd_divergencias_api_vs_planilha": 0,
+    "divergencias_api_vs_planilha": [],
+    "validado_no_mesmo_sha256_canonico": true
+  }
+}

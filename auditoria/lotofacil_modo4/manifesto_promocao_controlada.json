@@ -1,0 +1,37 @@
+{
+  "versao_promocao": "5.1.0-promocao-controlada",
+  "versao_motor": "4.0.0-etapa4-arquitetura-adaptativa",
+  "identificacao_oficial": "MOTOR COMBINATORIO DE OTIMIZACAO DE CARTEIRAS - LOTOFACIL | MODO 4",
+  "gerado_em_utc": "2026-11-13T21:09:32.570257+00:00",
+  "feature_flag_padrao_producao": false,
+  "politica_micro_padrao_producao": "conservadora_3J",
+  "experimental_2j_habilitada_por_padrao": false,
+  "inicializacao_mista_fixa": "padrao",
+  "etapas_1_a_5_verificadas": true,
+  "verificados_etapas_1_2_3": 20,
+  "verificados_etapa_4": 4,
+  "selo_lotomania_valido": true,
+  "hashes_producao": {
+    "lotofacil_modo4/promocao_producao.py": "5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996",
+    "api.py": "d60cad46afbf563530a77e4950b142c1ebd54bcd2fef2e17bc23d84fc9de7c0b",
+    "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+    "js/engines/motor_lotofacil_modo4_engine.js": "943b4bba0a6928dfc9402c6f5f57598a7820302b4faaa3a10c48528a11231413",
+    "index.html": "639bf551a59a3eeef9b1ee322ba16e9eeb6bc3477616338fef996fc155a12de0",
+    "js/ui.js": "e11df28bae9c9671b5ea4a69dfd389c8c66663ecf4caf139be56f0b2f14ca427",
+    "B2B_Loterias_Mobile.html": "22d7439d279073dae543eb1a8c89649dd38abe18c5dd76727edfff29b2ac02e3"
+  },
+  "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada.",
+  "revisao_manifesto": "5.1.0-promocao-controlada+rev2-mobile-fix",
+  "historico_versionamento": {
+    "revisao_numero": 2,
+    "manifesto_anterior_rel": "auditoria/lotofacil_modo4/historico_manifestos/manifesto_promocao_controlada_pre_mobile_fix_2026-11-13T200600_177386_0000.json",
+    "manifesto_anterior_sha256": "cabed03a4a49614d00853440de2857baba9f0a0a0be81ceb91424691e1e5bce3",
+    "manifesto_anterior_gerado_em_utc": "2026-11-13T20:06:00.177386+00:00",
+    "arquivos_alterados_nesta_revisao": [
+      "B2B_Loterias_Mobile.html"
+    ],
+    "hash_mobile_anterior": "be183a5917716ef7e41ed94d87661fa6c985f3a3ff827e3af3f4347328edb3f3",
+    "hash_mobile_atual": "22d7439d279073dae543eb1a8c89649dd38abe18c5dd76727edfff29b2ac02e3",
+    "escopo": "Regeneracao exclusiva de B2B_Loterias_Mobile.html apos correcao pontual do GERAR_MOBILE.ps1 (insercao unica do Touch fix no primeiro <body>). Motores, API e Web preservados inalterados."
+  }
+}

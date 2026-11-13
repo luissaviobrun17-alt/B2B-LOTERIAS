@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
@@ -6,10 +6,44 @@ import uvicorn
 import urllib.request
 import json
 import os
+import sys
 import logging
 import uuid
 
 logger = logging.getLogger('api.loteria_b2b')
+
+
+def _garantir_fluxos_padrao_seguros() -> None:
+    """Garante stdout/stderr validos quando iniciado via pythonw.exe (sem console)."""
+    if sys.stdout is not None and sys.stderr is not None:
+        return
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    log_path = os.path.join(base_dir, "logs", "api_server.log")
+    stream = None
+    try:
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        if os.path.exists(log_path) and os.path.getsize(log_path) > 2 * 1024 * 1024:
+            backup_path = log_path + ".1"
+            try:
+                if os.path.exists(backup_path):
+                    os.remove(backup_path)
+                os.replace(log_path, backup_path)
+            except OSError:
+                pass
+        stream = open(log_path, "a", encoding="utf-8", buffering=1)
+    except OSError:
+        try:
+            stream = open(os.devnull, "a", encoding="utf-8")
+        except OSError:
+            stream = None
+    if stream is not None:
+        if sys.stdout is None:
+            sys.stdout = stream
+        if sys.stderr is None:
+            sys.stderr = stream
+
+
+_garantir_fluxos_padrao_seguros()
 try:
     from motor_sugestao import MotorSugestaoLoteria
 except ImportError:
@@ -466,6 +500,34 @@ from verificador_selo_modo4 import (
     IntegridadeModo4Error,
     verificar_selo_modo4,
 )
+from lotomania_modo4_jobs import (
+    encerrar_gerenciador_jobs_lotomania_modo4,
+    obter_gerenciador_jobs_lotomania_modo4,
+    validar_e_serializar_resultado_lotomania_modo4,
+)
+
+try:
+    from lotofacil_modo4.promocao_producao import (
+        obter_status_health_lotofacil_modo4,
+        registrar_lotofacil_modo4_na_api,
+    )
+    _LOTOFACIL_MODO4_ERRO_IMPORT = None
+except Exception as _exc_lf4:
+    obter_status_health_lotofacil_modo4 = None
+    registrar_lotofacil_modo4_na_api = None
+    _LOTOFACIL_MODO4_ERRO_IMPORT = str(_exc_lf4)
+
+
+def _status_lotofacil_modo4_health():
+    if obter_status_health_lotofacil_modo4 is not None:
+        return obter_status_health_lotofacil_modo4(app)
+    return {
+        "disponivel": False,
+        "feature_flag_ativa": False,
+        "status": "bloqueado_erro_import",
+        "motivo_indisponibilidade": _LOTOFACIL_MODO4_ERRO_IMPORT or "modulo_indisponivel",
+        "fallback_permitido": False,
+    }
 
 _MODO4_SELO_INICIAL = None
 _MODO4_ERRO_INICIAL = None
@@ -518,6 +580,7 @@ def endpoint_health():
                 "arquivos_verificados": status_selo["arquivos_verificados"],
                 "clausula_obrigatoria": CLAUSULA_OBRIGATORIA_MODO4,
             },
+            "lotofacil_modo4": _status_lotofacil_modo4_health(),
         }
     except Exception as exc:
         logger.error("Falha na verificacao de saude do MODO 4: %s", exc)
@@ -534,7 +597,35 @@ def endpoint_health():
                 "motivo_bloqueio": "Selo criptografico invalido ou arquivos de referencia adulterados.",
                 "clausula_obrigatoria": CLAUSULA_OBRIGATORIA_MODO4,
             },
+            "lotofacil_modo4": _status_lotofacil_modo4_health(),
         }
+
+
+def _validar_requisicao_e_selo_lotomania_modo4(request: OtimizarCoberturaRequest) -> None:
+    """Valida estritamente tipos de entrada e integridade Ed25519/SHA-256 do MODO 4."""
+    if type(request.quantidade_jogos) is not int or not (1 <= request.quantidade_jogos <= 10000):
+        raise HTTPException(
+            status_code=422,
+            detail="quantidade_jogos deve ser um inteiro estrito entre 1 e 10.000.",
+        )
+    if request.seed is not None and type(request.seed) is not int:
+        raise HTTPException(
+            status_code=422,
+            detail="seed deve ser um inteiro estrito ou null.",
+        )
+    if type(request.permitir_espelhos) is not bool:
+        raise HTTPException(
+            status_code=422,
+            detail="permitir_espelhos deve ser booleano estrito.",
+        )
+
+    verificar_selo_modo4(
+        parametros_runtime=(
+            MotorLotomaniaModo4.obter_parametros_runtime()
+            if MotorLotomaniaModo4 is not None
+            else None
+        )
+    )
 
 
 @app.post("/api/v1/lotomania-modo4/gerar")
@@ -545,30 +636,7 @@ def endpoint_lotomania_modo4_gerar(request: OtimizarCoberturaRequest):
     Opera com verificacao previa de selo Ed25519, historico=None e limite estrito 1..10.000.
     """
     try:
-        if type(request.quantidade_jogos) is not int or not (1 <= request.quantidade_jogos <= 10000):
-            raise HTTPException(
-                status_code=422,
-                detail="quantidade_jogos deve ser um inteiro estrito entre 1 e 10.000.",
-            )
-        if request.seed is not None and type(request.seed) is not int:
-            raise HTTPException(
-                status_code=422,
-                detail="seed deve ser um inteiro estrito ou null.",
-            )
-        if type(request.permitir_espelhos) is not bool:
-            raise HTTPException(
-                status_code=422,
-                detail="permitir_espelhos deve ser booleano estrito.",
-            )
-
-        # Verifica o selo antes de instanciar ou executar o motor
-        verificar_selo_modo4(
-            parametros_runtime=(
-                MotorLotomaniaModo4.obter_parametros_runtime()
-                if MotorLotomaniaModo4 is not None
-                else None
-            )
-        )
+        _validar_requisicao_e_selo_lotomania_modo4(request)
         if MotorLotomaniaModo4 is None:
             from motor_lotomania_modo4 import MotorLotomaniaModo4 as _M4
             globals()["MotorLotomaniaModo4"] = _M4
@@ -581,21 +649,12 @@ def endpoint_lotomania_modo4_gerar(request: OtimizarCoberturaRequest):
             trace=bool(request.trace),
         )
 
-        if not isinstance(resultado, dict) or not resultado.get("sucesso"):
-            raise RuntimeError("Falha estrutural: o motor MODO 4 nao retornou status de sucesso.")
-        jogos = resultado.get("jogos", [])
-        if len(jogos) != request.quantidade_jogos:
-            raise RuntimeError(
-                f"Discrepancia quantitativa: esperados {request.quantidade_jogos} jogos, entregues {len(jogos)}."
-            )
-        for idx, jg in enumerate(jogos):
-            if not isinstance(jg, list) or len(jg) != 50 or len(set(jg)) != 50:
-                raise RuntimeError(f"Jogo {idx + 1} na resposta nao contem 50 dezenas distintas.")
-            if not all(type(n) is int and 1 <= n <= 100 for n in jg):
-                raise RuntimeError(f"Jogo {idx + 1} na resposta contem dezenas fora do dominio [1..100].")
-
-        # Camada de representacao da API: converte float('inf') para None (null no JSON)
-        return MotorLotomaniaModo4.serializar_resposta_api(resultado)
+        # Camada de representacao da API: pos-validacao + float('inf') -> None (null no JSON)
+        return validar_e_serializar_resultado_lotomania_modo4(
+            resultado,
+            request.quantidade_jogos,
+            MotorLotomaniaModo4,
+        )
     except HTTPException:
         raise
     except IntegridadeModo4Error as exc_selo:
@@ -615,6 +674,86 @@ def endpoint_lotomania_modo4_gerar(request: OtimizarCoberturaRequest):
             status_code=500,
             detail=f"Erro interno no processamento do MODO 4 (ID: {erro_id}). Consulte o log do servidor.",
         )
+
+
+@app.post("/api/v1/lotomania-modo4/jobs", status_code=202)
+def endpoint_lotomania_modo4_criar_job(request: OtimizarCoberturaRequest):
+    """Enfileira geracao MODO 4 em subprocesso isolado, evitando timeout HTTP e disputa de GIL."""
+    try:
+        _validar_requisicao_e_selo_lotomania_modo4(request)
+        return obter_gerenciador_jobs_lotomania_modo4().criar_job(
+            quantidade_jogos=request.quantidade_jogos,
+            permitir_espelhos=request.permitir_espelhos,
+            seed=request.seed,
+            trace=bool(request.trace),
+        )
+    except HTTPException:
+        raise
+    except IntegridadeModo4Error as exc_selo:
+        erro_id = str(uuid.uuid4())[:8]
+        logger.critical("BLOQUEIO CRIPTOGRAFICO MODO 4 JOB (ID: %s): %s", erro_id, exc_selo)
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"MODO 4 bloqueado por falha de integridade criptografica (ID: {erro_id}). "
+                "Nenhum jogo foi gerado."
+            ),
+        )
+    except OverflowError as exc_lim:
+        raise HTTPException(status_code=429, detail=str(exc_lim))
+    except Exception as e:
+        erro_id = str(uuid.uuid4())[:8]
+        logger.exception("Erro ao enfileirar job MODO 4. ID: %s | Detalhe: %s", erro_id, e)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro interno ao criar tarefa do MODO 4 (ID: {erro_id}).",
+        )
+
+
+@app.get("/api/v1/lotomania-modo4/jobs/{job_id}")
+def endpoint_lotomania_modo4_status_job(job_id: str):
+    """Consulta estado, tempo decorrido e disponibilidade de resultado de um job MODO 4."""
+    snap = obter_gerenciador_jobs_lotomania_modo4().obter_status(job_id)
+    if snap is None:
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' nao encontrado ou expirado.")
+    return snap
+
+
+@app.get("/api/v1/lotomania-modo4/jobs/{job_id}/resultado")
+def endpoint_lotomania_modo4_resultado_job(job_id: str):
+    """Entrega o JSON oficial validado de um job MODO 4 concluido (fail-closed em erros)."""
+    estado, payload_bytes, meta = obter_gerenciador_jobs_lotomania_modo4().obter_resultado(job_id)
+    if estado == "not_found":
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' nao encontrado ou expirado.")
+    if estado == "running":
+        raise HTTPException(status_code=409, detail="Job ainda em processamento. Aguarde a conclusao.")
+    if estado == "cancelled":
+        raise HTTPException(
+            status_code=409,
+            detail=(meta or {}).get("erro") or "Job cancelado pelo usuario. Nenhum jogo foi gerado.",
+        )
+    if estado == "failed" or payload_bytes is None:
+        status_err = int((meta or {}).get("status_http") or 500)
+        raise HTTPException(
+            status_code=status_err,
+            detail=(meta or {}).get("erro") or "Falha no processamento do MODO 4. Nenhum jogo foi gerado.",
+        )
+    return Response(content=payload_bytes, media_type="application/json")
+
+
+@app.delete("/api/v1/lotomania-modo4/jobs/{job_id}")
+def endpoint_lotomania_modo4_cancelar_job(job_id: str):
+    """Cancela um job MODO 4 e encerra seu subprocesso trabalhador imediatamente."""
+    snap = obter_gerenciador_jobs_lotomania_modo4().cancelar_job(job_id)
+    if snap is None:
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' nao encontrado ou expirado.")
+    return snap
+
+
+@app.post("/api/v1/lotomania-modo4/jobs/{job_id}/cancel")
+def endpoint_lotomania_modo4_cancelar_job_post(job_id: str):
+    """Alias POST para cancelamento via navigator.sendBeacon ao fechar a aba."""
+    return endpoint_lotomania_modo4_cancelar_job(job_id)
 
 
 @app.post("/api/v1/lotomania-modo4/conferir")
@@ -1238,5 +1377,21 @@ def endpoint_motor_supersete_analise(request: AnaliseSuperSeteRequest):
         raise HTTPException(status_code=500, detail=f"Erro na Análise Super Sete: {str(e)}")
 
 
+# =============================================================================
+# LOTOFACIL MODO 4 — PROMOCAO CONTROLADA (FEATURE FLAG DESLIGADA POR PADRAO)
+# =============================================================================
+if registrar_lotofacil_modo4_na_api is not None:
+    registrar_lotofacil_modo4_na_api(app)
+
+
+app.add_event_handler("shutdown", encerrar_gerenciador_jobs_lotomania_modo4)
+
+
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="127.0.0.1", port=8000, reload=False)
+    _garantir_fluxos_padrao_seguros()
+    _app_dir = os.path.dirname(os.path.abspath(__file__))
+    if _app_dir not in sys.path:
+        sys.path.insert(0, _app_dir)
+    os.chdir(_app_dir)
+    _use_colors = bool(sys.stdout is not None and getattr(sys.stdout, "isatty", lambda: False)())
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=False, use_colors=_use_colors)

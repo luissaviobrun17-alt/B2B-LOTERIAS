@@ -1,0 +1,952 @@
+{
+  "sistema": "LOTOFACIL_MODO4",
+  "etapa": "ETAPA_05_INTEGRACAO_E_VALIDACAO_E2E",
+  "gerado_em_utc": "2026-11-13T15:42:47.509617+00:00",
+  "versao_arquitetura_etapa4": "4.0.0-etapa4-arquitetura-adaptativa",
+  "versao_modulo_etapa5": "5.0.0-etapa5-homologacao",
+  "historico_geracao_etapa4": null,
+  "feature_flag_padrao": false,
+  "producao_inalterada": true,
+  "hashes_producao_preservados": {
+    "api.py": "00ce87abede00a27a0f7a7b585bef83260fa63df887631f058316a26072422e4",
+    "motor_lotofacil.py": "7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3",
+    "index.html": "dbe34fc336206db531c9b42b5b365137212dadc7039568c8c3ad921d89746b6c",
+    "js/ui.js": "c09db8b8554517a14cd5d5ecd53a11393a15063d5988117a3c3495b80c22fed8",
+    "B2B_Loterias_Mobile.html": "ad35961c59d851f7e60c8979c21f2d9ec107cce4b3223651c7b0ffbb66ad79b3"
+  },
+  "preservacao_pre_execucao": {
+    "integro": true,
+    "diretorio_base": "C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS",
+    "verificados_etapas_1_2_3": 20,
+    "esperados_etapas_1_2_3": 20,
+    "verificados_etapa_4": 4,
+    "esperados_etapa_4": 4,
+    "verificados_dados_e_lotomania": 7,
+    "esperados_dados_e_lotomania": 7,
+    "verificados_etapa_5": 0,
+    "manifesto_etapa5_presente": true,
+    "selo_lotomania_valido": true,
+    "erro_selo_lotomania": null,
+    "divergencias": []
+  },
+  "preservacao_pos_execucao": {
+    "integro": true,
+    "diretorio_base": "C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS",
+    "verificados_etapas_1_2_3": 20,
+    "esperados_etapas_1_2_3": 20,
+    "verificados_etapa_4": 4,
+    "esperados_etapa_4": 4,
+    "verificados_dados_e_lotomania": 7,
+    "esperados_dados_e_lotomania": 7,
+    "verificados_etapa_5": 4,
+    "manifesto_etapa5_presente": true,
+    "selo_lotomania_valido": true,
+    "erro_selo_lotomania": null,
+    "divergencias": []
+  },
+  "manifesto_etapa5_resumo": {
+    "arquivo": "auditoria/lotofacil_modo4/manifesto_etapa5.json",
+    "modulos_etapa5_protegidos": [
+      "lotofacil_modo4/etapa5_experimento_despacho.py",
+      "lotofacil_modo4/etapa5_api_homologacao.py",
+      "lotofacil_modo4/gerar_evidencias_etapa5.py",
+      "testes/test_lotofacil_modo4_etapa5.py"
+    ]
+  },
+  "auditoria_ast_referencia_etapa4": {
+    "arquivo_auditado": "C:\\Users\\Luis Brun\\Desktop\\GitHub\\B2B LOTERIAS\\lotofacil_modo4\\etapa4_referencia_independente.py",
+    "total_imports": 9,
+    "modulos_importados": [
+      "__future__",
+      "ast",
+      "decimal",
+      "fractions",
+      "hashlib",
+      "itertools",
+      "math",
+      "os",
+      "typing"
+    ],
+    "dependencias_internas_detectadas": 0,
+    "violacoes": [],
+    "independencia_comprovada": true,
+    "distincao_epistemologica": {
+      "independencia_implementacao_demonstrada": true,
+      "independencia_metodologica_origem": "Derivacao autonoma das formulas oficiais CAIXA (hipergeometrica 4-regioes, MST Kruskal Hunter-Worsley, Dawson-Sankoff) validada contra enumeracao exata dos 3.268.760 sorteios na Etapa 2."
+    }
+  },
+  "comparativo_3_vias": {
+    "concluido_sem_regressao": true,
+    "health_paridade_chaves_producao": true,
+    "health_flag_off_correta": true,
+    "health_flag_on_correta": true,
+    "lotomania_modo4_jogos_identicos_3_vias": true,
+    "motores_legados_3_vias": [
+      {
+        "endpoint": "/api/v1/motor-lotofacil",
+        "status_a": 200,
+        "status_b": 200,
+        "status_c": 200,
+        "paridade_esquema_e_operacao": true
+      },
+      {
+        "endpoint": "/api/v1/motor-lotomania",
+        "status_a": 200,
+        "status_b": 200,
+        "status_c": 200,
+        "paridade_esquema_e_operacao": true
+      },
+      {
+        "endpoint": "/api/v1/motor-timemania",
+        "status_a": 200,
+        "status_b": 200,
+        "status_c": 200,
+        "paridade_esquema_e_operacao": true
+      }
+    ],
+    "lotofacil_modo4_ciclo_flag_e_rollback": {
+      "status_via_a_producao": 404,
+      "status_via_b_flag_off": 503,
+      "jogos_via_b_flag_off": 0,
+      "status_via_c_flag_on": 200,
+      "jogos_via_c_flag_on": 6,
+      "status_rollback_runtime_off": 503,
+      "jogos_rollback_runtime_off": 0,
+      "status_reativacao_runtime_on": 200,
+      "determinismo_pos_reativacao": true,
+      "aprovado": true
+    }
+  },
+  "validacao_e2e_e_fail_closed": {
+    "todos_e2e_ok": true,
+    "maior_divergencia_e2e_vs_ref": 1.1102230246251565e-16,
+    "casos_e2e": [
+      {
+        "id": "e2e_exata_pequena_p16_J4",
+        "ok": true,
+        "algoritmo": "busca_exata_pequena",
+        "quantidade_jogos": 4,
+        "custo_total_brl": "14.00",
+        "F_api": 0.9956002747252747,
+        "F_ref_independente": 0.9956002747252746,
+        "divergencia_F": 1.1102230246251565e-16,
+        "divergencia_max_componente": 0.0,
+        "conforme_ref": true,
+        "seis_grandezas_distintas_presentes": true
+      },
+      {
+        "id": "e2e_regular_orc56_p25",
+        "ok": true,
+        "algoritmo": "multiplos_reinicios",
+        "quantidade_jogos": 16,
+        "custo_total_brl": "56.00",
+        "F_api": 0.9914901170599549,
+        "F_ref_independente": 0.9914901170599548,
+        "divergencia_F": 1.1102230246251565e-16,
+        "divergencia_max_componente": 0.0,
+        "conforme_ref": true,
+        "seis_grandezas_distintas_presentes": true
+      },
+      {
+        "id": "e2e_final_zero_fixas_todos_p20_J8",
+        "ok": true,
+        "algoritmo": "busca_local_trocas",
+        "quantidade_jogos": 8,
+        "custo_total_brl": "28.00",
+        "F_api": 0.9896652365557601,
+        "F_ref_independente": 0.98966523655576,
+        "divergencia_F": 1.1102230246251565e-16,
+        "divergencia_max_componente": 0.0,
+        "conforme_ref": true,
+        "seis_grandezas_distintas_presentes": true
+      },
+      {
+        "id": "e2e_independencia_fixas_pool_p22_J10",
+        "ok": true,
+        "algoritmo": "multiplos_reinicios",
+        "quantidade_jogos": 10,
+        "custo_total_brl": "35.00",
+        "F_api": 0.9932957680390051,
+        "F_ref_independente": 0.9932957680390051,
+        "divergencia_F": 0.0,
+        "divergencia_max_componente": 0.0,
+        "conforme_ref": true,
+        "seis_grandezas_distintas_presentes": true
+      },
+      {
+        "id": "e2e_mista_heterogenea_p21_2x16_6x15",
+        "ok": true,
+        "algoritmo": "multiplos_reinicios",
+        "quantidade_jogos": 8,
+        "custo_total_brl": "133.00",
+        "F_api": 0.9770355664324404,
+        "F_ref_independente": 0.9770355664324404,
+        "divergencia_F": 0.0,
+        "divergencia_max_componente": 0.0,
+        "conforme_ref": true,
+        "seis_grandezas_distintas_presentes": true
+      },
+      {
+        "id": "e2e_micro_orcamento_p25_J12_B30",
+        "ok": true,
+        "algoritmo": "algoritmo_guloso",
+        "quantidade_jogos": 12,
+        "custo_total_brl": "42.00",
+        "F_api": 0.9641576812419201,
+        "F_ref_independente": 0.9641576812419201,
+        "divergencia_F": 0.0,
+        "divergencia_max_componente": 0.0,
+        "conforme_ref": true,
+        "seis_grandezas_distintas_presentes": true
+      }
+    ],
+    "avaliar_endpoint_ok": true,
+    "negativos_422_ok": true,
+    "negativos_422": [
+      {
+        "caso": "historico_proibido",
+        "status_http": 422,
+        "jogos": 0,
+        "aprovado": true
+      },
+      {
+        "caso": "usar_historico_proibido",
+        "status_http": 422,
+        "jogos": 0,
+        "aprovado": true
+      },
+      {
+        "caso": "conflito_fixas_bloqueadas",
+        "status_http": 422,
+        "jogos": 0,
+        "aprovado": true
+      },
+      {
+        "caso": "orcamento_insuficiente",
+        "status_http": 422,
+        "jogos": 0,
+        "aprovado": true
+      },
+      {
+        "caso": "ambiguidade_tamanhos_quantidade",
+        "status_http": 422,
+        "jogos": 0,
+        "aprovado": true
+      }
+    ],
+    "fail_closed_cliente_ok": true,
+    "fail_closed_cliente": [
+      {
+        "caso": "porta_desconectada",
+        "erro": "REDE_OU_TIMEOUT:URLError",
+        "status_http": null,
+        "jogos": 0,
+        "fallback_executado": false,
+        "aprovado": true
+      },
+      {
+        "caso": "timeout_rede",
+        "erro": "REDE_OU_TIMEOUT:TimeoutError",
+        "status_http": null,
+        "jogos": 0,
+        "fallback_executado": false,
+        "aprovado": true
+      },
+      {
+        "caso": "http_500_simulado",
+        "erro": "HTTP_500",
+        "status_http": 500,
+        "jogos": 0,
+        "fallback_executado": false,
+        "aprovado": true
+      },
+      {
+        "caso": "http_503_simulado",
+        "erro": "HTTP_503",
+        "status_http": 503,
+        "jogos": 0,
+        "fallback_executado": false,
+        "aprovado": true
+      },
+      {
+        "caso": "json_corrompido",
+        "erro": "JSON_CORROMPIDO:Expecting ',' delimiter",
+        "status_http": 200,
+        "jogos": 0,
+        "fallback_executado": false,
+        "aprovado": true
+      }
+    ],
+    "adulteracao_fail_closed_ok": true,
+    "adulteracao_fail_closed": [
+      {
+        "caso": "adulteracao_artefato_lotofacil_etapa2",
+        "status_http_gerar": 503,
+        "jogos_gerados": 0,
+        "health_disponivel": false,
+        "aprovado": true
+      },
+      {
+        "caso": "adulteracao_motor_lotomania_selo",
+        "status_http_gerar": 503,
+        "jogos_gerados": 0,
+        "health_disponivel": false,
+        "aprovado": true
+      }
+    ],
+    "amostra_primeiro_caso": "e2e_exata_pequena_p16_J4"
+  },
+  "diagnostico_etapa3_vs_etapa4": {
+    "avaliador_exato_invariante": true,
+    "divergencia_max_etapa2_vs_motor_etapa4": 1.1102230246251565e-16,
+    "divergencia_max_etapa2_vs_ref_independente": 1.1102230246251565e-16,
+    "divergencia_max_score_reportado_vs_canonico": 0.0,
+    "conclusao_tecnica": "Os avaliadores da Etapa 2, Etapa 4 incremental e referencia independente convergem com divergencia maxima 1.110e-16 (<= 1e-12), inclusive sobre as proprias carteiras produzidas pela Etapa 3. As diferencas em heuristicas decorrem do desenho distinto de busca: no guloso ha alternancia por semente (PRNG), na busca local e multiplos reinicios a Etapa 3 atinge F superior as custas de maior CPU/RAM (selecao de vitima por p2_mat vs matriz de intersecao/first-improvement), enquanto na busca exata ha empate integral (delta_F = 0.0).",
+    "casos": [
+      {
+        "caso": "bench_guloso_p25_J16_b320",
+        "algoritmo": "algoritmo_guloso",
+        "F_etapa3": 0.98814321,
+        "F_etapa4": 0.98710404,
+        "delta_F_etapa4_menos_etapa3": -0.00103917,
+        "avaliacoes_etapa3": 320,
+        "avaliacoes_etapa4": 320,
+        "bilhetes_em_comum": 0,
+        "similaridade_jaccard_carteiras": 0.0,
+        "deltas_componentes_e4_menos_e3": {
+          "cobertura_combinatoria": 0.00098814,
+          "probabilidade_conjunta": 0.00109442,
+          "diversificacao_sobreposicao": 0.0010685,
+          "distribuicao_dezenas": 0.0,
+          "custo_beneficio": 0.0,
+          "diversidade_estrutural": -0.03645833
+        },
+        "auditoria_avaliadores": {
+          "carteira_etapa3": {
+            "F_reportado_algoritmo": 0.988143208663,
+            "F_avaliador_etapa2": 0.988143208663,
+            "F_motor_incremental_etapa4": 0.988143208663,
+            "F_referencia_independente": 0.988143208663,
+            "div_etapa2_vs_motor_etapa4": 1.1102230246251565e-16,
+            "div_etapa2_vs_ref_independente": 0.0,
+            "div_reportado_vs_canonico": 0.0,
+            "componentes": {
+              "cobertura_combinatoria": 0.98098617,
+              "probabilidade_conjunta": 0.98561931,
+              "diversificacao_sobreposicao": 0.98942875,
+              "distribuicao_dezenas": 0.99869281,
+              "custo_beneficio": 1.0,
+              "diversidade_estrutural": 0.99375
+            }
+          },
+          "carteira_etapa4": {
+            "F_reportado_algoritmo": 0.987104040009,
+            "F_avaliador_etapa2": 0.987104040009,
+            "F_motor_incremental_etapa4": 0.987104040009,
+            "F_referencia_independente": 0.987104040009,
+            "div_etapa2_vs_motor_etapa4": 1.1102230246251565e-16,
+            "div_etapa2_vs_ref_independente": 0.0,
+            "div_reportado_vs_canonico": 0.0,
+            "componentes": {
+              "cobertura_combinatoria": 0.98197431,
+              "probabilidade_conjunta": 0.98671374,
+              "diversificacao_sobreposicao": 0.99049724,
+              "distribuicao_dezenas": 0.99869281,
+              "custo_beneficio": 1.0,
+              "diversidade_estrutural": 0.95729167
+            }
+          }
+        },
+        "causa_raiz_trajetoria": "Etapa 3 usa _gerar_candidatos_jogo_guloso com roleta 1/(1+u_d) e reavaliacao completa via avaliar_carteira_etapa2; Etapa 4 usa AvaliadorConstrutivoIncrementalEtapa4 e gerador v4 com consumo distinto do PRNG, explorando outro caminho de construcao.",
+        "sensibilidade_multi_semente": {
+          "sementes": [
+            7,
+            21,
+            42,
+            101,
+            202
+          ],
+          "vitorias_etapa4": 3,
+          "empates": 0,
+          "vitorias_etapa3": 2,
+          "delta_F_medio_e4_menos_e3": 0.00015494,
+          "detalhes": [
+            {
+              "semente": 7,
+              "F_etapa3": 0.98910891,
+              "F_etapa4": 0.98969123,
+              "delta_F_e4_menos_e3": 0.00058231
+            },
+            {
+              "semente": 21,
+              "F_etapa3": 0.99019195,
+              "F_etapa4": 0.98872246,
+              "delta_F_e4_menos_e3": -0.00146949
+            },
+            {
+              "semente": 42,
+              "F_etapa3": 0.98814321,
+              "F_etapa4": 0.98710404,
+              "delta_F_e4_menos_e3": -0.00103917
+            },
+            {
+              "semente": 101,
+              "F_etapa3": 0.98936484,
+              "F_etapa4": 0.98990197,
+              "delta_F_e4_menos_e3": 0.00053714
+            },
+            {
+              "semente": 202,
+              "F_etapa3": 0.98856043,
+              "F_etapa4": 0.99072431,
+              "delta_F_e4_menos_e3": 0.00216389
+            }
+          ]
+        }
+      },
+      {
+        "caso": "bench_local_p20_J10_b300",
+        "algoritmo": "busca_local_trocas",
+        "F_etapa3": 0.99587872,
+        "F_etapa4": 0.98963391,
+        "delta_F_etapa4_menos_etapa3": -0.00624481,
+        "avaliacoes_etapa3": 300,
+        "avaliacoes_etapa4": 300,
+        "bilhetes_em_comum": 0,
+        "similaridade_jaccard_carteiras": 0.0,
+        "deltas_componentes_e4_menos_e3": {
+          "cobertura_combinatoria": -0.00102167,
+          "probabilidade_conjunta": -0.00592087,
+          "diversificacao_sobreposicao": -0.00687378,
+          "distribuicao_dezenas": 0.0,
+          "custo_beneficio": 0.0,
+          "diversidade_estrutural": -0.06166667
+        },
+        "auditoria_avaliadores": {
+          "carteira_etapa3": {
+            "F_reportado_algoritmo": 0.99587871596,
+            "F_avaliador_etapa2": 0.99587871596,
+            "F_motor_incremental_etapa4": 0.99587871596,
+            "F_referencia_independente": 0.99587871596,
+            "div_etapa2_vs_motor_etapa4": 1.1102230246251565e-16,
+            "div_etapa2_vs_ref_independente": 1.1102230246251565e-16,
+            "div_reportado_vs_canonico": 0.0,
+            "componentes": {
+              "cobertura_combinatoria": 0.99879257,
+              "probabilidade_conjunta": 0.99885806,
+              "diversificacao_sobreposicao": 0.99638215,
+              "distribuicao_dezenas": 1.0,
+              "custo_beneficio": 1.0,
+              "diversidade_estrutural": 0.945
+            }
+          },
+          "carteira_etapa4": {
+            "F_reportado_algoritmo": 0.989633908547,
+            "F_avaliador_etapa2": 0.989633908547,
+            "F_motor_incremental_etapa4": 0.989633908547,
+            "F_referencia_independente": 0.989633908547,
+            "div_etapa2_vs_motor_etapa4": 0.0,
+            "div_etapa2_vs_ref_independente": 0.0,
+            "div_reportado_vs_canonico": 0.0,
+            "componentes": {
+              "cobertura_combinatoria": 0.9977709,
+              "probabilidade_conjunta": 0.9929372,
+              "diversificacao_sobreposicao": 0.98950836,
+              "distribuicao_dezenas": 1.0,
+              "custo_beneficio": 1.0,
+              "diversidade_estrutural": 0.88333333
+            }
+          }
+        },
+        "causa_raiz_trajetoria": "Etapa 3 seleciona jogo-vitima pela soma p2_mat[i][k] e usa candidato guloso; Etapa 4 ordena vitimas pela soma da matriz de intersecao inter_mat, aplica first-improvement imediato por dezena e substituicao por 8 trocas + 1 equilibrado.",
+        "sensibilidade_multi_semente": {
+          "sementes": [
+            7,
+            21,
+            42,
+            101,
+            202
+          ],
+          "vitorias_etapa4": 0,
+          "empates": 0,
+          "vitorias_etapa3": 5,
+          "delta_F_medio_e4_menos_e3": -0.00456737,
+          "detalhes": [
+            {
+              "semente": 7,
+              "F_etapa3": 0.99587872,
+              "F_etapa4": 0.98988901,
+              "delta_F_e4_menos_e3": -0.00598971
+            },
+            {
+              "semente": 21,
+              "F_etapa3": 0.99587872,
+              "F_etapa4": 0.99093777,
+              "delta_F_e4_menos_e3": -0.00494094
+            },
+            {
+              "semente": 42,
+              "F_etapa3": 0.99587872,
+              "F_etapa4": 0.98963391,
+              "delta_F_e4_menos_e3": -0.00624481
+            },
+            {
+              "semente": 101,
+              "F_etapa3": 0.99587872,
+              "F_etapa4": 0.9922047,
+              "delta_F_e4_menos_e3": -0.00367402
+            },
+            {
+              "semente": 202,
+              "F_etapa3": 0.99587872,
+              "F_etapa4": 0.99389133,
+              "delta_F_e4_menos_e3": -0.00198738
+            }
+          ]
+        }
+      },
+      {
+        "caso": "bench_multistart_p25_J16_b320",
+        "algoritmo": "multiplos_reinicios",
+        "F_etapa3": 0.99233583,
+        "F_etapa4": 0.99149012,
+        "delta_F_etapa4_menos_etapa3": -0.00084571,
+        "avaliacoes_etapa3": 320,
+        "avaliacoes_etapa4": 320,
+        "bilhetes_em_comum": 0,
+        "similaridade_jaccard_carteiras": 0.0,
+        "deltas_componentes_e4_menos_e3": {
+          "cobertura_combinatoria": -0.00094664,
+          "probabilidade_conjunta": -0.00180545,
+          "diversificacao_sobreposicao": -0.00081219,
+          "distribuicao_dezenas": 0.0,
+          "custo_beneficio": 0.0,
+          "diversidade_estrutural": 0.00104167
+        },
+        "auditoria_avaliadores": {
+          "carteira_etapa3": {
+            "F_reportado_algoritmo": 0.992335826058,
+            "F_avaliador_etapa2": 0.992335826058,
+            "F_motor_incremental_etapa4": 0.992335826058,
+            "F_referencia_independente": 0.992335826058,
+            "div_etapa2_vs_motor_etapa4": 1.1102230246251565e-16,
+            "div_etapa2_vs_ref_independente": 1.1102230246251565e-16,
+            "div_reportado_vs_canonico": 0.0,
+            "componentes": {
+              "cobertura_combinatoria": 0.98516996,
+              "probabilidade_conjunta": 0.99312199,
+              "diversificacao_sobreposicao": 0.99356337,
+              "distribuicao_dezenas": 1.0,
+              "custo_beneficio": 1.0,
+              "diversidade_estrutural": 0.99583333
+            }
+          },
+          "carteira_etapa4": {
+            "F_reportado_algoritmo": 0.99149011706,
+            "F_avaliador_etapa2": 0.99149011706,
+            "F_motor_incremental_etapa4": 0.99149011706,
+            "F_referencia_independente": 0.99149011706,
+            "div_etapa2_vs_motor_etapa4": 1.1102230246251565e-16,
+            "div_etapa2_vs_ref_independente": 1.1102230246251565e-16,
+            "div_reportado_vs_canonico": 0.0,
+            "componentes": {
+              "cobertura_combinatoria": 0.98422332,
+              "probabilidade_conjunta": 0.99131654,
+              "diversificacao_sobreposicao": 0.99275119,
+              "distribuicao_dezenas": 1.0,
+              "custo_beneficio": 1.0,
+              "diversidade_estrutural": 0.996875
+            }
+          }
+        },
+        "causa_raiz_trajetoria": "Etapa 3 e Etapa 4 utilizam cronogramas de reinicios e sequencias iniciais distintos com o mesmo orcamento B=320, convergindo para otimos locais diferentes.",
+        "sensibilidade_multi_semente": {
+          "sementes": [
+            7,
+            21,
+            42,
+            101,
+            202
+          ],
+          "vitorias_etapa4": 0,
+          "empates": 0,
+          "vitorias_etapa3": 5,
+          "delta_F_medio_e4_menos_e3": -0.00176268,
+          "detalhes": [
+            {
+              "semente": 7,
+              "F_etapa3": 0.9935601,
+              "F_etapa4": 0.99134958,
+              "delta_F_e4_menos_e3": -0.00221052
+            },
+            {
+              "semente": 21,
+              "F_etapa3": 0.99254809,
+              "F_etapa4": 0.9904505,
+              "delta_F_e4_menos_e3": -0.0020976
+            },
+            {
+              "semente": 42,
+              "F_etapa3": 0.99233583,
+              "F_etapa4": 0.99149012,
+              "delta_F_e4_menos_e3": -0.00084571
+            },
+            {
+              "semente": 101,
+              "F_etapa3": 0.99316017,
+              "F_etapa4": 0.99200845,
+              "delta_F_e4_menos_e3": -0.00115172
+            },
+            {
+              "semente": 202,
+              "F_etapa3": 0.99272832,
+              "F_etapa4": 0.99022048,
+              "delta_F_e4_menos_e3": -0.00250784
+            }
+          ]
+        }
+      },
+      {
+        "caso": "bench_exata_p16_J4",
+        "algoritmo": "busca_exata_pequena",
+        "F_etapa3": 0.99560027,
+        "F_etapa4": 0.99560027,
+        "delta_F_etapa4_menos_etapa3": 0.0,
+        "avaliacoes_etapa3": 1820,
+        "avaliacoes_etapa4": 1820,
+        "bilhetes_em_comum": 4,
+        "similaridade_jaccard_carteiras": 1.0,
+        "deltas_componentes_e4_menos_e3": {
+          "cobertura_combinatoria": 0.0,
+          "probabilidade_conjunta": 0.0,
+          "diversificacao_sobreposicao": 0.0,
+          "distribuicao_dezenas": 0.0,
+          "custo_beneficio": 0.0,
+          "diversidade_estrutural": 0.0
+        },
+        "auditoria_avaliadores": {
+          "carteira_etapa3": {
+            "F_reportado_algoritmo": 0.995600274725,
+            "F_avaliador_etapa2": 0.995600274725,
+            "F_motor_incremental_etapa4": 0.995600274725,
+            "F_referencia_independente": 0.995600274725,
+            "div_etapa2_vs_motor_etapa4": 1.1102230246251565e-16,
+            "div_etapa2_vs_ref_independente": 1.1102230246251565e-16,
+            "div_reportado_vs_canonico": 0.0,
+            "componentes": {
+              "cobertura_combinatoria": 0.99991758,
+              "probabilidade_conjunta": 1.0,
+              "diversificacao_sobreposicao": 1.0,
+              "distribuicao_dezenas": 1.0,
+              "custo_beneficio": 1.0,
+              "diversidade_estrutural": 0.9125
+            }
+          },
+          "carteira_etapa4": {
+            "F_reportado_algoritmo": 0.995600274725,
+            "F_avaliador_etapa2": 0.995600274725,
+            "F_motor_incremental_etapa4": 0.995600274725,
+            "F_referencia_independente": 0.995600274725,
+            "div_etapa2_vs_motor_etapa4": 1.1102230246251565e-16,
+            "div_etapa2_vs_ref_independente": 1.1102230246251565e-16,
+            "div_reportado_vs_canonico": 0.0,
+            "componentes": {
+              "cobertura_combinatoria": 0.99991758,
+              "probabilidade_conjunta": 1.0,
+              "diversificacao_sobreposicao": 1.0,
+              "distribuicao_dezenas": 1.0,
+              "custo_beneficio": 1.0,
+              "diversidade_estrutural": 0.9125
+            }
+          }
+        },
+        "causa_raiz_trajetoria": "Enumeracao exata completa explora integralmente C(16,15)=16, C(16,4)=1820; ambos certificam o mesmo otimo global exato (delta_F = 0.0).",
+        "sensibilidade_multi_semente": {
+          "sementes": [
+            7,
+            21,
+            42,
+            101,
+            202
+          ],
+          "vitorias_etapa4": 0,
+          "empates": 5,
+          "vitorias_etapa3": 0,
+          "delta_F_medio_e4_menos_e3": 0.0,
+          "detalhes": [
+            {
+              "semente": 7,
+              "F_etapa3": 0.99560027,
+              "F_etapa4": 0.99560027,
+              "delta_F_e4_menos_e3": 0.0
+            },
+            {
+              "semente": 21,
+              "F_etapa3": 0.99560027,
+              "F_etapa4": 0.99560027,
+              "delta_F_e4_menos_e3": 0.0
+            },
+            {
+              "semente": 42,
+              "F_etapa3": 0.99560027,
+              "F_etapa4": 0.99560027,
+              "delta_F_e4_menos_e3": 0.0
+            },
+            {
+              "semente": 101,
+              "F_etapa3": 0.99560027,
+              "F_etapa4": 0.99560027,
+              "delta_F_e4_menos_e3": 0.0
+            },
+            {
+              "semente": 202,
+              "F_etapa3": 0.99560027,
+              "F_etapa4": 0.99560027,
+              "delta_F_e4_menos_e3": 0.0
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "experimento_controlado_despacho": {
+    "bloco_a_limiar_micro": {
+      "experimento": "bloco_a_limiar_micro_3J_vs_2J",
+      "total_execucoes_pareadas": 8,
+      "vitorias_tratamento": 5,
+      "empates": 2,
+      "derrotas_tratamento": 1,
+      "delta_F_medio": 0.0086273,
+      "delta_F_min": -0.00070371,
+      "delta_F_max": 0.02143997,
+      "divergencia_max_ref_independente": 1.1102230246251565e-16,
+      "execucoes": [
+        {
+          "cenario": "micro_p20_J8_B22_s42",
+          "grupo": "janela_2J_3J",
+          "algoritmo_controle": "algoritmo_guloso",
+          "algoritmo_tratamento": "busca_local_trocas",
+          "F_controle": 0.98733061,
+          "F_tratamento": 0.9866269,
+          "delta_F": -0.00070371,
+          "tempo_controle_s": 0.01329,
+          "tempo_tratamento_s": 0.0099,
+          "avaliacoes_controle": 22,
+          "avaliacoes_tratamento": 22,
+          "vencedor": "controle"
+        },
+        {
+          "cenario": "micro_p25_J10_B24_s42",
+          "grupo": "janela_2J_3J",
+          "algoritmo_controle": "algoritmo_guloso",
+          "algoritmo_tratamento": "busca_local_trocas",
+          "F_controle": 0.95152119,
+          "F_tratamento": 0.97296116,
+          "delta_F": 0.02143997,
+          "tempo_controle_s": 0.01856,
+          "tempo_tratamento_s": 0.01316,
+          "avaliacoes_controle": 24,
+          "avaliacoes_tratamento": 24,
+          "vencedor": "tratamento"
+        },
+        {
+          "cenario": "micro_p25_J12_B30_s42",
+          "grupo": "janela_2J_3J",
+          "algoritmo_controle": "algoritmo_guloso",
+          "algoritmo_tratamento": "busca_local_trocas",
+          "F_controle": 0.96415768,
+          "F_tratamento": 0.97657188,
+          "delta_F": 0.0124142,
+          "tempo_controle_s": 0.02211,
+          "tempo_tratamento_s": 0.017,
+          "avaliacoes_controle": 30,
+          "avaliacoes_tratamento": 30,
+          "vencedor": "tratamento"
+        },
+        {
+          "cenario": "micro_p25_J12_B30_s101",
+          "grupo": "janela_2J_3J",
+          "algoritmo_controle": "algoritmo_guloso",
+          "algoritmo_tratamento": "busca_local_trocas",
+          "F_controle": 0.96719965,
+          "F_tratamento": 0.98095334,
+          "delta_F": 0.01375369,
+          "tempo_controle_s": 0.02182,
+          "tempo_tratamento_s": 0.01878,
+          "avaliacoes_controle": 30,
+          "avaliacoes_tratamento": 30,
+          "vencedor": "tratamento"
+        },
+        {
+          "cenario": "micro_p22_J14_B32_f2_s42",
+          "grupo": "janela_2J_3J",
+          "algoritmo_controle": "algoritmo_guloso",
+          "algoritmo_tratamento": "busca_local_trocas",
+          "F_controle": 0.97348956,
+          "F_tratamento": 0.98544718,
+          "delta_F": 0.01195762,
+          "tempo_controle_s": 0.02483,
+          "tempo_tratamento_s": 0.01858,
+          "avaliacoes_controle": 32,
+          "avaliacoes_tratamento": 32,
+          "vencedor": "tratamento"
+        },
+        {
+          "cenario": "micro_p25_J16_B40_s42",
+          "grupo": "janela_2J_3J",
+          "algoritmo_controle": "algoritmo_guloso",
+          "algoritmo_tratamento": "busca_local_trocas",
+          "F_controle": 0.97572834,
+          "F_tratamento": 0.985885,
+          "delta_F": 0.01015666,
+          "tempo_controle_s": 0.03228,
+          "tempo_tratamento_s": 0.02379,
+          "avaliacoes_controle": 40,
+          "avaliacoes_tratamento": 40,
+          "vencedor": "tratamento"
+        },
+        {
+          "cenario": "controle_fora_janela_p20_J10_B300",
+          "grupo": "fora_janela_amplo",
+          "algoritmo_controle": "multiplos_reinicios",
+          "algoritmo_tratamento": "multiplos_reinicios",
+          "F_controle": 0.99193181,
+          "F_tratamento": 0.99193181,
+          "delta_F": 0.0,
+          "tempo_controle_s": 0.09881,
+          "tempo_tratamento_s": 0.09673,
+          "avaliacoes_controle": 300,
+          "avaliacoes_tratamento": 300,
+          "vencedor": "empate"
+        },
+        {
+          "cenario": "controle_fora_janela_p25_J16_B320",
+          "grupo": "fora_janela_amplo",
+          "algoritmo_controle": "multiplos_reinicios",
+          "algoritmo_tratamento": "multiplos_reinicios",
+          "F_controle": 0.99149012,
+          "F_tratamento": 0.99149012,
+          "delta_F": 0.0,
+          "tempo_controle_s": 0.16353,
+          "tempo_tratamento_s": 0.16863,
+          "avaliacoes_controle": 320,
+          "avaliacoes_tratamento": 320,
+          "vencedor": "empate"
+        }
+      ],
+      "invariancia_fora_da_janela_3J": true,
+      "na_janela_2J_3J": {
+        "execucoes": 6,
+        "vitorias_2J": 5,
+        "derrotas_2J": 1,
+        "empates": 0,
+        "delta_F_medio": 0.01150307
+      },
+      "decisao_empirica_micro": "adotar_experimental_2J"
+    },
+    "bloco_b_inicializacao_mista": {
+      "experimento": "bloco_b_inicializacao_mista",
+      "total_execucoes_pareadas": 6,
+      "vitorias_tratamento": 0,
+      "empates": 0,
+      "derrotas_tratamento": 6,
+      "delta_F_medio": -0.00246533,
+      "delta_F_min": -0.00674139,
+      "delta_F_max": -0.0004227,
+      "divergencia_max_ref_independente": 1.1102230246251565e-16,
+      "execucoes": [
+        {
+          "cenario": "mista_p21_2x16_8x15_B200_s42",
+          "grupo": "heterogenea_media",
+          "algoritmo_controle": "multiplos_reinicios",
+          "algoritmo_tratamento": "multiplos_reinicios",
+          "F_controle": 0.981386,
+          "F_tratamento": 0.97989138,
+          "delta_F": -0.00149462,
+          "tempo_controle_s": 0.08856,
+          "tempo_tratamento_s": 0.08757,
+          "avaliacoes_controle": 200,
+          "avaliacoes_tratamento": 200,
+          "vencedor": "controle"
+        },
+        {
+          "cenario": "mista_p21_2x16_8x15_B200_s101",
+          "grupo": "heterogenea_media",
+          "algoritmo_controle": "multiplos_reinicios",
+          "algoritmo_tratamento": "multiplos_reinicios",
+          "F_controle": 0.97814346,
+          "F_tratamento": 0.97772076,
+          "delta_F": -0.0004227,
+          "tempo_controle_s": 0.10237,
+          "tempo_tratamento_s": 0.0518,
+          "avaliacoes_controle": 200,
+          "avaliacoes_tratamento": 200,
+          "vencedor": "controle"
+        },
+        {
+          "cenario": "mista_p25_1x18_2x17_6x15_B300_s42",
+          "grupo": "heterogenea_ampla",
+          "algoritmo_controle": "multiplos_reinicios",
+          "algoritmo_tratamento": "multiplos_reinicios",
+          "F_controle": 0.94461125,
+          "F_tratamento": 0.94248474,
+          "delta_F": -0.00212651,
+          "tempo_controle_s": 0.64898,
+          "tempo_tratamento_s": 0.33617,
+          "avaliacoes_controle": 300,
+          "avaliacoes_tratamento": 300,
+          "vencedor": "controle"
+        },
+        {
+          "cenario": "mista_p25_1x18_2x17_6x15_B300_s101",
+          "grupo": "heterogenea_ampla",
+          "algoritmo_controle": "multiplos_reinicios",
+          "algoritmo_tratamento": "multiplos_reinicios",
+          "F_controle": 0.94836027,
+          "F_tratamento": 0.94643653,
+          "delta_F": -0.00192374,
+          "tempo_controle_s": 0.58552,
+          "tempo_tratamento_s": 0.35092,
+          "avaliacoes_controle": 300,
+          "avaliacoes_tratamento": 300,
+          "vencedor": "controle"
+        },
+        {
+          "cenario": "mista_p23_pool_fixas_B240_s42",
+          "grupo": "heterogenea_composicao_pool",
+          "algoritmo_controle": "multiplos_reinicios",
+          "algoritmo_tratamento": "multiplos_reinicios",
+          "F_controle": 0.96199337,
+          "F_tratamento": 0.95525198,
+          "delta_F": -0.00674139,
+          "tempo_controle_s": 0.17095,
+          "tempo_tratamento_s": 0.11019,
+          "avaliacoes_controle": 240,
+          "avaliacoes_tratamento": 240,
+          "vencedor": "controle"
+        },
+        {
+          "cenario": "mista_p19_estreita_B150_s42",
+          "grupo": "heterogenea_restrita",
+          "algoritmo_controle": "multiplos_reinicios",
+          "algoritmo_tratamento": "multiplos_reinicios",
+          "F_controle": 0.99289066,
+          "F_tratamento": 0.99080765,
+          "delta_F": -0.00208301,
+          "tempo_controle_s": 0.06906,
+          "tempo_tratamento_s": 0.05376,
+          "avaliacoes_controle": 150,
+          "avaliacoes_tratamento": 150,
+          "vencedor": "controle"
+        }
+      ],
+      "decisao_empirica_mista": "manter_inicializacao_padrao"
+    },
+    "recomendacao_padrao_producao": {
+      "politica_micro_recomendada": "adotar_experimental_2J",
+      "inicializacao_mista_recomendada": "manter_inicializacao_padrao",
+      "etapa4_inalterada": true
+    }
+  },
+  "clausula_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada."
+}

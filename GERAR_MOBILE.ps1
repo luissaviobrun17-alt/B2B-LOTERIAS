@@ -1,4 +1,4 @@
-# ============================================
+﻿# ============================================
 # GERAR VERSÃO MOBILE - B2B Loterias
 # V10 — Compatível com iOS Safari + Android
 # ============================================
@@ -174,8 +174,15 @@ $iosFix = @"
 })();
 </script>
 "@
-# Inserir logo após <body>
-$htmlContent = $htmlContent -replace '<body>', "<body>`n$iosFix"
+# Inserir logo após a primeira ocorrência de <body> (evitando strings <body> em scripts embutidos)
+$bodyTag = '<body>'
+$bodyIdx = $htmlContent.IndexOf($bodyTag, [System.StringComparison]::OrdinalIgnoreCase)
+if ($bodyIdx -ge 0) {
+    $insertPos = $bodyIdx + $bodyTag.Length
+    $htmlContent = $htmlContent.Insert($insertPos, "`n$iosFix")
+} else {
+    throw "Tag <body> nao encontrada no HTML base."
+}
 Write-Host "   Fix iOS/Android injetado" -ForegroundColor Green
 
 # 7. Salvar e criar ZIP
