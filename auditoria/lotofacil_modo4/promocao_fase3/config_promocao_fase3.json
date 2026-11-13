@@ -1,0 +1,139 @@
+{
+  "versao_runbook": "1.0.0-fase3-preparacao",
+  "versao_alvo_promocao": "5.1.0-promocao-controlada",
+  "data_preparacao_utc": "2026-11-13T22:35:00+00:00",
+  "status_fase": "FASE_3_PREPARADA_AGUARDANDO_AUTORIZACAO_PRODUCAO",
+  "diretorio_preparacao_isolado": "auditoria/lotofacil_modo4/promocao_fase3",
+  "prerequisitos_fase2": {
+    "ata_fase2_rel": "auditoria/lotofacil_modo4/homologacao_ativacao/ata_homologacao_ativacao.json",
+    "dossie_fase2_rel": "auditoria/lotofacil_modo4/homologacao_ativacao/DOSSIE_HOMOLOGACAO_ATIVACAO.md",
+    "veredito_exigido": "GO",
+    "branch_autorizada": "feat/lotomania-modo4-jobs-mobile",
+    "merge_main_proibido": true
+  },
+  "parametros_producao": {
+    "host": "127.0.0.1",
+    "porta_producao": 8000,
+    "uvicorn_workers": 1,
+    "variavel_ativacao_unica": "LOTOFACIL_MODO4_ATIVO",
+    "valor_alvo_ativacao": "true",
+    "permitir_experimental_2j": false,
+    "politica_micro_homologada": "conservadora_3J",
+    "inicializacao_mista": "padrao"
+  },
+  "allowlist_variaveis_snapshot": {
+    "modo": "allowlist_estrita_somente_chaves_declaradas",
+    "chaves_permitidas": [
+      "LOTOFACIL_MODO4_ATIVO",
+      "LOTOFACIL_MODO4_PERMITIR_EXPERIMENTAL_2J",
+      "LOTOFACIL_MODO4_POLITICA_MICRO"
+    ],
+    "chaves_constantes_governanca": {
+      "inicializacao_mista": "padrao"
+    },
+    "proibir_dump_ambiente_completo": true,
+    "rotulo_variavel_nao_definida": "NAO_DEFINIDA_USAR_PADRAO_SEGURO"
+  },
+  "cinco_exigencias_adicionais": {
+    "1_snapshot_anterior": {
+      "descricao": "Capturar estado antes do reinicio sem vazar variaveis fora da allowlist.",
+      "campos_obrigatorios": [
+        "pid_ouvinte_porta_8000",
+        "memoria_processo_anterior_mb",
+        "versao_promocao_e_motor",
+        "variaveis_ambiente_allowlist",
+        "saude_health_e_status",
+        "hashes_sha256_7_arquivos_selados",
+        "respostas_referencia_legados_e_lotomania"
+      ]
+    },
+    "2_integridade_posterior": {
+      "descricao": "Recalcular os SHA-256 dos 7 arquivos selados e validar cadeia criptografica imediatamente apos subida do processo.",
+      "abortar_em_qualquer_divergencia": true,
+      "exigir_selo_lotomania_valido": true
+    },
+    "3_teste_controlado": {
+      "descricao": "Executar primeiro uma geracao pequena controlada e somente apos validacao integral rodar testes adicionais.",
+      "payload_inicial_pequeno": {
+        "quantidade_jogos": 3,
+        "tamanho_aposta": 15,
+        "tipo_concurso": "concurso_regular",
+        "prioridade": "equilibrio_adaptativo",
+        "semente": 42,
+        "max_avaliacoes": 120
+      },
+      "payload_adicional_avaliar": {
+        "habilitado_somente_apos_inicial_ok": true
+      },
+      "cenarios_negativos_obrigatorios_422": [
+        "experimental_2J",
+        "inicializacao_mista",
+        "historico_proibido"
+      ],
+      "tolerancia_divergencia_ast_F": 1e-12
+    },
+    "4_monitoramento": {
+      "descricao": "Monitorar erros HTTP, latencia, memoria do PID ativo, telemetria /status e integridade dos legados.",
+      "max_erros_http_inesperados": 0,
+      "max_latencia_teste_controlado_s": 3.0,
+      "max_rss_pico_mb": 1024.0,
+      "exigir_coerencia_telemetria_status": true,
+      "exigir_legados_e_lotomania_http_200": true
+    },
+    "5_rollback_comprovado": {
+      "descricao": "Alternar porta 8000 para LOTOFACIL_MODO4_ATIVO=false e comprovar HTTP 503 com zero jogos.",
+      "exigir_status_disponivel_false": true,
+      "exigir_gerar_http_503_zero_jogos": true,
+      "exigir_avaliar_http_503_zero_jogos": true,
+      "exigir_fallback_false": true,
+      "exigir_legados_e_lotomania_operacionais_pos_rollback": true
+    }
+  },
+  "tres_definicoes_operacionais": {
+    "1_escopo_snapshot_ambiente": "Captura exclusiva por allowlist das chaves LOTOFACIL_MODO4_*, registrando apenas a contagem numerica de variaveis omitidas.",
+    "2_ordem_rollback_e_estado_final": {
+      "etapas_ordenadas": [
+        "etapa_1_snapshot_anterior",
+        "etapa_2_reinicio_on_e_integridade_7_selados",
+        "etapa_3_teste_controlado_pequeno_e_adicional",
+        "etapa_4_monitoramento_memoria_telemetria_legados",
+        "etapa_5_rollback_comprovado_off_503_zero_jogos",
+        "etapa_6_pos_rollback_explicito_e_sonda_final"
+      ],
+      "modos_pos_rollback_validos": [
+        "encerrar_em_off_standby",
+        "reativar_on_com_revalidacao"
+      ],
+      "exigir_escolha_explicita_cli": true,
+      "comportamento_sem_escolha": "bloqueio_fail_closed_codigo_2"
+    },
+    "3_contingencia_reinicio_8000": {
+      "falha_subida_ou_funcional_sem_divergencia_selo": "abortar_fase3_e_restaurar_porta_8000_em_OFF_validando_legados_e_lotomania",
+      "divergencia_arquivo_selado_ou_criptografia": "abortar_fase3_fail_closed_preservar_evidencias_forenses_sem_mascaramento"
+    }
+  },
+  "arquivos_selados_monitorados": [
+    "lotofacil_modo4/promocao_producao.py",
+    "api.py",
+    "motor_lotofacil.py",
+    "js/engines/motor_lotofacil_modo4_engine.js",
+    "index.html",
+    "js/ui.js",
+    "B2B_Loterias_Mobile.html"
+  ],
+  "endpoints_legados_controle": [
+    "/api/v1/motor-lotofacil",
+    "/api/v1/motor-lotomania",
+    "/api/v1/motor-diadesorte",
+    "/api/v1/motor-megasena"
+  ],
+  "criterios_interrupcao_imediata": [
+    "Falha na inicializacao ou timeout do processo na porta 8000 durante reinicio controlado.",
+    "Qualquer divergencia SHA-256 nos 7 arquivos selados ou falha no selo Ed25519 da Lotomania antes ou depois do reinicio.",
+    "Qualquer habilitacao de experimental_2J=True ou desvio da politica conservadora_3J / inicializacao padrao.",
+    "Falha ou divergencia matematica > 1e-12 no teste controlado inicial de 3 jogos ou aceite de payload proibido (deve retornar HTTP 422).",
+    "Estouro de PeakWorkingSetSize > 1024.0 MB, erro HTTP inesperado ou regressao nos 4 motores legados / Lotomania MODO 4.",
+    "Falha na comprovacao de rollback (qualquer status != 503 ou jogos > 0 ou fallback != False com LOTOFACIL_MODO4_ATIVO=False)."
+  ],
+  "clausula_matematica_obrigatoria": "O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada."
+}
