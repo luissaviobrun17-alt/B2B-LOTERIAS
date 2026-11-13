@@ -49,7 +49,14 @@ Sonda passiva executada via `--snapshot-somente-leitura` sobre a instancia vigen
 * **Isolamento de ambiente:** `allowlist` aplicada exclusivamente sobre `3` variaveis (`NAO_DEFINIDA_USAR_PADRAO_SEGURO` para as tres); `57` variaveis externas do host omitidas por seguranca.
 * **Arquivos legados em disco verificados:** `23` arquivos (`sha256_mapa_legados_disco = a3cffc581bb1d38900a6e6c7ce88558c13a96054f88f24ef3443584fb22c28bd`).
 
-## 4. Hashes SHA-256 dos Artefatos de Preparacao e Arquivos Selados Preservados
+## 4. Bateria de Regressao Ativa (7 Suites / 14 Execucoes) e Excecao Historica
+
+A validacao automatizada separa explicitamente a bateria ativa pos-promocao da suite historica da Etapa 5, evitando divergencia numerica entre contagens:
+
+* **Bateria ativa pos-promocao (`7` suites, `14` execucoes em modo padrao e `-O`):** `test_lotofacil_modo4_etapa1.py` (`6/6`), `test_lotofacil_modo4_etapa2.py` (`6/6`), `test_lotofacil_modo4_etapa3.py` (`5/5`), `test_lotofacil_modo4_etapa4.py` (`5/5`), `test_lotofacil_modo4_promocao.py` (`7/7`), `test_lotofacil_modo4_homologacao_preparacao.py` (`4/4`) e `test_lotofacil_modo4_promocao_fase3_preparacao.py` (`6/6`), totalizando `14/14` execucoes aprovadas com zero falhas e zero testes ignorados.
+* **Suite historica fora da bateria ativa (`1` suite pre-promocao):** `testes/test_lotofacil_modo4_etapa5.py` nao compoe a bateria ativa de regressao porque e estruturalmente incompativel com o codigo selado da Fase 1 (exige ausencia das rotas `/api/v1/lotofacil-modo4/*` em `api.py`), registrando `4` falhas em `6` testes tanto no modo padrao quanto em `-O`.
+
+## 5. Hashes SHA-256 dos Artefatos de Preparacao e Arquivos Selados Preservados
 
 | Arquivo | SHA-256 | Situacao |
 | :--- | :--- | :--- |
@@ -66,8 +73,8 @@ Sonda passiva executada via `--snapshot-somente-leitura` sobre a instancia vigen
 | `B2B_Loterias_Mobile.html` | `22d7439d279073dae543eb1a8c89649dd38abe18c5dd76727edfff29b2ac02e3` | Selado e preservado |
 | `motor_lotomania_modo4.py` | `94a2d1001d235e0e9bd543aeee697bac0ac6c60b1d24654838e452d6f42c68f9` | Selado e preservado |
 
-## 5. Clausula Matematica Obrigatoria
+## 6. Clausula Matematica Obrigatoria
 
 > O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada.
 
-**Situacao:** Divergencias de governanca da Preparacao da Fase 3 sanadas. Nenhuma intervencao em producao (porta `8000`) ou merge em `main` sera realizada sem autorizacao humana expressa.
+**Situacao de Encerramento do Dia:** Preparacao Auditavel da Fase 3 encerrada tecnicamente em **`OFF_STANDBY`**. Porta `8000` preservada sem reinicio (`LOTOFACIL_MODO4_ATIVO=False`, `PID 15312`), `main` preservada e Fase 3 nao autorizada nem executada.
