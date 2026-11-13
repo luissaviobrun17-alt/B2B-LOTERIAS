@@ -49,14 +49,34 @@ class TestLotofacilModo4HomologacaoPreparacao(unittest.TestCase):
         _exigir(os.path.isfile(CAMINHO_MICROCALIBRACAO_JSON), "microcalibracao_fase1.json ausente.")
         _exigir(os.path.isfile(CAMINHO_RELATORIO_REVISAO_MD), "RELATORIO_REVISAO_FASE1.md ausente.")
 
-        # Fase 2 deve permanecer nao executada nesta etapa
+        # Fase 2 isolada autorizada: valida integridade da Ata GO, Dossie e Evidencias sem reexecutar carga/browser
+        caminho_ata = os.path.join(DIR_HOMOLOGACAO_ABS, "ata_homologacao_ativacao.json")
+        caminho_dossie = os.path.join(DIR_HOMOLOGACAO_ABS, "DOSSIE_HOMOLOGACAO_ATIVACAO.md")
+        caminho_evidencias = os.path.join(DIR_HOMOLOGACAO_ABS, "evidencias_homologacao_ativacao.json")
+        _exigir(os.path.isfile(caminho_ata), "ata_homologacao_ativacao.json da Fase 2 isolada ausente.")
+        _exigir(os.path.isfile(caminho_dossie), "DOSSIE_HOMOLOGACAO_ATIVACAO.md da Fase 2 isolada ausente.")
+        _exigir(os.path.isfile(caminho_evidencias), "evidencias_homologacao_ativacao.json da Fase 2 isolada ausente.")
+
+        with open(caminho_ata, encoding="utf-8") as fa:
+            ata = json.load(fa)
+        with open(caminho_evidencias, encoding="utf-8") as fe:
+            evid = json.load(fe)
+
+        _exigir(ata.get("veredito") == "GO", f"Veredito esperado GO na Fase 2 isolada; obtido {ata.get('veredito')}")
+        _exigir(ata.get("versao_avaliada") == "5.1.0-promocao-controlada", "Versao avaliada divergente na Ata.")
+        _exigir(ata.get("motivos_no_go") == [], f"Ata GO nao pode ter motivos NO-GO: {ata.get('motivos_no_go')}")
+        criterios_esperados = {f"frente_{i}_ok" for i in range(1, 7)}
+        _exigir(set(ata.get("criterios", {}).keys()) == criterios_esperados, "Criterios da Ata incompletos.")
+        _exigir(all(bool(ata["criterios"][k]) for k in criterios_esperados), "Todas as 6 frentes devem estar aprovadas na Ata GO.")
+
+        _exigir(evid.get("versao_runbook") == "1.1.0-fase1-revisada", "Versao do runbook divergente nas evidencias.")
+        _exigir(evid.get("portas_isoladas_utilizadas") == {"api": 18080, "ui": 18081}, "Fase 2 deve registrar exclusivamente portas isoladas 18080/18081.")
+        _exigir(evid.get("ata_decisao") == ata, "ata_decisao nas evidencias deve coincidir com ata_homologacao_ativacao.json.")
+        _exigir(evid.get("clausula_obrigatoria") == CLAUSULA_MATEMATICA_OBRIGATORIA, "Clausula obrigatoria divergente nas evidencias.")
+        comp_8000 = evid["frentes"]["frente_6_rollback"]["producao_8000_comparacao"]
         _exigir(
-            not os.path.exists(os.path.join(DIR_HOMOLOGACAO_ABS, "ata_homologacao_ativacao.json")),
-            "Ata de Fase 2 nao pode existir antes de autorizacao expressa.",
-        )
-        _exigir(
-            not os.path.exists(os.path.join(DIR_HOMOLOGACAO_ABS, "DOSSIE_HOMOLOGACAO_ATIVACAO.md")),
-            "Dossie de Fase 2 nao pode existir antes de autorizacao expressa.",
+            comp_8000["preservada"] is True and comp_8000["hashes_identicos"] is True and comp_8000["invariantes_off_ok"] is True,
+            "Porta 8000 deve permanecer preservada e com invariantes OFF apos a Fase 2.",
         )
 
         with open(CAMINHO_CONFIG_JSON, encoding="utf-8") as fc:
@@ -125,7 +145,11 @@ class TestLotofacilModo4HomologacaoPreparacao(unittest.TestCase):
 
         _exigir(len(cfg["regras_automaticas_no_go"]) >= 8, "Regras automaticas endurecidas de NO-GO devem estar registradas.")
 
-        for caminho_md in (CAMINHO_RUNBOOK_MD, CAMINHO_RELATORIO_REVISAO_MD):
+        for caminho_md in (
+            CAMINHO_RUNBOOK_MD,
+            CAMINHO_RELATORIO_REVISAO_MD,
+            os.path.join(DIR_HOMOLOGACAO_ABS, "DOSSIE_HOMOLOGACAO_ATIVACAO.md"),
+        ):
             with open(caminho_md, encoding="utf-8") as f:
                 md = f.read()
             _exigir("\u2014" not in md and "\u2013" not in md, f"Arquivo {os.path.basename(caminho_md)} nao pode conter em-dash ou en-dash.")
