@@ -3,7 +3,7 @@
 **Versao Alvo:** `5.1.0-promocao-controlada`  
 **Versao da Preparacao Fase 3:** `1.0.1-fase3-preparacao-revisada`  
 **Branch de Trabalho:** `feat/lotomania-modo4-jobs-mobile` (`main` preservada sem merge)  
-**Estado Operacional:** `FASE_3_PREPARADA_AGUARDANDO_AUTORIZACAO_PRODUCAO` | **Porta `8000`:** `LOTOFACIL_MODO4_ATIVO=False`
+**Estado Operacional:** `FASE_3_EXECUCAO_CONCLUIDA_VERIFICADA` (`GO`) | **Porta `8000`:** `OFF_STANDBY` (`LOTOFACIL_MODO4_ATIVO=False`, `PID 23604`)
 
 ## 1. Escopo Executado e Fechamento das Divergencias de Governanca
 
@@ -56,14 +56,17 @@ A validacao automatizada separa explicitamente a bateria ativa pos-promocao da s
 * **Bateria ativa pos-promocao (`7` suites, `14` execucoes em modo padrao e `-O`):** `test_lotofacil_modo4_etapa1.py` (`6/6`), `test_lotofacil_modo4_etapa2.py` (`6/6`), `test_lotofacil_modo4_etapa3.py` (`5/5`), `test_lotofacil_modo4_etapa4.py` (`5/5`), `test_lotofacil_modo4_promocao.py` (`7/7`), `test_lotofacil_modo4_homologacao_preparacao.py` (`4/4`) e `test_lotofacil_modo4_promocao_fase3_preparacao.py` (`6/6`), totalizando `14/14` execucoes aprovadas com zero falhas e zero testes ignorados.
 * **Suite historica fora da bateria ativa (`1` suite pre-promocao):** `testes/test_lotofacil_modo4_etapa5.py` nao compoe a bateria ativa de regressao porque e estruturalmente incompativel com o codigo selado da Fase 1 (exige ausencia das rotas `/api/v1/lotofacil-modo4/*` em `api.py`), registrando `4` falhas em `6` testes tanto no modo padrao quanto em `-O`.
 
-## 5. Hashes SHA-256 dos Artefatos de Preparacao e Arquivos Selados Preservados
+## 5. Hashes SHA-256 dos Artefatos da Fase 3 e Arquivos Selados Preservados
 
 | Arquivo | SHA-256 | Situacao |
 | :--- | :--- | :--- |
-| `auditoria/lotofacil_modo4/promocao_fase3/config_promocao_fase3.json` | `f9706e3f6e2b66ba2632c90ea83cc7c7db609265f20fb1c22ec78efa72bbf14f` | Atualizado (Revisao Preparacao Fase 3) |
-| `auditoria/lotofacil_modo4/promocao_fase3/RUNBOOK_PROMOCAO_FASE3.md` | `1e7e8cce8ca07046b0f9c232552f96334d8aa4449eb2277e70ae9fe14c9fe6f1` | Atualizado (Revisao Preparacao Fase 3) |
-| `lotofacil_modo4/promocao_fase3_runbook.py` | `533dc8388bcd6bc57b2d560f7d1e717b25d82d0a97b64a6d4e2d825c9f9c4b5d` | Atualizado (Revisao Preparacao Fase 3) |
-| `testes/test_lotofacil_modo4_promocao_fase3_preparacao.py` | `21659ab333c0919543748ec5050bc6c694cc1c7661ef24e14954ada6618920b9` | Atualizado (Revisao Preparacao Fase 3) |
+| `auditoria/lotofacil_modo4/promocao_fase3/config_promocao_fase3.json` | `f9706e3f6e2b66ba2632c90ea83cc7c7db609265f20fb1c22ec78efa72bbf14f` | Verificado (Preparacao Fase 3) |
+| `auditoria/lotofacil_modo4/promocao_fase3/RUNBOOK_PROMOCAO_FASE3.md` | `1e7e8cce8ca07046b0f9c232552f96334d8aa4449eb2277e70ae9fe14c9fe6f1` | Verificado (Runbook Fase 3) |
+| `auditoria/lotofacil_modo4/promocao_fase3/ata_promocao_fase3.json` | `344fb9ce859bc95b68b3740a83f49679872568b9e193c03309e81993d277072a` | Gerado (Ata Fase 3 GO) |
+| `auditoria/lotofacil_modo4/promocao_fase3/evidencias_promocao_fase3.json` | `c6ab78423c55fadcd7fa382fd9d88d5a77c5899a82c70028448aaf68ea0830fa` | Gerado (Evidencias 6 Etapas Fase 3) |
+| `auditoria/lotofacil_modo4/promocao_fase3/DOSSIE_PROMOCAO_FASE3.md` | `393d8309217ad25dd834da9c65b5cadb92cb09b96dc219f72beefcc65de86ae2` | Gerado (Dossie Fase 3 GO) |
+| `lotofacil_modo4/promocao_fase3_runbook.py` | `9854c3409a1c4f391b849826d609a798ec4efc009959adcc429ef99e076a550e` | Atualizado (Executor + Verificador Pos-Execucao) |
+| `testes/test_lotofacil_modo4_promocao_fase3_preparacao.py` | `41542f3266ed3ebf05c5e8b8866ef5f47db1f20e4d94b6214844c1b84bf06ea1` | Atualizado (Suite Fase 3 Pos-Execucao) |
 | `lotofacil_modo4/promocao_producao.py` | `5bc19c7e8313f0042afd7414373de334ddb6832350789c1c026aca3996a66996` | Selado e preservado |
 | `api.py` | `d60cad46afbf563530a77e4950b142c1ebd54bcd2fef2e17bc23d84fc9de7c0b` | Selado e preservado |
 | `motor_lotofacil.py` | `7dcaf017f8a4845fe42f5a58cb978c81e95e8f55b96ef558b9a0ec551ba077c3` | Selado e preservado |
@@ -77,4 +80,4 @@ A validacao automatizada separa explicitamente a bateria ativa pos-promocao da s
 
 > O sistema não prevê resultados futuros nem altera a probabilidade matemática individual de premiação de qualquer bilhete. Seu objetivo é otimizar a distribuição combinatória dos bilhetes de uma carteira, buscando reduzir a redundância entre eventos premiados e melhorar a cobertura conjunta observada.
 
-**Situacao de Encerramento do Dia:** Preparacao Auditavel da Fase 3 encerrada tecnicamente em **`OFF_STANDBY`**. Porta `8000` preservada sem reinicio (`LOTOFACIL_MODO4_ATIVO=False`, `PID 15312`), `main` preservada e Fase 3 nao autorizada nem executada.
+**Situacao de Encerramento:** Fase 3 executada com autorizacao expressa e encerrada com veredito **`GO`**, rollback comprovado (`HTTP 503` e `0` jogos) e porta `8000` consolidada em **`OFF_STANDBY`** (`LOTOFACIL_MODO4_ATIVO=False`, `PID 23604`), com `main` preservada e todos os arquivos selados intactos.

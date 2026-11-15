@@ -1,0 +1,6 @@
+{
+  "veredito": "GO",
+  "abortada": false,
+  "pos_rollback_modo": "encerrar_em_off_standby",
+  "estado_final_ativo": false
+}

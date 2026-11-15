@@ -533,14 +533,34 @@ def verificar_preparacao_fase3_somente_leitura(
         os.path.join(dir_fase3, "evidencias_promocao_fase3.json"),
         os.path.join(dir_fase3, "DOSSIE_PROMOCAO_FASE3.md"),
     )
-    fase3_executada = any(os.path.exists(p) for p in artefatos_execucao)
+    fase3_executada = all(os.path.isfile(p) for p in artefatos_execucao)
+    ata_fase3_veredito: Optional[str] = None
+    execucao_fase3_integra = True
+    if fase3_executada:
+        caminho_ata_f3, caminho_evid_f3, caminho_dossie_f3 = artefatos_execucao
+        _validar_contem_sem_travessao_e_clausula(caminho_dossie_f3)
+        with open(caminho_ata_f3, "r", encoding="utf-8") as fa3:
+            ata_f3 = json.load(fa3)
+        with open(caminho_evid_f3, "r", encoding="utf-8") as fe3:
+            evid_f3 = json.load(fe3)
+        ata_fase3_veredito = ata_f3.get("veredito")
+        execucao_fase3_integra = bool(
+            ata_f3.get("veredito") == "GO"
+            and ata_f3.get("abortada") is False
+            and ata_f3.get("pos_rollback_modo") == MODO_POS_ROLLBACK_DESIGNADO
+            and ata_f3.get("estado_final_ativo") is False
+            and evid_f3.get("ata_decisao") == ata_f3
+            and evid_f3.get("clausula_obrigatoria") == CLAUSULA_MATEMATICA_OBRIGATORIA
+        )
+
     integridade_7 = recalcular_hashes_7_arquivos_selados(diretorio_base=diretorio_base)
     hw = coletar_telemetria_hardware()
 
-    pronto = bool(f2_go and regras_f3_ok and integridade_7["integro"] and not fase3_executada)
+    pronto = bool(f2_go and regras_f3_ok and integridade_7["integro"] and execucao_fase3_integra)
     return {
-        "fase": "FASE_3_PREPARACAO_AUDITAVEL_VERIFICADA",
+        "fase": "FASE_3_EXECUCAO_CONCLUIDA_VERIFICADA" if fase3_executada else "FASE_3_PREPARACAO_AUDITAVEL_VERIFICADA",
         "fase3_executada": fase3_executada,
+        "ata_fase3_veredito": ata_fase3_veredito,
         "pronto_para_deliberacao": pronto,
         "ata_fase2_veredito": ata_f2.get("veredito"),
         "regras_governanca_fase3_ok": regras_f3_ok,
@@ -749,18 +769,109 @@ def _monitorar_pos_ativacao(
 
 def _construir_dossie_fase3_md(dados: Dict[str, Any]) -> str:
     ata = dados["ata_decisao"]
+    etapas = dados.get("etapas", {})
+    e1 = etapas.get("etapa_1_snapshot_anterior", {})
+    e2 = etapas.get("etapa_2_reinicio_on_e_integridade", {})
+    e3 = etapas.get("etapa_3_teste_controlado", {})
+    e4 = etapas.get("etapa_4_monitoramento", {})
+    e5 = etapas.get("etapa_5_rollback_comprovado", {})
+    e6 = etapas.get("etapa_6_pos_rollback_final", {})
+
+    int_pre = e1.get("integridade_7_selados", {})
+    int_pos = e2.get("integridade_7_selados_pos", {})
+    mem_pre = e1.get("memoria_processo_mb") or {}
+    mem_mon = e4.get("memoria_pid_mb") or {}
+    env_pre = e1.get("variaveis_ambiente") or {}
+    sond_pre = e1.get("sondagem_referencia_endpoints") or {}
+    tel_mon = e4.get("telemetria") or {}
+
     linhas = [
         "# DOSSIE E ATA DA FASE 3 - PROMOCAO CONTROLADA EM PRODUCAO (LOTOFACIL MODO 4)",
         "",
+        f"**Versao do Runbook:** `{dados.get('versao_runbook', '1.0.1-fase3-preparacao-revisada')}`  ",
         f"**Versao Avaliada:** `{dados['versao_avaliada']}`  ",
         f"**Data/Hora (UTC):** `{dados['executado_em_utc']}`  ",
         f"**Veredito:** `{ata['veredito']}` | **Abortada:** `{ata['abortada']}`  ",
+        f"**Modo Pos-Rollback:** `{ata.get('pos_rollback_modo', 'N/A')}` | **Estado Final Ativo:** `{ata.get('estado_final_ativo')}`  ",
         "",
-        "## Clausula Matematica Obrigatoria",
+        "## 1. Resumo Executivo das 6 Etapas da Fase 3",
         "",
-        f"> {CLAUSULA_MATEMATICA_OBRIGATORIA}",
+        "| Etapa | Resultado | Evidencia Chave |",
+        "| :--- | :--- | :--- |",
+        (
+            f"| 1. Snapshot Passivo Anterior | `{'GO' if e1.get('alcancavel') and int_pre.get('integro') else 'NO-GO'}` | "
+            f"PID=`{e1.get('pid_ouvinte')}`, SHA-256 estado=`{e1.get('estado_normalizado_sha256')}`, "
+            f"Selados=`{int_pre.get('verificados_promocao')}/7`, Legados+Lotomania=`{sond_pre.get('aprovado')}` |"
+        ),
+        (
+            f"| 2. Reinicio ON e Integridade Pos-Reinicio | `{'GO' if e2.get('processo_iniciou') and int_pos.get('integro') else 'NO-GO'}` | "
+            f"Processo ON=`{e2.get('processo_iniciou')}` (PID=`{(e2.get('info_processo') or {}).get('pid')}`), "
+            f"Selados pos-reinicio=`{int_pos.get('integro')}`, Divergencias=`{len(int_pos.get('divergencias_totais', []))}` |"
+        ),
+        (
+            f"| 3. Teste Controlado e Cenarios 422 | `{'GO' if e3.get('aprovado') else 'NO-GO'}` | "
+            f"HTTP pequeno=`{e3.get('status_http_pequeno')}`, Latencia=`{e3.get('latencia_pequeno_s')} s`, "
+            f"Diff F=`{e3.get('diff_F_pequeno')}`, `/avaliar` ok=`{e3.get('avaliar_ok')}`, Negativos 422 ok=`{e3.get('negativos_422_ok')}` |"
+        ),
+        (
+            f"| 4. Monitoramento de Recursos e Legados | `{'GO' if e4.get('aprovado') else 'NO-GO'}` | "
+            f"RSS pico=`{mem_mon.get('rss_pico_mb')} MB`, Latencia ok=`{e4.get('latencia_controlada_ok')}`, "
+            f"Telemetria ok=`{e4.get('telemetria_coerente_ok')}`, Legados+Lotomania=`{(e4.get('legados_e_lotomania') or {}).get('aprovado')}` |"
+        ),
+        (
+            f"| 5. Rollback Comprovado para OFF | `{'GO' if e5.get('aprovado') else 'NO-GO'}` | "
+            f"Disponivel=`{e5.get('status_disponivel')}`, `/gerar` HTTP=`{e5.get('gerar_http')}` (`{e5.get('gerar_jogos')}` jogos), "
+            f"`/avaliar` HTTP=`{e5.get('avaliar_http')}` (`{e5.get('avaliar_jogos')}` jogos), Fallback=`{e5.get('gerar_fallback')}` |"
+        ),
+        (
+            f"| 6. Estado Final Pos-Rollback | `{'GO' if e6.get('verificacao_ok') else 'NO-GO'}` | "
+            f"Modo aplicado=`{e6.get('modo_aplicado')}`, Estado final ativo=`{e6.get('estado_final_ativo')}`, "
+            f"Verificacao ok=`{e6.get('verificacao_ok')}` |"
+        ),
+        "",
+        "## 2. Detalhamento da Etapa 1 (Snapshot Anterior) e Etapa 2 (Reinicio ON + Integridade)",
+        "",
+        f"* **Processo inicial na porta 8000 (OFF_STANDBY):** PID `{e1.get('pid_ouvinte')}`, `rss_atual_mb = {mem_pre.get('rss_atual_mb')} MB`, `rss_pico_mb = {mem_pre.get('rss_pico_mb')} MB`, `privado_mb = {mem_pre.get('privado_mb')} MB`.",
+        f"* **Governanca pre-janela:** `feature_flag_ativa = {e1.get('feature_flag_ativa')}`, `experimental_2j_habilitada = {e1.get('experimental_2j_habilitada')}`, `politica_micro_padrao = {e1.get('politica_micro_padrao')}`, `inicializacao_mista = {e1.get('inicializacao_mista')}`.",
+        f"* **Isolamento de ambiente (allowlist):** `{len(env_pre.get('allowlist_aplicada', []))}` chaves permitidas, `{env_pre.get('total_variaveis_omitidas_por_seguranca')}` variaveis externas omitidas por seguranca, `proibir_dump_ambiente_completo = {env_pre.get('proibir_dump_ambiente_completo')}`.",
+        f"* **Mapa de arquivos legados em disco:** `{e1.get('hashes_arquivos_legados_disco_count')}` arquivos monitorados (`sha256_mapa_legados_disco = {e1.get('sha256_mapa_legados_disco')}`).",
+        f"* **Reinicio controlado ON (Etapa 2):** PID `{((e2.get('info_processo') or {}).get('pid'))}`, `integridade_7_selados_pos.integro = {int_pos.get('integro')}`, `selo_lotomania_valido = {int_pos.get('selo_lotomania_valido')}`, `divergencias_totais = {int_pos.get('divergencias_totais')}`.",
+        "",
+        "## 3. Detalhamento da Etapa 3 (Teste Controlado) e Etapa 4 (Monitoramento)",
+        "",
+        f"* **Carteira pequena controlada (3 jogos, semente 42, `conservadora_3J`):** `HTTP {e3.get('status_http_pequeno')}`, latencia `{e3.get('latencia_pequeno_s')} s`, `diff_F_pequeno = {e3.get('diff_F_pequeno')}`, `hash_carteira_pequena = {e3.get('hash_carteira_pequena')}`.",
+        f"* **Auditoria `/avaliar`:** `avaliar_ok = {e3.get('avaliar_ok')}`, `diff_F_avaliar = {e3.get('diff_F_avaliar')}`.",
+        f"* **Bloqueios fail-closed (`HTTP 422`, `0` jogos, `fallback_executado = False`):** `negativos_422_ok = {e3.get('negativos_422_ok')}`, cenarios validados: `{json.dumps(e3.get('negativos', {}), sort_keys=True)}`.",
+        f"* **Memoria e telemetria sob ativacao (Etapa 4):** `rss_atual_mb = {mem_mon.get('rss_atual_mb')} MB`, `rss_pico_mb = {mem_mon.get('rss_pico_mb')} MB`, `privado_mb = {mem_mon.get('privado_mb')} MB`, `total_requisicoes_gerar = {tel_mon.get('total_requisicoes_gerar')}`, `total_sucesso_gerar = {tel_mon.get('total_sucesso_gerar')}`, `total_bloqueios_politica_experimental = {tel_mon.get('total_bloqueios_politica_experimental')}`, `total_erros_validacao = {tel_mon.get('total_erros_validacao')}`, `total_erros_internos = {tel_mon.get('total_erros_internos')}`, `total_requisicoes_avaliar = {tel_mon.get('total_requisicoes_avaliar')}`.",
+        "",
+        "## 4. Detalhamento da Etapa 5 (Rollback Comprovado) e Etapa 6 (Encerramento OFF_STANDBY)",
+        "",
+        f"* **Comprovacao de rollback ON para OFF:** `status_disponivel = {e5.get('status_disponivel')}`, `status_feature_flag = {e5.get('status_feature_flag')}`, `POST /gerar = HTTP {e5.get('gerar_http')}` (`{e5.get('gerar_jogos')}` jogos entregues, `fallback_executado = {e5.get('gerar_fallback')}`), `POST /avaliar = HTTP {e5.get('avaliar_http')}` (`{e5.get('avaliar_jogos')}` jogos entregues), `legados_e_lotomania_ok = {e5.get('legados_e_lotomania_ok')}`.",
+        f"* **Estado final pos-rollback (Etapa 6):** `modo_aplicado = {e6.get('modo_aplicado')}`, `estado_final_ativo = {e6.get('estado_final_ativo')}`, `verificacao_ok = {e6.get('verificacao_ok')}`.",
+        "",
+        "## 5. Hashes SHA-256 dos 7 Arquivos Selados (Pre e Pos-Janela)",
+        "",
+        "| Arquivo Monitorado | SHA-256 Verificado |",
+        "| :--- | :--- |",
     ]
-    return "\n".join(linhas) + "\n"
+    hashes_exibir = int_pos.get("hashes_atuais") or int_pre.get("hashes_atuais") or {}
+    for rel, sha in hashes_exibir.items():
+        linhas.append(f"| `{rel}` | `{sha}` |")
+
+    linhas.extend(
+        [
+            "",
+            "## 6. Clausula Matematica Obrigatoria",
+            "",
+            f"> {CLAUSULA_MATEMATICA_OBRIGATORIA}",
+            "",
+            f"**Decisao Formal da Ata da Fase 3:** `{ata['veredito']}` | **Modo Final:** `{ata.get('pos_rollback_modo', 'N/A')}` | **Lotofacil MODO 4 Ativo:** `{ata.get('estado_final_ativo')}`",
+        ]
+    )
+    md = "\n".join(linhas) + "\n"
+    if "\u2014" in md or "\u2013" in md:
+        raise RuntimeError("Dossie Markdown da Fase 3 nao pode conter travessao em-dash ou en-dash.")
+    return md
 
 
 def _registrar_e_emitir_dossie_opcional(

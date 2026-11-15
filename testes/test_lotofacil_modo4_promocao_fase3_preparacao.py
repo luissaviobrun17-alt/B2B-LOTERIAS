@@ -96,12 +96,45 @@ class TestLotofacilModo4PromocaoFase3Preparacao(unittest.TestCase):
         _exigir(os.path.isfile(CAMINHO_CONFIG_FASE3_JSON), "config_promocao_fase3.json ausente.")
         _exigir(os.path.isfile(CAMINHO_RUNBOOK_FASE3_MD), "RUNBOOK_PROMOCAO_FASE3.md ausente.")
 
-        # Nenhum artefato de execucao em producao pode existir antes de autorizacao expressa
-        for nome_exec in ("ata_promocao_fase3.json", "evidencias_promocao_fase3.json", "DOSSIE_PROMOCAO_FASE3.md"):
-            _exigir(
-                not os.path.exists(os.path.join(DIR_FASE3_ABS, nome_exec)),
-                f"Artefato de execucao {nome_exec} nao pode existir durante a preparacao.",
-            )
+        # Fase 3 autorizada e concluida: valida integridade da Ata GO, Evidencias e Dossie da Fase 3
+        caminho_ata_f3 = os.path.join(DIR_FASE3_ABS, "ata_promocao_fase3.json")
+        caminho_evid_f3 = os.path.join(DIR_FASE3_ABS, "evidencias_promocao_fase3.json")
+        caminho_dossie_f3 = os.path.join(DIR_FASE3_ABS, "DOSSIE_PROMOCAO_FASE3.md")
+        _exigir(os.path.isfile(caminho_ata_f3), "ata_promocao_fase3.json ausente.")
+        _exigir(os.path.isfile(caminho_evid_f3), "evidencias_promocao_fase3.json ausente.")
+        _exigir(os.path.isfile(caminho_dossie_f3), "DOSSIE_PROMOCAO_FASE3.md ausente.")
+
+        with open(caminho_ata_f3, "r", encoding="utf-8") as fa3:
+            ata_f3 = json.load(fa3)
+        with open(caminho_evid_f3, "r", encoding="utf-8") as fe3:
+            evid_f3 = json.load(fe3)
+        with open(caminho_dossie_f3, "r", encoding="utf-8") as fd3:
+            dossie_f3_bruto = fd3.read()
+
+        _exigir(ata_f3.get("veredito") == "GO", f"Veredito esperado GO na Ata da Fase 3; obtido {ata_f3.get('veredito')}")
+        _exigir(ata_f3.get("abortada") is False, "Ata da Fase 3 GO nao pode indicar abortada=True.")
+        _exigir(
+            ata_f3.get("pos_rollback_modo") == MODO_POS_ROLLBACK_DESIGNADO,
+            f"Modo pos-rollback na Ata da Fase 3 deve ser {MODO_POS_ROLLBACK_DESIGNADO}.",
+        )
+        _exigir(ata_f3.get("estado_final_ativo") is False, "Estado final apos rollback deve ser False (OFF_STANDBY).")
+        _exigir(evid_f3.get("ata_decisao") == ata_f3, "ata_decisao nas evidencias deve coincidir com ata_promocao_fase3.json.")
+        _exigir(evid_f3.get("clausula_obrigatoria") == CLAUSULA_MATEMATICA_OBRIGATORIA, "Clausula obrigatoria divergente nas evidencias da Fase 3.")
+        etapas_f3 = evid_f3.get("etapas", {})
+        for chave_etapa in (
+            "etapa_1_snapshot_anterior",
+            "etapa_2_reinicio_on_e_integridade",
+            "etapa_3_teste_controlado",
+            "etapa_4_monitoramento",
+            "etapa_5_rollback_comprovado",
+            "etapa_6_pos_rollback_final",
+        ):
+            _exigir(chave_etapa in etapas_f3, f"Etapa obrigatoria ausente nas evidencias da Fase 3: {chave_etapa}")
+        _exigir(etapas_f3["etapa_2_reinicio_on_e_integridade"]["integridade_7_selados_pos"]["integro"] is True, "7 selados pos-reinicio devem estar integros.")
+        _exigir(etapas_f3["etapa_3_teste_controlado"]["aprovado"] is True, "Etapa 3 (teste controlado) deve estar aprovada.")
+        _exigir(etapas_f3["etapa_4_monitoramento"]["aprovado"] is True, "Etapa 4 (monitoramento) deve estar aprovada.")
+        _exigir(etapas_f3["etapa_5_rollback_comprovado"]["aprovado"] is True, "Etapa 5 (rollback 503) deve estar aprovada.")
+        _exigir(etapas_f3["etapa_6_pos_rollback_final"]["verificacao_ok"] is True, "Etapa 6 (pos-rollback OFF_STANDBY) deve estar aprovada.")
 
         caminho_relatorio_md = os.path.join(DIR_FASE3_ABS, "RELATORIO_PREPARACAO_FASE3.md")
         _exigir(os.path.isfile(caminho_relatorio_md), "RELATORIO_PREPARACAO_FASE3.md ausente.")
@@ -115,6 +148,7 @@ class TestLotofacilModo4PromocaoFase3Preparacao(unittest.TestCase):
             ("config_promocao_fase3.json", cfg_bruto),
             ("RUNBOOK_PROMOCAO_FASE3.md", md_bruto),
             ("RELATORIO_PREPARACAO_FASE3.md", rel_bruto),
+            ("DOSSIE_PROMOCAO_FASE3.md", dossie_f3_bruto),
         ):
             _exigir("\u2014" not in txt and "\u2013" not in txt, f"{nome} contem travessao proibido.")
             _exigir(CLAUSULA_MATEMATICA_OBRIGATORIA in txt, f"Clausula matematica ausente em {nome}.")
@@ -299,14 +333,20 @@ class TestLotofacilModo4PromocaoFase3Preparacao(unittest.TestCase):
 
     def test_05_preparacao_somente_leitura_e_7_hashes_selados(self) -> None:
         prep = verificar_preparacao_fase3_somente_leitura()
-        _exigir(prep["fase3_executada"] is False, "Preparacao nao pode indicar Fase 3 executada.")
-        _exigir(prep["pronto_para_deliberacao"] is True, f"Preparacao deve estar pronta: {prep}")
+        _exigir(prep["fase3_executada"] is True, "Verificador deve detectar a execucao autorizada da Fase 3.")
+        _exigir(prep["ata_fase3_veredito"] == "GO", "Veredito da Ata da Fase 3 deve ser GO.")
+        _exigir(prep["pronto_para_deliberacao"] is True, f"Verificacao pos-execucao deve estar integra: {prep}")
         _exigir(prep["regras_governanca_fase3_ok"] is True, "Regras de governanca da Fase 3 devem estar conformes.")
         _exigir(prep["quatro_parametros_governanca_esclarecidos"] is True, "Quatro parametros de governanca devem estar formalmente esclarecidos.")
         _exigir(prep["modo_pos_rollback_designado"] == "encerrar_em_off_standby", "Modo pos-rollback designado divergente.")
         _exigir(prep["ata_fase2_veredito"] == "GO", "Pre-requisito Fase 2 GO deve estar verificado.")
         _exigir(prep["integridade_cadeia_selada"] is True and prep["divergencias"] == [], "Cadeia selada deve estar integra.")
         _exigir(set(prep["hashes_7_selados"].keys()) == set(ARQUIVOS_PRODUCAO_PROMOCAO), "Devem constar exatamente os 7 arquivos selados.")
+
+        with tempfile.TemporaryDirectory() as tmp_sem_exec:
+            prep_pre = verificar_preparacao_fase3_somente_leitura(dir_fase3=tmp_sem_exec)
+            _exigir(prep_pre["fase3_executada"] is False, "Diretorio sem artefatos de execucao deve reportar fase3_executada=False.")
+            _exigir(prep_pre["pronto_para_deliberacao"] is True, "Estado pre-execucao em diretorio limpo deve estar pronto.")
 
     def test_06_protocolo_6_etapas_e_abortos_em_porta_efemera_isolada(self) -> None:
         porta_a = _reservar_porta_livre(18290)
