@@ -1,0 +1,5 @@
+# Preservar bytes exatos dos artefatos criptograficamente autenticados do catalogo (Ordem 6 - Passo 2)
+* -text
+*.bin binary
+*.sqlite binary
+

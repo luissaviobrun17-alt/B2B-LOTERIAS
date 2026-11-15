@@ -1,0 +1,10 @@
+{
+  "esquema_recibo": "1.0.0",
+  "sha256_assinatura_sig": "014af1af64491c83036c0c118d2c88c5e4147c23a791c44cd4a0bd6e9f135faf",
+  "sha256_indice_sqlite": "fbea7ec8de73d7d95fb2903f8e7f799a08a209b1760a28d4e2d3aeb07af765f3",
+  "sha256_manifesto": "6bc10ff4730796d4fee643d726e5697d423ff362163ea0a1852cfe8ab732fd9e",
+  "status": "PUBLICADO",
+  "timestamp_publicacao_utc": "2026-11-15T15:50:59Z",
+  "total_entradas": 1,
+  "versao_catalogo": "v1.0.0"
+}
