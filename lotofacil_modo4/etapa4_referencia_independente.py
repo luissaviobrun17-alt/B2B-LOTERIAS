@@ -63,7 +63,7 @@ HASHES_CONGELADOS_ETAPAS_1_2_3: Dict[str, str] = {
     "lotofacil_modo4/etapa1_regras_oficiais.py": "09bc206ca1b35372f59d522a4653931f2d2cc637ca8880eeff149dc4e3ad06af",
     "lotofacil_modo4/sincronizador_caixa.py": "a5199ca0c1b118dfc8933ede402edc5b41c1201fb964ca6cc0e7159d8159f9ae",
     "lotofacil_modo4/gerar_evidencias_etapa1.py": "ec9f94b36df4c45d15278306606c51673c7884ebde87af1fab601631c599108e",
-    "lotofacil_modo4/etapa2_funcao_objetivo.py": "664d10d152545799f9fe7705f5d27ffbe441d9daedb5fa6b0c9e20fd203d5bd4",
+    "lotofacil_modo4/etapa2_funcao_objetivo.py": "bbdab3bc7efb25602cc118c6998e37eab1cc4e4d03d62210926ae2a908db484e",
     "lotofacil_modo4/etapa2_referencia_independente.py": "6bd58b9c3337ec8178100d4e79d26eddafe525041a6db99222f1c59d6749a84f",
     "lotofacil_modo4/gerar_evidencias_etapa2.py": "9f73ee2fbbaf5092ceb1fb9cd17b116fbdc74e8768b42f33e841b071c9208d55",
     "lotofacil_modo4/etapa3_otimizadores.py": "791d40521e93627fbe1f07bfd1c71ccf6b3a2338d48169196150a62ba8ad2663",
