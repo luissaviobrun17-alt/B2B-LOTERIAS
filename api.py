@@ -1383,6 +1383,15 @@ def endpoint_motor_supersete_analise(request: AnaliseSuperSeteRequest):
 if registrar_lotofacil_modo4_na_api is not None:
     registrar_lotofacil_modo4_na_api(app)
 
+# =============================================================================
+# CATALOGO OFICIAL LOTOFACIL MODO 4 (J=1.000): CONSULTA E AUDITORIA
+# =============================================================================
+try:
+    from catalogo_lotofacil_10000.integracao_api import registrar_catalogo_lotofacil_na_api
+    registrar_catalogo_lotofacil_na_api(app)
+except Exception as _exc_cat_lf:
+    logger.warning("Catalogo Lotofacil J=1000 nao registrado na API: %s", _exc_cat_lf)
+
 
 app.add_event_handler("shutdown", encerrar_gerenciador_jobs_lotomania_modo4)
 

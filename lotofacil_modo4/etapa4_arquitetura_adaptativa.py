@@ -688,9 +688,7 @@ class MotorIncrementalOtimizadoEtapa4:
         self.pares_totais = self.j * (self.j - 1) // 2
         self.s_i_min, self.i_min_medio = _cota_minima_intersecao_exata(self.tamanhos, self.p, self.f)
         self.s_i_max = 0
-        self.inter_mat: List[List[int]] = [[0] * self.j for _ in range(self.j)]
-        self.np2_mat: List[List[int]] = [[0] * self.j for _ in range(self.j)]
-        self.penal_mat: List[List[float]] = [[0.0] * self.j for _ in range(self.j)]
+        self.soma_inter_jogos: List[int] = [0] * self.j
 
         self.soma_inter = 0
         self.soma_penal = 0.0
@@ -704,36 +702,91 @@ class MotorIncrementalOtimizadoEtapa4:
             c_high = c_low + (1 if i_min_rac > c_low else 0)
             frac_c = i_min_rac - c_low
 
-            for i in range(self.j):
-                mi = self.tamanhos[i]
-                for k in range(i + 1, self.j):
-                    mk = self.tamanhos[k]
-                    c_max_par = min(mi, mk)
-                    self.s_i_max += c_max_par
-                    self.soma_np2_max += _CACHE_NP2_EXATO[(mi, mk, c_max_par)]
+            # Calculo em forma fechada O(1) de s_i_max, soma_np2_max e soma_p2_ref_min_frac
+            # agrupado por tamanhos de aposta
+            contagem_m: Dict[int, int] = {}
+            for m in self.tamanhos:
+                contagem_m[m] = contagem_m.get(m, 0) + 1
+            m_unicos = sorted(contagem_m.keys())
 
-                    c_min_par = max(0, mi + mk - self.p, self.f)
-                    if mi == mk == TAMANHO_SORTEIO:
+            for idx_a, ma in enumerate(m_unicos):
+                qtd_a = contagem_m[ma]
+                if qtd_a >= 2:
+                    qtd_pares_mesmo = qtd_a * (qtd_a - 1) // 2
+                    c_max_par = ma
+                    self.s_i_max += qtd_pares_mesmo * c_max_par
+                    self.soma_np2_max += qtd_pares_mesmo * _CACHE_NP2_EXATO[(ma, ma, c_max_par)]
+
+                    c_min_par = max(0, 2 * ma - self.p, self.f)
+                    if ma == TAMANHO_SORTEIO:
                         cl = max(c_min_par, min(c_max_par, c_low))
                         ch = max(c_min_par, min(c_max_par, c_high))
-                        pl = Fraction(_CACHE_NP2_EXATO[(mi, mk, cl)], ESPACO_AMOSTRAL_SIMPLES)
-                        ph = Fraction(_CACHE_NP2_EXATO[(mi, mk, ch)], ESPACO_AMOSTRAL_SIMPLES)
-                        self.soma_p2_ref_min_frac += pl + frac_c * (ph - pl)
+                        pl = Fraction(_CACHE_NP2_EXATO[(ma, ma, cl)], ESPACO_AMOSTRAL_SIMPLES)
+                        ph = Fraction(_CACHE_NP2_EXATO[(ma, ma, ch)], ESPACO_AMOSTRAL_SIMPLES)
+                        termo_ref = pl + frac_c * (ph - pl)
                     else:
-                        self.soma_p2_ref_min_frac += Fraction(
-                            _CACHE_NP2_EXATO[(mi, mk, c_min_par)], ESPACO_AMOSTRAL_SIMPLES
-                        )
+                        termo_ref = Fraction(_CACHE_NP2_EXATO[(ma, ma, c_min_par)], ESPACO_AMOSTRAL_SIMPLES)
+                    self.soma_p2_ref_min_frac += Fraction(qtd_pares_mesmo, 1) * termo_ref
 
-                    inter = (self.masks[i] & self.masks[k]).bit_count()
-                    self.inter_mat[i][k] = self.inter_mat[k][i] = inter
-                    np2_ik = _CACHE_NP2_EXATO[(mi, mk, inter)]
-                    self.np2_mat[i][k] = self.np2_mat[k][i] = np2_ik
-                    pen = (max(0.0, inter - self.i_min_medio) / max(1.0, c_max_par - self.i_min_medio)) ** 2
-                    self.penal_mat[i][k] = self.penal_mat[k][i] = pen
+                for mb in m_unicos[idx_a + 1:]:
+                    qtd_b = contagem_m[mb]
+                    qtd_pares_dist = qtd_a * qtd_b
+                    c_max_par = min(ma, mb)
+                    self.s_i_max += qtd_pares_dist * c_max_par
+                    self.soma_np2_max += qtd_pares_dist * _CACHE_NP2_EXATO[(ma, mb, c_max_par)]
 
-                    self.soma_inter += inter
-                    self.soma_penal += pen
-                    self.soma_np2 += np2_ik
+                    c_min_par = max(0, ma + mb - self.p, self.f)
+                    termo_ref = Fraction(_CACHE_NP2_EXATO[(ma, mb, c_min_par)], ESPACO_AMOSTRAL_SIMPLES)
+                    self.soma_p2_ref_min_frac += Fraction(qtd_pares_dist, 1) * termo_ref
+
+            # Laco par a par com avaliacao estrita por bitmasks e tabelas pre-computadas
+            masks = self.masks
+            tams = self.tamanhos
+            soma_inter_jogos = self.soma_inter_jogos
+            soma_inter = 0
+            soma_penal = 0.0
+            soma_np2 = 0
+            i_med = self.i_min_medio
+
+            todos_simples = (len(m_unicos) == 1 and m_unicos[0] == TAMANHO_SORTEIO)
+            if todos_simples:
+                pen_tab = [
+                    (max(0.0, c - i_med) / max(1.0, 15.0 - i_med)) ** 2
+                    for c in range(16)
+                ]
+                np2_tab = [_CACHE_NP2_EXATO.get((15, 15, c), 0) for c in range(16)]
+                hist = [0] * 16
+                for i in range(self.j):
+                    mask_i = masks[i]
+                    for k in range(i + 1, self.j):
+                        hist[(mask_i & masks[k]).bit_count()] += 1
+
+                self.soma_inter = sum(c * count for c, count in enumerate(hist))
+                self.soma_np2 = sum(np2_tab[c] * count for c, count in enumerate(hist))
+                self.soma_penal = sum(pen_tab[c] * count for c, count in enumerate(hist))
+            else:
+                soma_inter = 0
+                soma_penal = 0.0
+                soma_np2 = 0
+                for i in range(self.j):
+                    mi = tams[i]
+                    mask_i = masks[i]
+                    for k in range(i + 1, self.j):
+                        mk = tams[k]
+                        inter = (mask_i & masks[k]).bit_count()
+                        c_max_par = min(mi, mk)
+                        soma_inter += inter
+                        soma_np2 += _CACHE_NP2_EXATO[(mi, mk, inter)]
+                        soma_penal += (max(0.0, inter - i_med) / max(1.0, c_max_par - i_med)) ** 2
+                self.soma_inter = soma_inter
+                self.soma_penal = soma_penal
+                self.soma_np2 = soma_np2
+
+            # Calculo exato da soma de intersecoes por jogo em O(J * m) via identidade de Fubini
+            self.soma_inter_jogos = [
+                sum(self.u_counts[d] for d in jg) - len(jg)
+                for jg in self.jogos
+            ]
 
         self.soma_p2_max_frac = Fraction(self.soma_np2_max, ESPACO_AMOSTRAL_SIMPLES)
         self.den_p2_frac = self.soma_p2_max_frac - self.soma_p2_ref_min_frac
@@ -906,9 +959,6 @@ class MotorIncrementalOtimizadoEtapa4:
         nova_soma_inter = self.soma_inter
         nova_soma_penal = self.soma_penal
         nova_soma_np2 = self.soma_np2
-        inter_row = self.inter_mat[idx]
-        np2_row = self.np2_mat[idx]
-        pen_row = self.penal_mat[idx]
         masks = self.masks
         tams = self.tamanhos
         i_med = self.i_min_medio
@@ -916,15 +966,19 @@ class MotorIncrementalOtimizadoEtapa4:
         for k in range(self.j):
             if k == idx:
                 continue
-            mk = tams[k]
-            inter_new = (new_mask & masks[k]).bit_count()
-            inter_old = inter_row[k]
+            mask_k = masks[k]
+            inter_new = (new_mask & mask_k).bit_count()
+            inter_old = (old_mask & mask_k).bit_count()
             if inter_new != inter_old:
+                mk = tams[k]
                 nova_soma_inter += inter_new - inter_old
-                nova_soma_np2 += _CACHE_NP2_EXATO[(mi, mk, inter_new)] - np2_row[k]
+                np2_old = _CACHE_NP2_EXATO[(mi, mk, inter_old)]
+                np2_new = _CACHE_NP2_EXATO[(mi, mk, inter_new)]
+                nova_soma_np2 += np2_new - np2_old
                 c_max_par = mi if mi <= mk else mk
+                pen_old = (max(0.0, inter_old - i_med) / max(1.0, c_max_par - i_med)) ** 2
                 pen_new = (max(0.0, inter_new - i_med) / max(1.0, c_max_par - i_med)) ** 2
-                nova_soma_penal += pen_new - pen_row[k]
+                nova_soma_penal += pen_new - pen_old
 
         ep_o, em_o, rl_o, rc_o = _DEZENA_INFO[d_out]
         ep_i, em_i, rl_i, rc_i = _DEZENA_INFO[d_in]
@@ -1019,20 +1073,23 @@ class MotorIncrementalOtimizadoEtapa4:
             if k == idx:
                 continue
             mk = self.tamanhos[k]
-            inter_new = (new_mask & self.masks[k]).bit_count()
-            inter_old = self.inter_mat[idx][k]
+            mask_k = self.masks[k]
+            inter_old = (old_mask & mask_k).bit_count()
+            inter_new = (new_mask & mask_k).bit_count()
             if inter_new != inter_old:
+                diff_inter = inter_new - inter_old
+                self.soma_inter += diff_inter
+                self.soma_inter_jogos[idx] += diff_inter
+                self.soma_inter_jogos[k] += diff_inter
+
+                np2_old = _CACHE_NP2_EXATO[(mi, mk, inter_old)]
                 np2_new = _CACHE_NP2_EXATO[(mi, mk, inter_new)]
+                self.soma_np2 += np2_new - np2_old
+
                 c_max_par = mi if mi <= mk else mk
+                pen_old = (max(0.0, inter_old - self.i_min_medio) / max(1.0, c_max_par - self.i_min_medio)) ** 2
                 pen_new = (max(0.0, inter_new - self.i_min_medio) / max(1.0, c_max_par - self.i_min_medio)) ** 2
-
-                self.soma_inter += inter_new - inter_old
-                self.soma_np2 += np2_new - self.np2_mat[idx][k]
-                self.soma_penal += pen_new - self.penal_mat[idx][k]
-
-                self.inter_mat[idx][k] = self.inter_mat[k][idx] = inter_new
-                self.np2_mat[idx][k] = self.np2_mat[k][idx] = np2_new
-                self.penal_mat[idx][k] = self.penal_mat[k][idx] = pen_new
+                self.soma_penal += pen_new - pen_old
 
         sig_old = self.perfis_sig[idx]
         lin_old = self.perfis_lin[idx]
@@ -1064,6 +1121,14 @@ class MotorIncrementalOtimizadoEtapa4:
         novo = [d for d in old_jg if d != d_out]
         novo.append(d_in)
         return self.aplicar_substituicao_jogo(idx, novo)
+
+    @property
+    def inter_mat(self) -> List[List[int]]:
+        """Propriedade para compatibilidade legada; gera matriz de intersecao sob demanda."""
+        return [
+            [(self.masks[i] & self.masks[k]).bit_count() for k in range(self.j)]
+            for i in range(self.j)
+        ]
 
 
 class AvaliadorConstrutivoIncrementalEtapa4:
@@ -1109,7 +1174,7 @@ class AvaliadorConstrutivoIncrementalEtapa4:
         self.soma_np2 = 0
         self.total_comb_pagas = 0
         self.total_marcas = 0
-        self.inter_pares: List[Tuple[int, int, int]] = []
+        self.hist_inter: Dict[Tuple[int, int], int] = {}
 
         # Pre-computar invariantes exatos de cada prefixo k=1..J
         self.prefix_meta: Dict[int, Dict[str, Any]] = {}
@@ -1117,52 +1182,96 @@ class AvaliadorConstrutivoIncrementalEtapa4:
         marcas_acc = 0
         np2_max_acc = 0
         si_max_acc = 0
+        todos_simples = all(m == TAMANHO_SORTEIO for m in self.tams_alvo)
+        np2_max_15_15 = _CACHE_NP2_EXATO[(TAMANHO_SORTEIO, TAMANHO_SORTEIO, TAMANHO_SORTEIO)]
+        p_livre = self.p - self.f
+        m_livre_un = TAMANHO_SORTEIO - self.f
+
         for k in range(1, self.j_max + 1):
-            tams_k = self.tams_alvo[:k]
-            mk_new = tams_k[-1]
+            mk_new = self.tams_alvo[k - 1]
             comb_pagas_acc += math.comb(mk_new, TAMANHO_SORTEIO)
             marcas_acc += mk_new
-            tetos = {
-                t: min(
-                    math.comb(self.p, t),
-                    (math.comb(self.f, t) if self.f >= t else 0)
-                    + sum(math.comb(m, t) - (math.comb(self.f, t) if self.f >= t else 0) for m in tams_k),
-                )
-                for t in (1, 2, 3, 4)
-            }
-            mu_k, ss_min_k, ss_max_k = _cota_minima_variancia_uso_exata(tams_k, self.p, self.f)
-            s_i_min_k, i_min_med_k = _cota_minima_intersecao_exata(tams_k, self.p, self.f)
 
-            soma_p2_ref_min_k = Fraction(0, 1)
-            if k > 1:
+            if todos_simples:
+                tetos = {
+                    1: min(self.p, k * TAMANHO_SORTEIO),
+                    2: min(math.comb(self.p, 2), (math.comb(self.f, 2) if self.f >= 2 else 0) + k * (math.comb(TAMANHO_SORTEIO, 2) - (math.comb(self.f, 2) if self.f >= 2 else 0))),
+                    3: min(math.comb(self.p, 3), (math.comb(self.f, 3) if self.f >= 3 else 0) + k * (math.comb(TAMANHO_SORTEIO, 3) - (math.comb(self.f, 3) if self.f >= 3 else 0))),
+                    4: min(math.comb(self.p, 4), (math.comb(self.f, 4) if self.f >= 4 else 0) + k * (math.comb(TAMANHO_SORTEIO, 4) - (math.comb(self.f, 4) if self.f >= 4 else 0))),
+                }
+                m_livre_tot = k * m_livre_un
+                mu_k = m_livre_tot / p_livre if p_livre > 0 else 0.0
+                _, r = divmod(m_livre_tot, p_livre) if p_livre > 0 else (0, 0)
+                ss_min_k = r * (1.0 - r / p_livre) if p_livre > 0 else 0.0
+                ss_max_k = max(ss_min_k, (k ** 2) * m_livre_un * (p_livre - m_livre_un) / p_livre) if p_livre > 0 else 0.0
+            else:
+                tams_k = self.tams_alvo[:k]
+                tetos = {
+                    t: min(
+                        math.comb(self.p, t),
+                        (math.comb(self.f, t) if self.f >= t else 0)
+                        + sum(math.comb(m, t) - (math.comb(self.f, t) if self.f >= t else 0) for m in tams_k),
+                    )
+                    for t in (1, 2, 3, 4)
+                }
+                mu_k, ss_min_k, ss_max_k = _cota_minima_variancia_uso_exata(tams_k, self.p, self.f)
+
+            if k <= 1:
+                s_i_min_k, i_min_med_k = 0, 0.0
+                soma_p2_ref_min_k = Fraction(0, 1)
+                den_p2_f = 0.0
+            else:
                 pares_k = k * (k - 1) // 2
-                i_rac = Fraction(s_i_min_k, pares_k)
-                c_low = i_rac.numerator // i_rac.denominator
-                c_high = c_low + (1 if i_rac > c_low else 0)
-                frac_c = i_rac - c_low
-                for i_old in range(k - 1):
-                    mi = tams_k[i_old]
-                    si_max_acc += min(mi, mk_new)
-                    np2_max_acc += _CACHE_NP2_EXATO[(mi, mk_new, min(mi, mk_new))]
-                for i in range(k):
-                    mi = tams_k[i]
-                    for j_i in range(i + 1, k):
-                        mj = tams_k[j_i]
-                        c_min_par = max(0, mi + mj - self.p, self.f)
-                        c_max_par = min(mi, mj)
-                        if mi == mj == TAMANHO_SORTEIO:
-                            cl = max(c_min_par, min(c_max_par, c_low))
-                            ch = max(c_min_par, min(c_max_par, c_high))
-                            pl = Fraction(_CACHE_NP2_EXATO[(mi, mj, cl)], ESPACO_AMOSTRAL_SIMPLES)
-                            ph = Fraction(_CACHE_NP2_EXATO[(mi, mj, ch)], ESPACO_AMOSTRAL_SIMPLES)
-                            soma_p2_ref_min_k += pl + frac_c * (ph - pl)
-                        else:
-                            soma_p2_ref_min_k += Fraction(
-                                _CACHE_NP2_EXATO[(mi, mj, c_min_par)], ESPACO_AMOSTRAL_SIMPLES
-                            )
+                if todos_simples:
+                    soma_fixa = pares_k * self.f
+                    q_i, r_i = divmod(m_livre_tot, p_livre) if p_livre > 0 else (0, 0)
+                    soma_livre = (p_livre - r_i) * (q_i * (q_i - 1) // 2) + r_i * ((q_i + 1) * q_i // 2) if p_livre > 0 else 0
+                    s_i_min_k = soma_fixa + soma_livre
+                    i_min_med_k = float(s_i_min_k / pares_k)
+                    si_max_acc += (k - 1) * TAMANHO_SORTEIO
+                    np2_max_acc += (k - 1) * np2_max_15_15
+
+                    i_rac = Fraction(s_i_min_k, pares_k)
+                    c_low = i_rac.numerator // i_rac.denominator
+                    c_high = c_low + (1 if i_rac > c_low else 0)
+                    frac_c = i_rac - c_low
+
+                    pl = Fraction(_CACHE_NP2_EXATO[(TAMANHO_SORTEIO, TAMANHO_SORTEIO, c_low)], ESPACO_AMOSTRAL_SIMPLES)
+                    ph = Fraction(_CACHE_NP2_EXATO[(TAMANHO_SORTEIO, TAMANHO_SORTEIO, c_high)], ESPACO_AMOSTRAL_SIMPLES)
+                    termo_par = pl + frac_c * (ph - pl)
+                    soma_p2_ref_min_k = pares_k * termo_par
+                    den_p2_f = float(Fraction(np2_max_acc, ESPACO_AMOSTRAL_SIMPLES) - soma_p2_ref_min_k)
+                else:
+                    tams_k = self.tams_alvo[:k]
+                    s_i_min_k, i_min_med_k = _cota_minima_intersecao_exata(tams_k, self.p, self.f)
+                    for i_old in range(k - 1):
+                        mi = tams_k[i_old]
+                        si_max_acc += min(mi, mk_new)
+                        np2_max_acc += _CACHE_NP2_EXATO[(mi, mk_new, min(mi, mk_new))]
+                    i_rac = Fraction(s_i_min_k, pares_k)
+                    c_low = i_rac.numerator // i_rac.denominator
+                    c_high = c_low + (1 if i_rac > c_low else 0)
+                    frac_c = i_rac - c_low
+                    soma_p2_ref_min_k = Fraction(0, 1)
+                    for i in range(k):
+                        mi = tams_k[i]
+                        for j_i in range(i + 1, k):
+                            mj = tams_k[j_i]
+                            c_min_par = max(0, mi + mj - self.p, self.f)
+                            c_max_par = min(mi, mj)
+                            if mi == mj == TAMANHO_SORTEIO:
+                                cl = max(c_min_par, min(c_max_par, c_low))
+                                ch = max(c_min_par, min(c_max_par, c_high))
+                                pl = Fraction(_CACHE_NP2_EXATO[(mi, mj, cl)], ESPACO_AMOSTRAL_SIMPLES)
+                                ph = Fraction(_CACHE_NP2_EXATO[(mi, mj, ch)], ESPACO_AMOSTRAL_SIMPLES)
+                                soma_p2_ref_min_k += pl + frac_c * (ph - pl)
+                            else:
+                                soma_p2_ref_min_k += Fraction(
+                                    _CACHE_NP2_EXATO[(mi, mj, c_min_par)], ESPACO_AMOSTRAL_SIMPLES
+                                )
+                    den_p2_f = float(Fraction(np2_max_acc, ESPACO_AMOSTRAL_SIMPLES) - soma_p2_ref_min_k)
 
             np2_max_f = np2_max_acc / ESPACO_AMOSTRAL_SIMPLES
-            den_p2_f = float(Fraction(np2_max_acc, ESPACO_AMOSTRAL_SIMPLES) - soma_p2_ref_min_k)
             self.prefix_meta[k] = {
                 "tetos": tetos,
                 "mu": mu_k,
@@ -1222,8 +1331,8 @@ class AvaliadorConstrutivoIncrementalEtapa4:
         i_med = pm["i_min_med"]
         soma_penal_new = 0.0
         if k_new > 1:
-            for inter_old, c_max_old in self.inter_pares:
-                soma_penal_new += (max(0.0, inter_old - i_med) / max(1.0, c_max_old - i_med)) ** 2
+            for (c_max_old, inter_old), qtd in self.hist_inter.items():
+                soma_penal_new += qtd * ((max(0.0, inter_old - i_med) / max(1.0, c_max_old - i_med)) ** 2)
             for idx_old, old_mask in enumerate(self.masks):
                 mk_old = self.tamanhos[idx_old]
                 inter = (cand_mask & old_mask).bit_count()
@@ -1308,7 +1417,8 @@ class AvaliadorConstrutivoIncrementalEtapa4:
             inter = (cand_mask & old_mask).bit_count()
             self.soma_inter += inter
             self.soma_np2 += _CACHE_NP2_EXATO[(m_new, mk_old, inter)]
-            self.inter_pares.append((inter, min(m_new, mk_old)))
+            c_max_par = min(m_new, mk_old)
+            self.hist_inter[(c_max_par, inter)] = self.hist_inter.get((c_max_par, inter), 0) + 1
 
         self.jogos.append(cand)
         self.masks.append(cand_mask)
@@ -1490,7 +1600,7 @@ def _refinamento_local_v4(
         melhor_f = f_atual + 1e-12
 
         if av.j > 1:
-            soma_inter_jogo = [sum(av.inter_mat[i]) for i in range(av.j)]
+            soma_inter_jogo = av.soma_inter_jogos
             ordem_jogos = sorted(range(av.j), key=lambda i: soma_inter_jogo[i], reverse=True)
         else:
             ordem_jogos = [0]
@@ -2443,7 +2553,7 @@ def _executar_algoritmo_interno_v4(
                 )
                 n_trocas = max(1, min(3, av_p.j))
                 if av_p.j > 1:
-                    somas = [sum(av_p.inter_mat[i]) for i in range(av_p.j)]
+                    somas = av_p.soma_inter_jogos
                     alvos = sorted(range(av_p.j), key=lambda i: somas[i], reverse=True)[:n_trocas]
                 else:
                     alvos = [0]

@@ -857,12 +857,48 @@
                                     ⚠️ LOTOFÁCIL MODO 4 desativado em produção por feature flag controlada (padrão OFF). Nenhum jogo foi gerado.
                                 </div>
 
+                                <!-- BLOCO OFICIAL: CATÁLOGO CANÔNICO HOMOLOGADO J=1.000 -->
+                                <div id="card-catalogo-lotofacil-1000" style="padding: 14px 16px; margin-bottom: 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(15,23,42,0.9)); border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 1.1rem;">📚</span>
+                                            <span style="font-size: 0.92rem; font-weight: 900; color: #a7f3d0; letter-spacing: 0.3px;">CATÁLOGO OFICIAL HOMOLOGADO (1.000 JOGOS CANÔNICOS)</span>
+                                            <span id="badge-catalogo-lotofacil-1000" style="font-size: 0.72rem; background: rgba(16,185,129,0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(16,185,129,0.4); font-weight: 700;">
+                                                🟢 Pronto para Carregamento
+                                            </span>
+                                        </div>
+                                        <div style="font-size: 0.72rem; color: #94a3b8;">
+                                            Versão: <strong>2.0-canonica-j1000</strong> | Estado: <span style="color:#f59e0b; font-weight:700;">OFF_STANDBY</span>
+                                        </div>
+                                    </div>
+                                    <p style="font-size: 0.78rem; color: #cbd5e1; margin: 0 0 10px 0; line-height: 1.45;">
+                                        Carteira de 1.000 jogos homologada com 100% de unicidade e cobertura integral de quadras (12.650/12.650). Escore F(C) = 0,975914 com tripla validação matemática de divergência nula e manifestos SHA-256 preservados.
+                                    </p>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                                        <button id="btn-carregar-catalogo-lotofacil-1000" type="button" style="background: linear-gradient(135deg, #059669, #047857); border: 1px solid #34d399; color: #ffffff; padding: 9px 18px; border-radius: 8px; font-weight: 900; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 12px rgba(16,185,129,0.35);">
+                                            📥 Carregar 1.000 Jogos do Catálogo
+                                        </button>
+                                        <button id="btn-auditar-catalogo-lotofacil-1000" type="button" style="background: rgba(15,23,42,0.8); border: 1px solid rgba(56,189,248,0.4); color: #7dd3fc; padding: 9px 14px; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                            🔍 Auditar Hashes SHA-256
+                                        </button>
+                                        <span id="info-status-catalogo-lotofacil-1000" style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;"></span>
+                                    </div>
+                                    <div id="painel-auditoria-catalogo-1000" style="display: none; margin-top: 10px; padding: 10px 12px; border-radius: 6px; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.25); font-size: 0.74rem; color: #e2e8f0; font-family: monospace; line-height: 1.5;"></div>
+                                </div>
+
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 10px; margin-bottom: 10px;">
                                     <div>
                                         <label for="input-qtd-jogos-lotofacil-modo4" style="font-size: 0.75rem; color: #a7f3d0; font-weight: 700; display: block; margin-bottom: 4px;">
                                             Quantidade de Jogos (1 a 5.000):
                                         </label>
-                                        <input type="number" id="input-qtd-jogos-lotofacil-modo4" min="1" max="5000" step="1" value="8" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(16,185,129,0.45); color: #fff; padding: 7px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 800;">
+                                        <input type="number" id="input-qtd-jogos-lotofacil-modo4" min="1" max="5000" step="1" value="1000" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(16,185,129,0.45); color: #fff; padding: 7px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 800;">
+                                        <div style="display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap;">
+                                            <button type="button" class="btn-preset-qtd-lotofacil-modo4" data-qtd="8" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: #a7f3d0; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">8</button>
+                                            <button type="button" class="btn-preset-qtd-lotofacil-modo4" data-qtd="50" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: #a7f3d0; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">50</button>
+                                            <button type="button" class="btn-preset-qtd-lotofacil-modo4" data-qtd="100" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: #a7f3d0; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">100</button>
+                                            <button type="button" class="btn-preset-qtd-lotofacil-modo4" data-qtd="500" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: #a7f3d0; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">500</button>
+                                            <button type="button" class="btn-preset-qtd-lotofacil-modo4" data-qtd="1000" style="background: rgba(16,185,129,0.25); border: 1px solid #10b981; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; cursor: pointer;">1.000 (Catálogo)</button>
+                                        </div>
                                     </div>
                                     <div>
                                         <label for="select-tamanho-lotofacil-modo4" style="font-size: 0.75rem; color: #a7f3d0; font-weight: 700; display: block; margin-bottom: 4px;">
@@ -3241,7 +3277,7 @@
             <script src="js/engines/motor_lotomania_engine.js?v=20261104_FIX_K_REFERENCE"></script>
             <script src="js/engines/motor_lotomania_modo4_engine.js?v=20261113_MODO4_JOBS_V13"></script>
             <script src="js/engines/motor_lotofacil_engine.js?v=20261105_CONJUNTOS_FULL"></script>
-            <script src="js/engines/motor_lotofacil_modo4_engine.js?v=20261113_MODO4_PROMOCAO_510"></script>
+            <script src="js/engines/motor_lotofacil_modo4_engine.js?v=20261116_MODO4_CATALOGO_1000"></script>
             <script src="js/engines/motor_diadesorte_engine.js?v=20260903"></script>
             <script src="js/engines/motor_timemania_engine.js?v=1781904590"></script>
             <script src="js/engines/motor_milionaria_engine.js?v=20261014_MILIONARIA_FIX"></script>
@@ -3437,7 +3473,7 @@
                 console.log('[B2B] repairGameLotomania injetado com sucesso no escopo global das classes.');
             })();
             </script>
-            <script src="js/ui.js?v=20261113_MODO4_JOBS_V13"></script>
+            <script src="js/ui.js?v=20261116_MODO4_CATALOGO_1000"></script>
             <script src="js/main.js?v=20261014_MILIONARIA_FIX"></script>
 
     <!-- v11: Coverage handler inline REMOVIDO — handler canônico está em ui.js -->

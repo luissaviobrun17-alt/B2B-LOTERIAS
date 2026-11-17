@@ -788,6 +788,8 @@ def avaliar_cobertura_subconjuntos_exata(
         cobertos_t: set[Tuple[int, ...]] = set()
         for jg in jogos_validos:
             cobertos_t.update(itertools.combinations(jg, t))
+            if len(cobertos_t) == total_pool_t:
+                break
 
         # Cota superior exata de cobertura alcançavel por estes tamanhos de jogos
         # Cada jogo cobre no maximo C(m_i, t) - C(f, t) novos subconjuntos alem dos fixos.
@@ -837,37 +839,64 @@ def avaliar_probabilidade_conjunta_carteira(
     esperado_bilhetes_prem = sum(p_ind_lista, Fraction(0, 1))
     esperado_simples_prem = Fraction(total_comb_simples, 1) * p1_simples
 
-    # Matriz exata p_2(i, k) = P(A_i inter A_k)
-    matriz_p2: List[List[Fraction]] = [[Fraction(0, 1)] * j for _ in range(j)]
-    soma_p2_pares = Fraction(0, 1)
-    soma_cov_pares = Fraction(0, 1)
     pares_totais = j * (j - 1) // 2
+    prob_conjunta_exata_fechada: Optional[Fraction] = None
 
-    for i in range(j):
-        matriz_p2[i][i] = p_ind_lista[i]
-        mi = tamanhos[i]
-        mask_i = perfis_jogos[i]["mascara"]
-        pi = p_ind_lista[i]
-        for k in range(i + 1, j):
-            mk = tamanhos[k]
-            pk = p_ind_lista[k]
-            inter = (mask_i & perfis_jogos[k]["mascara"]).bit_count()
+    if j <= 300:
+        # Matriz exata p_2(i, k) = P(A_i inter A_k) para J <= 300
+        matriz_p2: List[List[Fraction]] = [[Fraction(0, 1)] * j for _ in range(j)]
+        soma_p2_pares = Fraction(0, 1)
+        soma_cov_pares = Fraction(0, 1)
+
+        for i in range(j):
+            matriz_p2[i][i] = p_ind_lista[i]
+            mi = tamanhos[i]
+            mask_i = perfis_jogos[i]["mascara"]
+            pi = p_ind_lista[i]
+            for k in range(i + 1, j):
+                mk = tamanhos[k]
+                pk = p_ind_lista[k]
+                inter = (mask_i & perfis_jogos[k]["mascara"]).bit_count()
+                p2 = probabilidade_conjunta_par_exata(mi, mk, inter, 11)
+                matriz_p2[i][k] = p2
+                matriz_p2[k][i] = p2
+                soma_p2_pares += p2
+                soma_cov_pares += p2 - (pi * pk)
+
+        cota_sup_hw = _limite_hunter_worsley(p_ind_lista, matriz_p2)
+        if j == 1:
+            prob_conjunta_exata_fechada = p_ind_lista[0]
+        elif j == 2:
+            prob_conjunta_exata_fechada = (p_ind_lista[0] + p_ind_lista[1]) - matriz_p2[0][1]
+    else:
+        # Quando J > 300, a cota superior de Hunter-Worsley satura analiticamente em 1.0
+        # (provado para J >= 25 em carteiras de bilhetes distintos). A matriz densa J x J
+        # de Fraction e dispensada para evitar alocacao quadratica de memoria.
+        cota_sup_hw = Fraction(1, 1)
+        hist_triplas: Dict[Tuple[int, int, int], int] = {}
+        masks = [p["mascara"] for p in perfis_jogos]
+        for i in range(j):
+            mi = tamanhos[i]
+            mask_i = masks[i]
+            for k in range(i + 1, j):
+                mk = tamanhos[k]
+                inter = (mask_i & masks[k]).bit_count()
+                chave = (mi, mk, inter) if mi <= mk else (mk, mi, inter)
+                hist_triplas[chave] = hist_triplas.get(chave, 0) + 1
+
+        soma_p2_pares = Fraction(0, 1)
+        for (mi, mk, inter), count in hist_triplas.items():
             p2 = probabilidade_conjunta_par_exata(mi, mk, inter, 11)
-            matriz_p2[i][k] = p2
-            matriz_p2[k][i] = p2
-            soma_p2_pares += p2
-            soma_cov_pares += p2 - (pi * pk)
+            soma_p2_pares += Fraction(count, 1) * p2
+
+        soma_pi = sum(p_ind_lista, Fraction(0, 1))
+        soma_pi_sq = sum((p * p for p in p_ind_lista), Fraction(0, 1))
+        soma_pi_pk = (soma_pi * soma_pi - soma_pi_sq) / 2
+        soma_cov_pares = soma_p2_pares - soma_pi_pk
 
     variancia_independente = sum(p * (Fraction(1, 1) - p) for p in p_ind_lista)
     variancia_dependente_exata = variancia_independente + (2 * soma_cov_pares)
-
     cota_inf_ds = _limite_dawson_sankoff(p_ind_lista, soma_p2_pares)
-    cota_sup_hw = _limite_hunter_worsley(p_ind_lista, matriz_p2)
-    prob_conjunta_exata_fechada: Optional[Fraction] = None
-    if j == 1:
-        prob_conjunta_exata_fechada = p_ind_lista[0]
-    elif j == 2:
-        prob_conjunta_exata_fechada = (p_ind_lista[0] + p_ind_lista[1]) - matriz_p2[0][1]
 
     # Referencia normalizada S_prob para carteira de jogos simples ou mistos:
     # Compara soma_p2_pares com pior caso (jogos clones de mesmo tamanho) vs cota teorica minima.
@@ -884,23 +913,40 @@ def avaliar_probabilidade_conjunta_carteira(
         c_high = c_low + (1 if i_min_rac > c_low else 0)
         frac_c = i_min_rac - c_low
 
-        for i in range(j):
-            mi = tamanhos[i]
-            for k in range(i + 1, j):
-                mk = tamanhos[k]
-                c_max_par = min(mi, mk)
-                soma_p2_max += probabilidade_conjunta_par_exata(mi, mk, c_max_par, 11)
+        contagem_m: Dict[int, int] = {}
+        for m in tamanhos:
+            contagem_m[m] = contagem_m.get(m, 0) + 1
+        m_unicos = sorted(contagem_m.keys())
 
-                c_min_par = max(0, mi + mk - p, f)
-                if mi == mk == TAMANHO_SORTEIO:
-                    # Interpolacao convexa no limite medio de Cauchy-Schwarz
+        for idx_a, ma in enumerate(m_unicos):
+            qtd_a = contagem_m[ma]
+            if qtd_a >= 2:
+                qtd_pares_mesmo = qtd_a * (qtd_a - 1) // 2
+                c_max_par = ma
+                p2_max_termo = probabilidade_conjunta_par_exata(ma, ma, c_max_par, 11)
+                soma_p2_max += Fraction(qtd_pares_mesmo, 1) * p2_max_termo
+
+                c_min_par = max(0, 2 * ma - p, f)
+                if ma == TAMANHO_SORTEIO:
                     cl = max(c_min_par, min(c_max_par, c_low))
                     ch = max(c_min_par, min(c_max_par, c_high))
-                    p_l = probabilidade_conjunta_par_exata(mi, mk, cl, 11)
-                    p_h = probabilidade_conjunta_par_exata(mi, mk, ch, 11)
-                    soma_p2_ref_min += p_l + frac_c * (p_h - p_l)
+                    p_l = probabilidade_conjunta_par_exata(ma, ma, cl, 11)
+                    p_h = probabilidade_conjunta_par_exata(ma, ma, ch, 11)
+                    termo_ref = p_l + frac_c * (p_h - p_l)
                 else:
-                    soma_p2_ref_min += probabilidade_conjunta_par_exata(mi, mk, c_min_par, 11)
+                    termo_ref = probabilidade_conjunta_par_exata(ma, ma, c_min_par, 11)
+                soma_p2_ref_min += Fraction(qtd_pares_mesmo, 1) * termo_ref
+
+            for mb in m_unicos[idx_a + 1:]:
+                qtd_b = contagem_m[mb]
+                qtd_pares_dist = qtd_a * qtd_b
+                c_max_par = min(ma, mb)
+                p2_max_termo = probabilidade_conjunta_par_exata(ma, mb, c_max_par, 11)
+                soma_p2_max += Fraction(qtd_pares_dist, 1) * p2_max_termo
+
+                c_min_par = max(0, ma + mb - p, f)
+                termo_ref = probabilidade_conjunta_par_exata(ma, mb, c_min_par, 11)
+                soma_p2_ref_min += Fraction(qtd_pares_dist, 1) * termo_ref
 
         den = soma_p2_max - soma_p2_ref_min
         if den <= 0:
@@ -1079,39 +1125,70 @@ def avaliar_diversificacao_sobreposicao(
             "score_diversificacao": 1.0,
         }
 
-    intersecoes: List[int] = []
-    hammings: List[int] = []
-    jaccards: List[float] = []
-    pares_duplicados = 0
-    s_i_max = 0
-    penalidades_pico: List[float] = []
+    pares_totais = j * (j - 1) // 2
+    todos_simples = (len(set(tamanhos)) == 1 and tamanhos[0] == TAMANHO_SORTEIO)
 
-    for i in range(j):
-        mi = tamanhos[i]
-        mask_i = perfis_jogos[i]["mascara"]
-        for k in range(i + 1, j):
-            mk = tamanhos[k]
-            mask_k = perfis_jogos[k]["mascara"]
-            inter = (mask_i & mask_k).bit_count()
-            uniao = (mask_i | mask_k).bit_count()
-            intersecoes.append(inter)
-            hammings.append(mi + mk - 2 * inter)
-            jaccards.append(1.0 - (inter / uniao))
-            c_max = min(mi, mk)
-            s_i_max += c_max
-            if mi == mk and inter == mi:
-                pares_duplicados += 1
-            denom_pico = max(1.0, c_max - i_min_medio)
-            excesso = max(0.0, inter - i_min_medio) / denom_pico
-            penalidades_pico.append(excesso ** 2)
+    if todos_simples:
+        masks = [p["mascara"] for p in perfis_jogos]
+        hist = [0] * 16
+        for i in range(j):
+            mi_mask = masks[i]
+            for k in range(i + 1, j):
+                c = (mi_mask & masks[k]).bit_count()
+                hist[c] += 1
 
-    soma_inter = sum(intersecoes)
+        soma_inter = sum(c * count for c, count in enumerate(hist))
+        min_inter = min(c for c, count in enumerate(hist) if count > 0)
+        max_inter = max(c for c, count in enumerate(hist) if count > 0)
+        s_i_max = 15 * pares_totais
+        soma_hamming = 30 * pares_totais - 2 * soma_inter
+        soma_jaccard = sum(count * (1.0 - (c / (30 - c))) for c, count in enumerate(hist) if count > 0)
+        pares_duplicados = hist[15]
+        denom_pico = max(1.0, 15.0 - i_min_medio)
+        soma_penalidades_pico = sum(
+            count * ((max(0.0, c - i_min_medio) / denom_pico) ** 2)
+            for c, count in enumerate(hist)
+            if count > 0
+        )
+    else:
+        soma_inter = 0
+        min_inter = UNIVERSO_TOTAL
+        max_inter = 0
+        soma_hamming = 0
+        soma_jaccard = 0.0
+        pares_duplicados = 0
+        s_i_max = 0
+        soma_penalidades_pico = 0.0
+
+        for i in range(j):
+            mi = tamanhos[i]
+            mask_i = perfis_jogos[i]["mascara"]
+            for k in range(i + 1, j):
+                mk = tamanhos[k]
+                mask_k = perfis_jogos[k]["mascara"]
+                inter = (mask_i & mask_k).bit_count()
+                uniao = mi + mk - inter
+                soma_inter += inter
+                if inter < min_inter:
+                    min_inter = inter
+                if inter > max_inter:
+                    max_inter = inter
+                soma_hamming += mi + mk - 2 * inter
+                soma_jaccard += 1.0 - (inter / uniao)
+                c_max = min(mi, mk)
+                s_i_max += c_max
+                if mi == mk and inter == mi:
+                    pares_duplicados += 1
+                denom_pico = max(1.0, c_max - i_min_medio)
+                excesso = max(0.0, inter - i_min_medio) / denom_pico
+                soma_penalidades_pico += excesso ** 2
+
     if s_i_max <= s_i_min:
         excesso_medio = 0.0
     else:
         excesso_medio = max(0.0, (soma_inter - s_i_min) / (s_i_max - s_i_min))
 
-    e_pico = sum(penalidades_pico) / len(penalidades_pico)
+    e_pico = soma_penalidades_pico / pares_totais
     s_div = min(1.0, max(0.0, 1.0 - (0.50 * excesso_medio + 0.50 * e_pico)))
 
     return {
@@ -1120,12 +1197,12 @@ def avaliar_diversificacao_sobreposicao(
         "soma_intersecoes": soma_inter,
         "cota_minima_intersecoes_soma": s_i_min,
         "cota_maxima_intersecoes_soma": s_i_max,
-        "intersecao_media": soma_inter / len(intersecoes),
+        "intersecao_media": soma_inter / pares_totais,
         "cota_minima_intersecao_media": i_min_medio,
-        "intersecao_minima": min(intersecoes),
-        "intersecao_maxima": max(intersecoes),
-        "hamming_medio": sum(hammings) / len(hammings),
-        "jaccard_medio": sum(jaccards) / len(jaccards),
+        "intersecao_minima": min_inter if pares_totais > 0 else 0,
+        "intersecao_maxima": max_inter if pares_totais > 0 else 0,
+        "hamming_medio": soma_hamming / pares_totais,
+        "jaccard_medio": soma_jaccard / pares_totais,
         "pares_duplicados": pares_duplicados,
         "score_diversificacao": s_div,
     }

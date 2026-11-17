@@ -1,0 +1,853 @@
+{
+  "estudo": "SIMULACAO_COMPARATIVA_ESTATISTICA_MODO4_VS_ALEATORIO",
+  "parametros_gerais": {
+    "num_sorteios_simulados": 100000,
+    "semente_sorteios": 999999,
+    "tamanho_carteiras": 1000,
+    "universo_dezenas": 25,
+    "dezenas_sorteadas": 15,
+    "probabilidade_exata_15_pontos_por_jogo": "1 / 3.268.760",
+    "probabilidade_analitica_ao_menos_1_acerto_15_em_1000_jogos": 0.00030592640634368996,
+    "esperanca_15_pontos_em_100k_sorteios": 30.592640634368998
+  },
+  "carteira_modo4": {
+    "identificador": "LOTOFACIL_MODO4_J1000_CANONICA",
+    "sha256_jogos": "891c598a23399d0efad1d8f84e44e89559603f1f15a5481206e9be417b86d153",
+    "b_cand": 32,
+    "semente": 2027,
+    "totais_por_faixa": {
+      "acertos_11": 8769274,
+      "acertos_12": 1671855,
+      "acertos_13": 144917,
+      "acertos_14": 4586,
+      "acertos_15": 21,
+      "total_premios_11_a_15": 10590653
+    },
+    "concursos_com_premio": {
+      "geral_ao_menos_1_premio": 100000,
+      "ao_menos_1_acerto_13": 76271,
+      "ao_menos_1_acerto_14": 4462,
+      "ao_menos_1_acerto_15": 21,
+      "taxa_cobertura_geral_pct": 100.0,
+      "taxa_cobertura_14_pct": 4.462
+    },
+    "estatisticas_premios_concurso": {
+      "media": 105.90653,
+      "variancia": 82.775381,
+      "desvio_padrao": 9.098098
+    }
+  },
+  "painel_referencia_aleatoria": {
+    "quantidade_carteiras": 10,
+    "sementes_utilizadas": [
+      1001,
+      1002,
+      1003,
+      1004,
+      1005,
+      1006,
+      1007,
+      1008,
+      1009,
+      1010
+    ],
+    "totais_acumulados_faixa": {
+      "acertos_11": {
+        "media": 8768688.5,
+        "min": 8764069,
+        "max": 8773243
+      },
+      "acertos_12": {
+        "media": 1670381.3,
+        "min": 1668559,
+        "max": 1672586
+      },
+      "acertos_13": {
+        "media": 144608.2,
+        "min": 144130,
+        "max": 145198
+      },
+      "acertos_14": {
+        "media": 4556.2,
+        "min": 4435,
+        "max": 4628
+      },
+      "acertos_15": {
+        "media": 29.9,
+        "min": 18,
+        "max": 38
+      },
+      "total_premios": {
+        "media": 10588264.1,
+        "min": 10584287,
+        "max": 10592837
+      }
+    },
+    "concursos_com_premio": {
+      "geral_ao_menos_1_premio": {
+        "media": 100000.0,
+        "min": 100000,
+        "max": 100000
+      },
+      "ao_menos_1_acerto_14": {
+        "media": 4451.5,
+        "min": 4326,
+        "max": 4542
+      },
+      "ao_menos_1_acerto_13": {
+        "media": 76468.7,
+        "min": 75882,
+        "max": 76813
+      }
+    },
+    "variancia_premios_concurso": {
+      "media": 88.18674,
+      "min": 74.840068,
+      "max": 98.412352
+    },
+    "resultados_individuais": [
+      {
+        "semente": 1001,
+        "totais": {
+          "acertos_11": 8771772,
+          "acertos_12": 1670153,
+          "acertos_13": 144526,
+          "acertos_14": 4596,
+          "acertos_15": 34,
+          "total_premios_11_a_15": 10591081
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 76772,
+          "ao_menos_1_acerto_14": 4499,
+          "ao_menos_1_acerto_15": 34,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.4990000000000006
+        },
+        "variancia": 86.790543
+      },
+      {
+        "semente": 1002,
+        "totais": {
+          "acertos_11": 8767967,
+          "acertos_12": 1668559,
+          "acertos_13": 145198,
+          "acertos_14": 4594,
+          "acertos_15": 21,
+          "total_premios_11_a_15": 10586339
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 76762,
+          "ao_menos_1_acerto_14": 4488,
+          "ao_menos_1_acerto_15": 21,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.488
+        },
+        "variancia": 98.412352
+      },
+      {
+        "semente": 1003,
+        "totais": {
+          "acertos_11": 8768331,
+          "acertos_12": 1669474,
+          "acertos_13": 144258,
+          "acertos_14": 4577,
+          "acertos_15": 34,
+          "total_premios_11_a_15": 10586674
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 76662,
+          "ao_menos_1_acerto_14": 4462,
+          "ao_menos_1_acerto_15": 34,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.462
+        },
+        "variancia": 77.570597
+      },
+      {
+        "semente": 1004,
+        "totais": {
+          "acertos_11": 8766902,
+          "acertos_12": 1672077,
+          "acertos_13": 144256,
+          "acertos_14": 4518,
+          "acertos_15": 38,
+          "total_premios_11_a_15": 10587791
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 76440,
+          "ao_menos_1_acerto_14": 4409,
+          "ao_menos_1_acerto_15": 38,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.409
+        },
+        "variancia": 81.192476
+      },
+      {
+        "semente": 1005,
+        "totais": {
+          "acertos_11": 8773243,
+          "acertos_12": 1669803,
+          "acertos_13": 145131,
+          "acertos_14": 4628,
+          "acertos_15": 32,
+          "total_premios_11_a_15": 10592837
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 76670,
+          "ao_menos_1_acerto_14": 4542,
+          "ao_menos_1_acerto_15": 32,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.542
+        },
+        "variancia": 85.859598
+      },
+      {
+        "semente": 1006,
+        "totais": {
+          "acertos_11": 8767675,
+          "acertos_12": 1672586,
+          "acertos_13": 144130,
+          "acertos_14": 4510,
+          "acertos_15": 32,
+          "total_premios_11_a_15": 10588933
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 75882,
+          "ao_menos_1_acerto_14": 4420,
+          "ao_menos_1_acerto_15": 32,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.42
+        },
+        "variancia": 96.849111
+      },
+      {
+        "semente": 1007,
+        "totais": {
+          "acertos_11": 8766858,
+          "acertos_12": 1670878,
+          "acertos_13": 145075,
+          "acertos_14": 4435,
+          "acertos_15": 18,
+          "total_premios_11_a_15": 10587264
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 76813,
+          "ao_menos_1_acerto_14": 4326,
+          "ao_menos_1_acerto_15": 18,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.326
+        },
+        "variancia": 74.840068
+      },
+      {
+        "semente": 1008,
+        "totais": {
+          "acertos_11": 8770408,
+          "acertos_12": 1668799,
+          "acertos_13": 144566,
+          "acertos_14": 4601,
+          "acertos_15": 26,
+          "total_premios_11_a_15": 10588400
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 76385,
+          "ao_menos_1_acerto_14": 4478,
+          "ao_menos_1_acerto_15": 26,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.478
+        },
+        "variancia": 96.353428
+      },
+      {
+        "semente": 1009,
+        "totais": {
+          "acertos_11": 8764069,
+          "acertos_12": 1671085,
+          "acertos_13": 144547,
+          "acertos_14": 4548,
+          "acertos_15": 38,
+          "total_premios_11_a_15": 10584287
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 76038,
+          "ao_menos_1_acerto_14": 4451,
+          "ao_menos_1_acerto_15": 38,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.4510000000000005
+        },
+        "variancia": 92.608926
+      },
+      {
+        "semente": 1010,
+        "totais": {
+          "acertos_11": 8769660,
+          "acertos_12": 1670399,
+          "acertos_13": 144395,
+          "acertos_14": 4555,
+          "acertos_15": 26,
+          "total_premios_11_a_15": 10589035
+        },
+        "concursos": {
+          "geral_ao_menos_1_premio": 100000,
+          "ao_menos_1_acerto_13": 76263,
+          "ao_menos_1_acerto_14": 4440,
+          "ao_menos_1_acerto_15": 26,
+          "taxa_cobertura_geral_pct": 100.0,
+          "taxa_cobertura_14_pct": 4.44
+        },
+        "variancia": 91.390301
+      }
+    ]
+  },
+  "comparacoes_pareadas_detalhadas": [
+    {
+      "semente_referencia": 1001,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.005,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4275,
+        "n01_ref_ganha": 4312,
+        "chi2": 0.1509,
+        "p_valor": 0.6976521788270669,
+        "holm": {
+          "p_valor_original": 0.6976521788270669,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.008333333333333333,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 17683,
+        "n01_ref_ganha": 18184,
+        "chi2": 6.9702,
+        "p_valor": 0.008287844406614888,
+        "holm": {
+          "p_valor_original": 0.008287844406614888,
+          "p_valor_ajustado": 0.07459059965953399,
+          "limiar_holm": 0.005555555555555556,
+          "significativo_alfa_005": false
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": -0.052,
+        "p_valor": 0.958566673087125,
+        "holm": {
+          "p_valor_original": 0.958566673087125,
+          "p_valor_ajustado": 0.958566673087125,
+          "limiar_holm": 0.05,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": -7.330578,
+        "ic_95_superior": -0.69623,
+        "media_diferenca_variancia": -4.002373
+      }
+    },
+    {
+      "semente_referencia": 1002,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.005555555555555556,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4244,
+        "n01_ref_ganha": 4270,
+        "chi2": 0.0734,
+        "p_valor": 0.7864371512233979,
+        "holm": {
+          "p_valor_original": 0.7864371512233979,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.01,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 17636,
+        "n01_ref_ganha": 18127,
+        "chi2": 6.7136,
+        "p_valor": 0.009567808956763388,
+        "holm": {
+          "p_valor_original": 0.009567808956763388,
+          "p_valor_ajustado": 0.0765424716541071,
+          "limiar_holm": 0.00625,
+          "significativo_alfa_005": false
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": -0.9017,
+        "p_valor": 0.36722838811766456,
+        "holm": {
+          "p_valor_original": 0.36722838811766456,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.0071428571428571435,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": -19.154675,
+        "ic_95_superior": -12.191701,
+        "media_diferenca_variancia": -15.630982
+      }
+    },
+    {
+      "semente_referencia": 1003,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.00625,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4260,
+        "n01_ref_ganha": 4260,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.05,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 17869,
+        "n01_ref_ganha": 18260,
+        "chi2": 4.2099,
+        "p_valor": 0.04018836333413041,
+        "holm": {
+          "p_valor_original": 0.04018836333413041,
+          "p_valor_ajustado": 0.24113018000478245,
+          "limiar_holm": 0.008333333333333333,
+          "significativo_alfa_005": false
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": -0.5763,
+        "p_valor": 0.5644447184846109,
+        "holm": {
+          "p_valor_original": 0.5644447184846109,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.0125,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": 2.078251,
+        "ic_95_superior": 8.363053,
+        "media_diferenca_variancia": 5.216595
+      }
+    },
+    {
+      "semente_referencia": 1004,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.0071428571428571435,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4264,
+        "n01_ref_ganha": 4211,
+        "chi2": 0.3191,
+        "p_valor": 0.5721754789471549,
+        "holm": {
+          "p_valor_original": 0.5721754789471549,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.00625,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 18036,
+        "n01_ref_ganha": 18205,
+        "chi2": 0.7788,
+        "p_valor": 0.37751254138793444,
+        "holm": {
+          "p_valor_original": 0.37751254138793444,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.016666666666666666,
+          "significativo_alfa_005": false
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": 0.8987,
+        "p_valor": 0.3688309168263024,
+        "holm": {
+          "p_valor_original": 0.3688309168263024,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.008333333333333333,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": -1.608816,
+        "ic_95_superior": 4.824283,
+        "media_diferenca_variancia": 1.576874
+      }
+    },
+    {
+      "semente_referencia": 1005,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.008333333333333333,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4267,
+        "n01_ref_ganha": 4347,
+        "chi2": 0.7245,
+        "p_valor": 0.3946658363678027,
+        "holm": {
+          "p_valor_original": 0.3946658363678027,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.005555555555555556,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 17796,
+        "n01_ref_ganha": 18195,
+        "chi2": 4.4012,
+        "p_valor": 0.035913411375197574,
+        "holm": {
+          "p_valor_original": 0.035913411375197574,
+          "p_valor_ajustado": 0.25139387962638304,
+          "limiar_holm": 0.0071428571428571435,
+          "significativo_alfa_005": false
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": 0.3952,
+        "p_valor": 0.6926692545385684,
+        "holm": {
+          "p_valor_original": 0.6926692545385684,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.025,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": -6.323371,
+        "ic_95_superior": 0.104664,
+        "media_diferenca_variancia": -3.129649
+      }
+    },
+    {
+      "semente_referencia": 1006,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.01,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4259,
+        "n01_ref_ganha": 4217,
+        "chi2": 0.1983,
+        "p_valor": 0.6560765266738631,
+        "holm": {
+          "p_valor_original": 0.6560765266738631,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.0071428571428571435,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 18528,
+        "n01_ref_ganha": 18139,
+        "chi2": 4.1057,
+        "p_valor": 0.04273869028847628,
+        "holm": {
+          "p_valor_original": 0.04273869028847628,
+          "p_valor_ajustado": 0.2136934514423814,
+          "limiar_holm": 0.01,
+          "significativo_alfa_005": false
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": 1.0588,
+        "p_valor": 0.28969984364184365,
+        "holm": {
+          "p_valor_original": 0.28969984364184365,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.005555555555555556,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": -17.625998,
+        "ic_95_superior": -10.553685,
+        "media_diferenca_variancia": -14.031854
+      }
+    },
+    {
+      "semente_referencia": 1007,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.0125,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4273,
+        "n01_ref_ganha": 4137,
+        "chi2": 2.1671,
+        "p_valor": 0.1409952868571976,
+        "holm": {
+          "p_valor_original": 0.1409952868571976,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.005,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 17622,
+        "n01_ref_ganha": 18164,
+        "chi2": 8.1786,
+        "p_valor": 0.004238640357218905,
+        "holm": {
+          "p_valor_original": 0.004238640357218905,
+          "p_valor_ajustado": 0.04238640357218905,
+          "limiar_holm": 0.005,
+          "significativo_alfa_005": true
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": -1.0121,
+        "p_valor": 0.31148768926978443,
+        "holm": {
+          "p_valor_original": 0.31148768926978443,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.00625,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": 4.750997,
+        "ic_95_superior": 10.993187,
+        "media_diferenca_variancia": 7.89043
+      }
+    },
+    {
+      "semente_referencia": 1008,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.016666666666666666,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4245,
+        "n01_ref_ganha": 4261,
+        "chi2": 0.0265,
+        "p_valor": 0.8708015357371476,
+        "holm": {
+          "p_valor_original": 0.8708015357371476,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.016666666666666666,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 17962,
+        "n01_ref_ganha": 18076,
+        "chi2": 0.3543,
+        "p_valor": 0.5516775644438083,
+        "holm": {
+          "p_valor_original": 0.5516775644438083,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.025,
+          "significativo_alfa_005": false
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": 1.6295,
+        "p_valor": 0.10320569403646784,
+        "holm": {
+          "p_valor_original": 0.10320569403646784,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.005,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": -17.304153,
+        "ic_95_superior": -10.05683,
+        "media_diferenca_variancia": -13.615339
+      }
+    },
+    {
+      "semente_referencia": 1009,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.025,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4265,
+        "n01_ref_ganha": 4254,
+        "chi2": 0.0117,
+        "p_valor": 0.9137226577215687,
+        "holm": {
+          "p_valor_original": 0.9137226577215687,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.025,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 18239,
+        "n01_ref_ganha": 18006,
+        "chi2": 1.485,
+        "p_valor": 0.22299310926697394,
+        "holm": {
+          "p_valor_original": 0.22299310926697394,
+          "p_valor_ajustado": 0.8919724370678958,
+          "limiar_holm": 0.0125,
+          "significativo_alfa_005": false
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": 0.5652,
+        "p_valor": 0.5719568099930934,
+        "holm": {
+          "p_valor_original": 0.5719568099930934,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.016666666666666666,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": -13.37028,
+        "ic_95_superior": -6.415936,
+        "media_diferenca_variancia": -9.826602
+      }
+    },
+    {
+      "semente_referencia": 1010,
+      "mcnemar_geral": {
+        "n10_m4_ganha": 0,
+        "n01_ref_ganha": 0,
+        "chi2": 0.0,
+        "p_valor": 1.0,
+        "holm": {
+          "p_valor_original": 1.0,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.05,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_14": {
+        "n10_m4_ganha": 4275,
+        "n01_ref_ganha": 4253,
+        "chi2": 0.0517,
+        "p_valor": 0.8201105875849658,
+        "holm": {
+          "p_valor_original": 0.8201105875849658,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.0125,
+          "significativo_alfa_005": false
+        }
+      },
+      "mcnemar_13": {
+        "n10_m4_ganha": 18086,
+        "n01_ref_ganha": 18078,
+        "chi2": 0.0014,
+        "p_valor": 0.9706369066138644,
+        "holm": {
+          "p_valor_original": 0.9706369066138644,
+          "p_valor_ajustado": 0.9706369066138644,
+          "limiar_holm": 0.05,
+          "significativo_alfa_005": false
+        }
+      },
+      "wilcoxon_premios": {
+        "z_score": 0.583,
+        "p_valor": 0.5598643120490268,
+        "holm": {
+          "p_valor_original": 0.5598643120490268,
+          "p_valor_ajustado": 1.0,
+          "limiar_holm": 0.01,
+          "significativo_alfa_005": false
+        }
+      },
+      "bootstrap_diferenca_variancia": {
+        "ic_95_inferior": -12.141338,
+        "ic_95_superior": -5.160663,
+        "media_diferenca_variancia": -8.607443
+      }
+    }
+  ]
+}

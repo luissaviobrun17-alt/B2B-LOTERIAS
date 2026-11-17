@@ -85,6 +85,8 @@ class MotorLotofacilModo4Engine {
                 mensagem = 'LOTOFÁCIL MODO 4 ativo com integridade SHA-256/Ed25519 verificada.';
             } else if (!flagAtiva && integridadeOk) {
                 mensagem = this.MENSAGEM_DESATIVADO_FLAG;
+            } else if (!flagAtiva) {
+                mensagem = 'LOTOFÁCIL MODO 4 mantido em OFF_STANDBY (gerador dinâmico desativado; catálogo homologado disponível para consulta).';
             }
 
             return {
