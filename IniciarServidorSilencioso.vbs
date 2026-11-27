@@ -45,8 +45,15 @@ If Not rodando Then
     If nd <> "" Then
         Dim sj : sj = APP_DIR & "\server.js"
         If fso.FileExists(sj) Then
+            On Error Resume Next
             sh.CurrentDirectory = APP_DIR
-            sh.Run nd & " """ & sj & """", 0, False
+            Dim wmiSrv, procSrv, resSrv
+            Set wmiSrv = GetObject("winmgmts:\\.\root\cimv2:Win32_Process")
+            resSrv = wmiSrv.Create(nd & " """ & sj & """", APP_DIR, Null, procSrv)
+            If Err.Number <> 0 Or resSrv <> 0 Then
+                sh.Run nd & " """ & sj & """", 0, False
+            End If
+            On Error GoTo 0
             iniciado8777 = True
         End If
     End If
@@ -58,7 +65,9 @@ If Not rodando Then
             On Error Resume Next
             sh.CurrentDirectory = APP_DIR
             Dim psExe : psExe = sh.ExpandEnvironmentStrings("%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe")
-            sh.Run Chr(34) & psExe & Chr(34) & " -WindowStyle Hidden -ExecutionPolicy Bypass -File " & Chr(34) & sp & Chr(34), 0, False
+            Dim wmiPs, procPs
+            Set wmiPs = GetObject("winmgmts:\\.\root\cimv2:Win32_Process")
+            wmiPs.Create(Chr(34) & psExe & Chr(34) & " -WindowStyle Hidden -ExecutionPolicy Bypass -File " & Chr(34) & sp & Chr(34), APP_DIR, Null, procPs)
             On Error GoTo 0
         End If
     End If
@@ -85,10 +94,12 @@ Sub GarantirApiPython()
     Dim pyW, pyCands, pyCand
     pyW = ""
     pyCands = Array( _
+        sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python311\pythonw.exe"), _
         sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe"), _
         sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python313\pythonw.exe"), _
-        sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python311\pythonw.exe"), _
+        "C:\Python311\pythonw.exe", _
         "C:\Python312\pythonw.exe", _
+        "C:\Program Files\Python311\pythonw.exe", _
         "C:\Program Files\Python312\pythonw.exe")
     For Each pyCand In pyCands
         If fso.FileExists(pyCand) Then
@@ -99,10 +110,11 @@ Sub GarantirApiPython()
     If pyW = "" Then pyW = "pythonw.exe"
 
     sh.CurrentDirectory = APP_DIR
-    If InStr(pyW, "\") > 0 Then
-        sh.Run Chr(34) & pyW & Chr(34) & " " & Chr(34) & apiPy & Chr(34), 0, False
-    Else
-        sh.Run pyW & " " & Chr(34) & apiPy & Chr(34), 0, False
+    Dim wmiPy, procPy, resPy
+    Set wmiPy = GetObject("winmgmts:\\.\root\cimv2:Win32_Process")
+    resPy = wmiPy.Create(Chr(34) & pyW & Chr(34) & " " & Chr(34) & apiPy & Chr(34), APP_DIR, Null, procPy)
+    If Err.Number <> 0 Or resPy <> 0 Then
+        sh.Run "cmd.exe /c start """" /d " & Chr(34) & APP_DIR & Chr(34) & " " & Chr(34) & pyW & Chr(34) & " " & Chr(34) & apiPy & Chr(34), 0, False
     End If
     On Error GoTo 0
 End Sub

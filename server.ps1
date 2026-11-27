@@ -1,10 +1,60 @@
-﻿# server.ps1 - PowerShell HTTP Server for B2B Loterias
+# server.ps1 - PowerShell HTTP Server for B2B Loterias
 # Serves static files and handles API endpoints on http://localhost:8777/
 # v2.1 — Multi-desktop mirroring, anti-collision, and auto-sync
 
 $port = 8777
 $root = $PSScriptRoot
 if (-not $root) { $root = Get-Location }
+
+# Garantir que o nucleo matematico Python (porta 8000) esteja ativo
+function Ensure-PythonApiRunning {
+    $apiFile = Join-Path $root "api.py"
+    if (-not (Test-Path $apiFile)) { return }
+    
+    $is8000Up = $false
+    try {
+        $tcp = New-Object System.Net.Sockets.TcpClient
+        $connect = $tcp.BeginConnect("127.0.0.1", 8000, $null, $null)
+        $wait = $connect.AsyncWaitHandle.WaitOne(400, $false)
+        if ($wait -and $tcp.Connected) {
+            $is8000Up = $true
+            $tcp.EndConnect($connect)
+        }
+        $tcp.Close()
+    } catch {}
+
+    if (-not $is8000Up) {
+        $pyCandidates = @(
+            (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python311\pythonw.exe'),
+            (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\pythonw.exe'),
+            (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python313\pythonw.exe'),
+            'C:\Python311\pythonw.exe',
+            'C:\Python312\pythonw.exe'
+        )
+        $pyExe = $null
+        foreach ($c in $pyCandidates) {
+            if (Test-Path $c) { $pyExe = $c; break }
+        }
+        if (-not $pyExe) {
+            $cmd = Get-Command pythonw -ErrorAction SilentlyContinue
+            if ($cmd) { $pyExe = $cmd.Source }
+        }
+        if (-not $pyExe) {
+            $cmd = Get-Command python -ErrorAction SilentlyContinue
+            if ($cmd) { $pyExe = $cmd.Source }
+        }
+
+        if ($pyExe) {
+            try {
+                $wmi = [wmiclass]"win32_process"
+                $wmi.Create("`"$pyExe`" `"$apiFile`"", $root, $null) | Out-Null
+            } catch {
+                Start-Process $pyExe -ArgumentList "`"$apiFile`"" -WorkingDirectory $root -WindowStyle Hidden
+            }
+        }
+    }
+}
+try { Ensure-PythonApiRunning } catch {}
 
 # Detectar a Área de Trabalho (Desktop) real e ativa do usuário
 function Get-ActiveDesktopPath {

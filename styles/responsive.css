@@ -542,3 +542,259 @@
         font-size: 16px; /* Evita zoom automático no iOS */
     }
 }
+
+
+/* =====================================================
+   TELA NOTEBOOK / DESKTOP 1366x768 & TELAS COMPACTAS
+   Garante visual sem rolagem e alinhamento impecável
+   ===================================================== */
+@media screen and (min-width: 1025px) and (max-width: 1400px), screen and (max-height: 850px) and (min-width: 1025px) {
+    .app-container {
+        max-width: 100% !important;
+        padding: 0.3rem 0.6rem !important;
+    }
+
+    header {
+        padding: 0.35rem 0.75rem 0.35rem 0.75rem !important;
+        border-radius: 0 0 12px 12px !important;
+    }
+
+    .header-top {
+        min-height: 52px !important;
+        padding: 0 6px !important;
+        margin-bottom: 0.3rem !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    .logo-container {
+        width: 46px !important;
+        height: 46px !important;
+    }
+
+    .brand-title-text {
+        font-size: 1.15rem !important;
+        letter-spacing: 1px !important;
+    }
+
+    .brand-sub-badge {
+        font-size: 0.58rem !important;
+        letter-spacing: 1.5px !important;
+    }
+
+    .tagline-main-5d {
+        font-size: 1.05rem !important;
+    }
+
+    .tagline-sub-5d {
+        font-size: 0.62rem !important;
+        letter-spacing: 2.5px !important;
+    }
+
+    .header-top-status {
+        padding: 3px 10px !important;
+        font-size: 0.66rem !important;
+    }
+
+    nav {
+        gap: 3px !important;
+        padding: 3px 5px !important;
+        border-radius: 10px !important;
+    }
+
+    .nav-btn {
+        padding: 4px 2px !important;
+        min-height: 38px !important;
+        border-radius: 8px !important;
+    }
+
+    .nav-name {
+        font-size: 0.74rem !important;
+        font-weight: 800 !important;
+    }
+
+    .nav-prize {
+        font-size: 0.58rem !important;
+        padding: 1px 5px !important;
+    }
+
+    .content-wrapper {
+        grid-template-columns: 1fr 280px !important;
+        gap: 0.65rem !important;
+        margin-top: 0.35rem !important;
+    }
+
+    .game-config,
+    .stats-panel,
+    .results-area,
+    .sidebar-card {
+        padding: 0.65rem 0.85rem !important;
+        border-radius: 10px !important;
+    }
+
+    .panel-header {
+        margin-bottom: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+    }
+
+    .panel-header h2 {
+        font-size: 1.2rem !important;
+    }
+
+    .prize-display {
+        padding: 0.2rem 0.5rem !important;
+        margin-top: 0.15rem !important;
+    }
+
+    .prize-value {
+        font-size: 0.95rem !important;
+    }
+
+    .prize-label {
+        font-size: 0.68rem !important;
+    }
+
+    .prize-badge {
+        font-size: 0.58rem !important;
+        padding: 1px 5px !important;
+    }
+
+    .countdown small {
+        font-size: 0.6rem !important;
+    }
+
+    .timer {
+        font-size: 0.9rem !important;
+    }
+
+    .selection-area {
+        padding: 0.45rem 0.65rem !important;
+        border-radius: 8px !important;
+    }
+
+    .selection-header label {
+        font-size: 0.78rem !important;
+    }
+
+    .sm-btn {
+        padding: 2px 8px !important;
+        font-size: 0.7rem !important;
+        border-radius: 6px !important;
+    }
+
+    /* Volante 10 colunas otimizado para a tela */
+    .number-grid {
+        grid-template-columns: repeat(10, minmax(28px, 34px)) !important;
+        gap: 3px !important;
+        max-height: 250px !important;
+        padding: 3px !important;
+        justify-content: center !important;
+    }
+
+    .number-grid[data-game="lotofacil"] {
+        grid-template-columns: repeat(5, minmax(32px, 40px)) !important;
+        max-width: 230px !important;
+    }
+
+    .number-grid[data-game="diadesorte"] {
+        grid-template-columns: repeat(7, minmax(28px, 35px)) !important;
+        max-width: 280px !important;
+    }
+
+    .number-grid[data-game="supersete"] {
+        grid-template-columns: repeat(7, minmax(28px, 34px)) !important;
+        max-width: 270px !important;
+    }
+
+    .grid-num {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .control-row {
+        gap: 0.5rem !important;
+        margin-top: 0.35rem !important;
+    }
+
+    .control-group label {
+        font-size: 0.72rem !important;
+    }
+
+    select, input[type="number"] {
+        padding: 0.35rem 0.5rem !important;
+        font-size: 0.82rem !important;
+        height: 34px !important;
+    }
+
+    #action-buttons-row {
+        gap: 5px !important;
+        margin-top: 5px !important;
+    }
+
+    .action-btn {
+        height: 38px !important;
+        padding: 0 0.6rem !important;
+        font-size: 0.82rem !important;
+        border-radius: 8px !important;
+    }
+
+    #b2b-motors-row {
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 3px !important;
+        margin-top: 5px !important;
+    }
+
+    .cyber-btn {
+        padding: 3px 4px !important;
+        min-height: 25px !important;
+        font-size: 0.62rem !important;
+        border-radius: 6px !important;
+    }
+
+    .cyber-name {
+        font-size: 0.6rem !important;
+    }
+
+    .cyber-tag {
+        font-size: 0.52rem !important;
+        padding: 1px 3px !important;
+    }
+
+    #smart-numbers-row {
+        padding: 5px 8px !important;
+        margin-top: 5px !important;
+        border-radius: 8px !important;
+    }
+
+    #smart-numbers-row label {
+        font-size: 0.72rem !important;
+    }
+
+    #smart-draw-size {
+        height: 28px !important;
+        font-size: 0.78rem !important;
+        padding: 2px 5px !important;
+    }
+
+    .sidebar-card {
+        padding: 0.65rem 0.8rem !important;
+    }
+
+    .sidebar-card h3 {
+        font-size: 0.85rem !important;
+        margin-bottom: 0.4rem !important;
+    }
+
+    .cost-item {
+        font-size: 0.72rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    .cost-total strong {
+        font-size: 1rem !important;
+    }
+}

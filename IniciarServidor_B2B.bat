@@ -10,10 +10,16 @@ set "APP_DIR=%~dp0"
 netstat -ano | findstr ":8000" | findstr "LISTEN" >nul
 if %errorlevel% neq 0 (
     if exist "%APP_DIR%api.py" (
-        if exist "%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe" (
-            start "" "%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe" "%APP_DIR%api.py"
-        ) else (
-            start "" /min python "%APP_DIR%api.py"
+        set "PY_EXE="
+        if exist "%LOCALAPPDATA%\Programs\Python\Python311\pythonw.exe" set "PY_EXE=%LOCALAPPDATA%\Programs\Python\Python311\pythonw.exe"
+        if not defined PY_EXE if exist "%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe" set "PY_EXE=%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe"
+        if not defined PY_EXE if exist "%LOCALAPPDATA%\Programs\Python\Python313\pythonw.exe" set "PY_EXE=%LOCALAPPDATA%\Programs\Python\Python313\pythonw.exe"
+        if not defined PY_EXE if exist "C:\Python311\pythonw.exe" set "PY_EXE=C:\Python311\pythonw.exe"
+        if not defined PY_EXE if exist "C:\Python312\pythonw.exe" set "PY_EXE=C:\Python312\pythonw.exe"
+        if not defined PY_EXE where pythonw >nul 2>&1 && set "PY_EXE=pythonw"
+        if not defined PY_EXE where python >nul 2>&1 && set "PY_EXE=python"
+        if defined PY_EXE (
+            start "" /d "%APP_DIR%" "%PY_EXE%" "%APP_DIR%api.py"
         )
     )
 )

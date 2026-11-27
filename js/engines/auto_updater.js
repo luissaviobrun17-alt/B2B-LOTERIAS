@@ -368,7 +368,7 @@ var AutoUpdater = (function () {
         if (!banner) {
             banner = document.createElement('div');
             banner.id = 'auto-update-banner';
-            banner.style.cssText = 'position:fixed;top:0;left:0;width:100%;z-index:99999;text-align:center;padding:6px 16px;font-family:Inter,sans-serif;font-size:0.78rem;font-weight:600;transition:all 0.5s ease;pointer-events:none;';
+            banner.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:99999;text-align:center;padding:8px 18px;font-family:Inter,sans-serif;font-size:0.78rem;font-weight:700;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6);transition:all 0.4s ease;pointer-events:none;';
             document.body.appendChild(banner);
         }
 

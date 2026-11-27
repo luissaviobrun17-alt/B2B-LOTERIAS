@@ -5092,6 +5092,7 @@ console.log('[UI] Sugestão gerada: ' + (suggestion ? suggestion.length : 0) + '
 
     renderNumberGrid(game) {
         this.gridContainer.innerHTML = '';
+        this.gridContainer.dataset.game = this.currentGameKey;
         const rangeStart = game.range[0];
         const rangeEnd = game.range[1];
 

@@ -735,6 +735,37 @@ server.listen(PORT, '0.0.0.0', () => {
         }
     }
     console.log(pastaMsg);
+
+    // Watchdog automatico da API Python (Porta 8000)
+    function ensurePythonApi() {
+        const checkReq = http.get('http://127.0.0.1:8000/health', (res) => {
+            res.resume();
+        });
+        checkReq.on('error', () => {
+            const { spawn } = require('child_process');
+            const apiPath = path.join(ROOT, 'api.py');
+            if (!fs.existsSync(apiPath)) return;
+            const pyCandidates = [
+                path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Python', 'Python311', 'pythonw.exe'),
+                path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Python', 'Python312', 'pythonw.exe'),
+                path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Python', 'Python313', 'pythonw.exe'),
+                'pythonw.exe',
+                'python.exe'
+            ];
+            let pyExe = pyCandidates.find(p => fs.existsSync(p)) || 'python';
+            try {
+                const child = spawn(pyExe, [apiPath], {
+                    cwd: ROOT,
+                    detached: true,
+                    stdio: 'ignore'
+                });
+                child.unref();
+            } catch(e) {}
+        });
+        checkReq.setTimeout(600, () => checkReq.abort());
+    }
+    setTimeout(ensurePythonApi, 1000);
+    setInterval(ensurePythonApi, 15000);
 });
 
 server.on('error', (err) => {

@@ -130,16 +130,17 @@ nav {
 }
 
 .logo-container {
-    width: 216px;
-    height: 216px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     overflow: hidden;
-    border: 4px solid var(--gold-color);
-    box-shadow: 0 0 20px var(--gold-glow);
+    border: 3px solid var(--gold-color);
+    box-shadow: 0 0 16px var(--gold-glow);
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--bg-surface);
+    flex-shrink: 0;
 }
 
 .header-logo-img {
@@ -181,7 +182,8 @@ nav {
 
 .nav-btn {
     flex: 1;
-    padding: 10px 6px;
+    min-width: 0;
+    padding: 6px 3px;
     border: none;
     background: rgba(255,255,255,0.04);
     color: rgba(255,255,255,0.85);
@@ -503,13 +505,29 @@ input:focus {
 
 .number-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, 42px);
+    grid-template-columns: repeat(10, minmax(32px, 38px));
     justify-content: center;
-    gap: 6px;
-    max-height: 400px;
+    gap: 5px;
+    max-height: 340px;
     overflow-y: auto;
     justify-items: center;
-    padding: 4px;
+    padding: 6px;
+    margin: 0 auto;
+}
+
+.number-grid[data-game="lotofacil"] {
+    grid-template-columns: repeat(5, minmax(36px, 44px));
+    max-width: 260px;
+}
+
+.number-grid[data-game="diadesorte"] {
+    grid-template-columns: repeat(7, minmax(32px, 38px));
+    max-width: 330px;
+}
+
+.number-grid[data-game="supersete"] {
+    grid-template-columns: repeat(7, minmax(30px, 36px));
+    max-width: 320px;
 }
 
 .grid-num {

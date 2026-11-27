@@ -90,10 +90,12 @@ On Error Resume Next
 Dim pyW, pyCands, pyCand, apiPy, esperaApi
 pyW = ""
 pyCands = Array( _
+    sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python311\pythonw.exe"), _
     sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python312\pythonw.exe"), _
     sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python313\pythonw.exe"), _
-    sh.ExpandEnvironmentStrings("%LOCALAPPDATA%\Programs\Python\Python311\pythonw.exe"), _
+    "C:\Python311\pythonw.exe", _
     "C:\Python312\pythonw.exe", _
+    "C:\Program Files\Python311\pythonw.exe", _
     "C:\Program Files\Python312\pythonw.exe")
 For Each pyCand In pyCands
     If fso.FileExists(pyCand) Then
@@ -106,13 +108,14 @@ apiPy = APP_DIR & "\api.py"
 If fso.FileExists(apiPy) Then
     If Not Porta8000Ativa() Then
         sh.CurrentDirectory = APP_DIR
-        If InStr(pyW, "\") > 0 Then
-            sh.Run Chr(34) & pyW & Chr(34) & " " & Chr(34) & apiPy & Chr(34), 0, False
-        Else
-            sh.Run pyW & " " & Chr(34) & apiPy & Chr(34), 0, False
+        Dim wmiPy, procPy, resPy
+        Set wmiPy = GetObject("winmgmts:\\.\root\cimv2:Win32_Process")
+        resPy = wmiPy.Create(Chr(34) & pyW & Chr(34) & " " & Chr(34) & apiPy & Chr(34), APP_DIR, Null, procPy)
+        If Err.Number <> 0 Or resPy <> 0 Then
+            sh.Run "cmd.exe /c start """" /d " & Chr(34) & APP_DIR & Chr(34) & " " & Chr(34) & pyW & Chr(34) & " " & Chr(34) & apiPy & Chr(34), 0, False
         End If
-        For esperaApi = 1 To 24
-            WScript.Sleep 250
+        For esperaApi = 1 To 30
+            WScript.Sleep 300
             If Porta8000Ativa() Then Exit For
         Next
     End If
@@ -124,7 +127,7 @@ On Error Resume Next
 Dim nav, k
 nav = AcharNavegador()
 If nav <> "" Then
-    sh.Run Chr(34) & nav & Chr(34) & " --app=" & Chr(34) & "http://localhost:" & PORTA & "/" & Chr(34), 1, False
+    sh.Run Chr(34) & nav & Chr(34) & " --app=" & Chr(34) & "http://localhost:" & PORTA & "/" & Chr(34) & " --start-maximized", 1, False
     For k = 1 To 8
         WScript.Sleep 300
         If sh.AppActivate("B2B Loterias") Then Exit For
