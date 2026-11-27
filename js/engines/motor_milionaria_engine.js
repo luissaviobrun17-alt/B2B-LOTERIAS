@@ -129,6 +129,8 @@ class MotorMilionariaB2BEngine {
 
         // 2. Motor JavaScript Autônomo Local
         const localData = MotorMilionariaB2BEngine._executarMotorLocalJS(qtd, {
+            pool,
+            fixedNumbers,
             poolTamanho,
             estrategia,
             janelaRecente,
@@ -190,6 +192,7 @@ class MotorMilionariaB2BEngine {
         const dezenasHist = histData.dezenas;
         const trevosHist = histData.trevos;
         const T = Math.max(1, dezenasHist.length);
+        const recCampo = (opts && opts.janelaRecente) || 10;
 
         // 1. Estatísticas das 50 dezenas
         const stats = {};
@@ -201,7 +204,6 @@ class MotorMilionariaB2BEngine {
             const freqRel = freqAbs / T;
             freqs.push(freqRel);
 
-            const recCampo = opts.janelaRecente || 10;
             const recVal = dezenasHist.slice(-recCampo).filter(d => d.includes(n)).length;
 
             let atraso = T;
@@ -658,6 +660,9 @@ class MotorMilionariaB2BEngine {
     }
 }
 
+if (typeof window !== 'undefined') {
+    window.MotorMilionariaB2BEngine = MotorMilionariaB2BEngine;
+}
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = MotorMilionariaB2BEngine;
 }

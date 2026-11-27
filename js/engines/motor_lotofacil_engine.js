@@ -128,7 +128,7 @@ class MotorLotofacilB2BEngine {
     }
 
     static gerarCarteiraLocal(qtd = 10, options = {}) {
-        const t0 = performance.now();
+        const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
         const historicoCompleto = this.obterHistorico();
         const limite = Math.min(historicoCompleto.length, options.historicoLimite || 10);
         const janela = historicoCompleto.slice(-limite);
@@ -568,7 +568,7 @@ class MotorLotofacilB2BEngine {
         }
         const mediaOverlap = overlaps.length > 0 ? +(overlaps.reduce((a, b) => a + b, 0) / overlaps.length).toFixed(2) : 0;
 
-        const t1 = performance.now();
+        const t1 = typeof performance !== 'undefined' ? performance.now() : Date.now();
         const tempoMs = +(t1 - t0).toFixed(2);
 
         const jogosFinais = jogosSelecionados.map((j, idx) => ({
