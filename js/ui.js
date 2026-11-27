@@ -7845,11 +7845,14 @@ if(pp){
                         </div>
                     </div>
 
-                    <div style="display:flex;gap:10px;align-items:flex-start;background:rgba(234,179,8,0.08);padding:10px 12px;border-radius:8px;border:1px solid rgba(234,179,8,0.3);">
+                    <div style="display:flex;gap:10px;align-items:flex-start;background:rgba(234,179,8,0.14);padding:12px 14px;border-radius:10px;border:1px solid rgba(234,179,8,0.45);">
                         <div style="background:#eab308;color:#0f172a;font-weight:900;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;">⚠️</div>
-                        <div style="font-size:0.8rem;color:#fef08a;line-height:1.4;">
-                            <strong>Aviso de segurança do Chrome/Edge:</strong><br>
-                            Se o navegador bloquear a colagem, digite <code style="background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:4px;color:#facc15;font-weight:bold;">permitir colagem</code> (ou <code style="background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:4px;color:#facc15;">allow pasting</code>) no Console e dê <strong>Enter</strong>.
+                        <div style="font-size:0.82rem;color:#fef08a;line-height:1.5;">
+                            <strong style="color:#ffffff;font-size:0.88rem;">🔒 Se o navegador bloquear o Ctrl+V (Aviso do Chrome/Edge):</strong><br>
+                            O Google Chrome bloqueia colagem no Console na 1ª vez por segurança do navegador. Não é erro!<br>
+                            Basta digitar exatamente: <code style="background:#000;padding:3px 8px;border-radius:5px;color:#22c55e;font-weight:900;font-size:0.95rem;border:1px solid #22c55e;">permitir colagem</code> e dar <strong>Enter</strong>.<br>
+                            <span style="font-size:0.75rem;color:#cbd5e1;">(Se seu Chrome estiver em inglês, digite: <code style="background:#000;padding:2px 6px;border-radius:4px;color:#facc15;">allow pasting</code>)</span><br>
+                            Em seguida, cole o script com <strong>Ctrl + V</strong> e dê <strong>Enter</strong>!
                         </div>
                     </div>
 
