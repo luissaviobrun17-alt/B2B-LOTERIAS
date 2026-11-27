@@ -723,20 +723,35 @@ const server = http.createServer((req, res) => {
     });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    const pastaMsg = `\n  📁 Jogos salvos em: ${JOGOS_DIR}\n`;
-    console.log(`[B2B Loterias] Servidor rodando em http://localhost:${PORT}`);
-    const nets = os.networkInterfaces();
-    for (const name of Object.keys(nets)) {
-        for (const net of nets[name]) {
-            if (net.family === 'IPv4' && !net.internal) {
-                console.log(`[B2B Loterias] 🌐 Acesso pela rede: http://${net.address}:${PORT}`);
-            }
-        }
-    }
-    console.log(pastaMsg);
+const net = require('net');
 
-    // Watchdog automatico da API Python (Porta 8000)
+function findAvailablePort(ports, cb) {
+    if (ports.length === 0) return cb(new Error('No available ports'));
+    const p = ports[0];
+    const s = net.createServer();
+    s.once('error', () => {
+        s.close();
+        findAvailablePort(ports.slice(1), cb);
+    });
+    s.once('listening', () => {
+        s.close(() => cb(null, p));
+    });
+    s.listen(p, '127.0.0.1');
+}
+
+findAvailablePort([8777, 8788, 8789, 8790], (err, activePort) => {
+    if (err) {
+        console.error('[B2B Loterias] Nenhuma porta disponível:', err);
+        return;
+    }
+    server.listen(activePort, '127.0.0.1', () => {
+        try { fs.writeFileSync(path.join(ROOT, 'active_port.txt'), String(activePort), 'utf8'); } catch(e) {}
+        console.log(`[B2B Loterias] Servidor rodando em http://localhost:${activePort}`);
+        console.log(`\n  📁 Jogos salvos em: ${JOGOS_DIR}\n`);
+    });
+});
+
+// Watchdog automatico da API Python (Porta 8000)
     function ensurePythonApi() {
         const checkReq = http.get('http://127.0.0.1:8000/health', (res) => {
             res.resume();
@@ -766,7 +781,6 @@ server.listen(PORT, '0.0.0.0', () => {
     }
     setTimeout(ensurePythonApi, 1000);
     setInterval(ensurePythonApi, 15000);
-});
 
 server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {

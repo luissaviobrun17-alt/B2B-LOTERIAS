@@ -10,7 +10,8 @@ Set fso = CreateObject("Scripting.FileSystemObject")
 
 Dim APP_DIR
 APP_DIR = fso.GetParentFolderName(WScript.ScriptFullName)
-Const PORTA = 8777
+Dim PORTA
+PORTA = ObterPortaAtiva()
 Const SENHA = "130767"
 
 ' -- 1. VERIFICAR LICENCA --
@@ -191,4 +192,20 @@ Function AcharNavegador()
             Exit Function
         End If
     Next
+End Function
+
+
+Function ObterPortaAtiva()
+    ObterPortaAtiva = 8788
+    Dim pFile
+    pFile = APP_DIR & "\active_port.txt"
+    If fso.FileExists(pFile) Then
+        On Error Resume Next
+        Dim f, txt
+        Set f = fso.OpenTextFile(pFile, 1)
+        txt = Trim(f.ReadLine)
+        f.Close
+        If IsNumeric(txt) Then ObterPortaAtiva = CInt(txt)
+        On Error GoTo 0
+    End If
 End Function
