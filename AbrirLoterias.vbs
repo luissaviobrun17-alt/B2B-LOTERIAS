@@ -127,7 +127,7 @@ On Error Resume Next
 Dim nav, k
 nav = AcharNavegador()
 If nav <> "" Then
-    sh.Run Chr(34) & nav & Chr(34) & " --app=" & Chr(34) & "http://localhost:" & PORTA & "/" & Chr(34) & " --start-maximized", 1, False
+    sh.Run Chr(34) & nav & Chr(34) & " --app=" & Chr(34) & "http://localhost:" & PORTA & "/" & Chr(34) & " --start-maximized --unsafely-disable-devtools-self-xss-warnings", 1, False
     For k = 1 To 8
         WScript.Sleep 300
         If sh.AppActivate("B2B Loterias") Then Exit For
